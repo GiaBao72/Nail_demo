@@ -237,7 +237,23 @@ button{font-family:inherit;cursor:pointer;transition:all .15s;border:none;outlin
 .ap-sub{font-size:12px;color:var(--text-2);margin-bottom:14px;line-height:1.5}
 .ap-btns{display:flex;flex-direction:column;gap:8px}
 
-/* note tag on card */
+/* timer badge on card */
+.timer-badge{
+  font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;
+  color:var(--amber);background:var(--amber-bg);
+  border:0.5px solid var(--amber-border);
+  border-radius:8px;padding:3px 8px;
+  display:inline-flex;align-items:center;gap:4px;
+  white-space:nowrap;
+}
+.timer-badge svg{width:11px;height:11px;flex-shrink:0}
+/* large timer in action panel */
+.ap-timer{
+  font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;
+  color:var(--amber);letter-spacing:-.02em;line-height:1;
+  margin-bottom:2px;
+}
+.ap-timer-label{font-size:10px;color:var(--text-3);font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px}
 .note-tag{
   font-size:10px;color:var(--text-2);
   background:var(--surface2);border:0.5px solid var(--border-md);
@@ -375,23 +391,42 @@ button{font-family:inherit;cursor:pointer;transition:all .15s;border:none;outlin
 
 <script>
 let workers=[
-  {id:1,name:'Lan',initials:'LA',turns:0,status:'ready',note:''},
-  {id:2,name:'Hoa',initials:'HO',turns:0,status:'ready',note:''},
-  {id:3,name:'Mai',initials:'MA',turns:0,status:'ready',note:''},
-  {id:4,name:'Tú',initials:'TU',turns:0,status:'ready',note:''},
-  {id:5,name:'Bích',initials:'BI',turns:0,status:'ready',note:''},
-  {id:6,name:'Linh',initials:'LI',turns:0,status:'ready',note:''},
-  {id:7,name:'Ngọc',initials:'NG',turns:0,status:'ready',note:''},
-  {id:8,name:'Thảo',initials:'TH',turns:0,status:'ready',note:''},
-  {id:9,name:'Yến',initials:'YE',turns:0,status:'ready',note:''},
-  {id:10,name:'Dung',initials:'DU',turns:0,status:'ready',note:''},
+  {id:1,name:'Lan',initials:'LA',turns:0,status:'ready',note:'',startTime:null},
+  {id:2,name:'Hoa',initials:'HO',turns:0,status:'ready',note:'',startTime:null},
+  {id:3,name:'Mai',initials:'MA',turns:0,status:'ready',note:'',startTime:null},
+  {id:4,name:'Tú',initials:'TU',turns:0,status:'ready',note:'',startTime:null},
+  {id:5,name:'Bích',initials:'BI',turns:0,status:'ready',note:'',startTime:null},
+  {id:6,name:'Linh',initials:'LI',turns:0,status:'ready',note:'',startTime:null},
+  {id:7,name:'Ngọc',initials:'NG',turns:0,status:'ready',note:'',startTime:null},
+  {id:8,name:'Thảo',initials:'TH',turns:0,status:'ready',note:'',startTime:null},
+  {id:9,name:'Yến',initials:'YE',turns:0,status:'ready',note:'',startTime:null},
+  {id:10,name:'Dung',initials:'DU',turns:0,status:'ready',note:'',startTime:null},
 ];
 let totalTurns=0,nextId=11,selectedId=null;
+
+function fmtTimer(ms){
+  const s=Math.floor(ms/1000);
+  const m=Math.floor(s/60);
+  const h=Math.floor(m/60);
+  if(h>0) return h+'h '+String(m%60).padStart(2,'0')+'m';
+  return String(m).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+}
+function getElapsed(w){
+  if(!w.startTime) return null;
+  return Date.now()-w.startTime;
+}
 
 function clockTick(){
   const n=new Date();
   document.getElementById('clock').textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
   document.getElementById('date-lbl').textContent=String(n.getDate()).padStart(2,'0')+'/'+String(n.getMonth()+1).padStart(2,'0');
+  // update all timer displays
+  workers.filter(w=>w.status==='busy'&&w.startTime).forEach(w=>{
+    const el=document.getElementById('timer-'+w.id);
+    if(el) el.textContent=fmtTimer(Date.now()-w.startTime);
+    const elAp=document.getElementById('ap-timer-'+w.id);
+    if(elAp) elAp.textContent=fmtTimer(Date.now()-w.startTime);
+  });
 }
 clockTick();setInterval(clockTick,1000);
 
@@ -448,7 +483,8 @@ function renderList(){
     const info=document.createElement('div');
     info.className='winfo';
     const noteHtml=w.note?`<div class="note-tag">📝 ${w.note}</div>`:'';
-    info.innerHTML=`<div class="wname">${w.name}</div><div class="wmeta">${w.turns} turn hôm nay</div>${noteHtml}`;
+    const timerHtml=w.status==='busy'&&w.startTime?`<div class="note-tag" style="color:var(--amber);background:var(--amber-bg);border-color:var(--amber-border)">⏱ <span id="timer-${w.id}">${fmtTimer(Date.now()-w.startTime)}</span></div>`:'';
+    info.innerHTML=`<div class="wname">${w.name}</div><div class="wmeta">${w.turns} turn hôm nay</div>${timerHtml}${noteHtml}`;
     const bdg=document.createElement('span');
     if(isNext){bdg.className='badge b-next';bdg.textContent='Tiếp theo';}
     else if(w.status==='ready'){bdg.className='badge b-ready';bdg.textContent='Rảnh';}
@@ -480,7 +516,11 @@ function renderAction(){
       Giao turn ngay</button>`;
     btns+=`<button class="btn-ghost" onclick="setStatus(${w.id},'off')">😴 Cho nghỉ</button>`;
   } else if(w.status==='busy'){
+    const elapsed=getElapsed(w);
+    const startStr=w.startTime?new Date(w.startTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):'--:--';
     noteBlock=`
+      <div class="ap-timer" id="ap-timer-${w.id}">${elapsed?fmtTimer(elapsed):'00:00'}</div>
+      <div class="ap-timer-label">Bắt đầu lúc ${startStr}</div>
       <div style="margin-bottom:10px">
         <div style="font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">Ghi chú ca này</div>
         <textarea class="note-area" id="note-input-${w.id}" rows="3" placeholder="VD: Đang làm gel, khách VIP, hẹn lại...">${w.note||''}</textarea>
@@ -524,7 +564,7 @@ function assignNext(){
   const ready=readyW();
   if(!ready.length){toast('Không có thợ rảnh!');return;}
   const w=ready[0];
-  w.status='busy';w.turns++;totalTurns++;w.note='';
+  w.status='busy';w.turns++;totalTurns++;w.note='';w.startTime=Date.now();
   selectedId=w.id;
   toast('Đã giao turn cho '+w.name+' 💅');render();
 }
@@ -532,7 +572,7 @@ function assignNext(){
 function assignWorkerWithNote(id){
   const w=workers.find(x=>x.id===id);
   if(!w||w.status!=='ready')return;
-  w.status='busy';w.turns++;totalTurns++;w.note='';
+  w.status='busy';w.turns++;totalTurns++;w.note='';w.startTime=Date.now();
   selectedId=w.id;
   toast('Đã giao turn cho '+w.name+' 💅');render();
 }
@@ -541,11 +581,10 @@ function assignWorker(id){assignWorkerWithNote(id);}
 
 function finishWorker(id){
   const w=workers.find(x=>x.id===id);if(!w)return;
-  // save note before finish if textarea open
   const el=document.getElementById('note-input-'+id);
   if(el) w.note=el.value.trim();
   workers=workers.filter(x=>x.id!==id);
-  w.status='ready';w.note='';workers.push(w);
+  w.status='ready';w.note='';w.startTime=null;workers.push(w);
   selectedId=null;
   toast(w.name+' xong việc — về cuối hàng 👏');render();
 }
