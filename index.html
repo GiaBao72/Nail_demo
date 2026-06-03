@@ -137,7 +137,46 @@ button{font-family:inherit;cursor:pointer;transition:all .15s;border:none;outlin
   margin-bottom:10px;display:flex;align-items:center;gap:7px;
 }
 .pill{background:var(--surface3);color:var(--text-2);padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
-.queue{display:flex;flex-direction:column;gap:7px}
+.queue{display:flex;flex-direction:column;gap:8px}
+
+/* ── WORKER ITEM WRAPPER ── */
+.witem{display:flex;flex-direction:column}
+.witem.has-history .wcard{border-radius:var(--r-lg) var(--r-lg) 0 0;border-bottom-color:transparent}
+
+/* ── HISTORY PANEL ── */
+.history-panel{
+  background:var(--surface2);
+  border:0.5px solid var(--border-md);border-top:none;
+  border-radius:0 0 var(--r-lg) var(--r-lg);
+  overflow:hidden;
+}
+.history-toggle{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:6px 14px;cursor:pointer;user-select:none;
+  font-size:10px;font-weight:700;color:var(--text-3);
+  letter-spacing:.06em;text-transform:uppercase;
+  border-top:0.5px solid var(--border);
+  background:var(--surface2);transition:background .12s;
+}
+.history-toggle:hover{background:var(--surface3)}
+.history-toggle svg{width:11px;height:11px;flex-shrink:0;transition:transform .2s}
+.history-toggle.open svg{transform:rotate(180deg)}
+.history-list{display:none;padding:4px 12px 10px}
+.history-toggle.open + .history-list{display:block}
+.history-item{
+  display:grid;grid-template-columns:60px 1fr auto;gap:10px;
+  align-items:start;padding:8px 0;
+  border-bottom:0.5px solid var(--border);
+}
+.history-item:last-child{border-bottom:none}
+.hi-time{font-size:12px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.hi-dur{font-size:10px;color:var(--text-3);margin-top:2px}
+.hi-svc{font-size:12px;font-weight:600;color:var(--text)}
+.hi-note{font-size:11px;color:var(--text-2);margin-top:2px;font-style:italic}
+.hi-money{text-align:right}
+.hi-rev{font-size:12px;font-weight:700;color:var(--green)}
+.hi-tip{font-size:10px;color:var(--blue);margin-top:2px}
+.history-empty{font-size:11px;color:var(--text-3);padding:10px 0;text-align:center}
 
 .wcard{
   display:flex;align-items:center;gap:11px;
