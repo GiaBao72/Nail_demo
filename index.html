@@ -262,7 +262,25 @@ button{font-family:inherit;cursor:pointer;transition:all .15s;border:none;outlin
   overflow:hidden;text-overflow:ellipsis;
   font-style:italic;
 }
-/* service tag */
+/* revenue inputs */
+.rev-row{display:flex;gap:8px;margin-bottom:10px}
+.rev-group{flex:1;display:flex;flex-direction:column;gap:4px}
+.rev-label{font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.06em;text-transform:uppercase}
+.rev-input{
+  width:100%;font-family:inherit;font-size:13px;font-weight:600;
+  border:0.5px solid var(--border-strong);border-radius:10px;
+  padding:8px 10px;outline:none;background:var(--surface2);color:var(--text);
+  transition:border-color .15s;
+}
+.rev-input:focus{border-color:var(--green);box-shadow:0 0 0 2px rgba(21,122,66,0.12);background:var(--surface)}
+/* revenue summary on card */
+.rev-tag{
+  font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;
+  display:inline-block;margin-top:3px;
+  background:var(--green-bg);color:var(--green);border:0.5px solid var(--green-border);
+}
+/* revenue total in stats */
+.stat-row.s-rev .stat-val{color:var(--green);font-size:16px}
 .svc-tag{
   font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;
   white-space:nowrap;letter-spacing:.02em;display:inline-block;margin-top:3px;
@@ -354,6 +372,14 @@ button{font-family:inherit;cursor:pointer;transition:all .15s;border:none;outlin
           <div class="stat-label"><span class="stat-dot d-total"></span>Tổng turn</div>
           <div class="stat-val" id="cnt-total">0</div>
         </div>
+        <div class="stat-row s-rev" style="background:var(--green-bg)">
+          <div class="stat-label"><span class="stat-dot" style="background:#10b981"></span>Doanh thu</div>
+          <div class="stat-val" id="cnt-rev" style="color:var(--green);font-size:15px">0đ</div>
+        </div>
+        <div class="stat-row" style="background:var(--blue-bg)">
+          <div class="stat-label"><span class="stat-dot" style="background:var(--blue)"></span>Tip</div>
+          <div class="stat-val" id="cnt-tip" style="color:var(--blue);font-size:15px">0đ</div>
+        </div>
       </div>
     </div>
     <div class="next-card" id="next-card">
@@ -406,16 +432,16 @@ button{font-family:inherit;cursor:pointer;transition:all .15s;border:none;outlin
 
 <script>
 let workers=[
-  {id:1,name:'Lan',initials:'LA',turns:0,status:'ready',note:'',startTime:null,service:''},
-  {id:2,name:'Hoa',initials:'HO',turns:0,status:'ready',note:'',startTime:null,service:''},
-  {id:3,name:'Mai',initials:'MA',turns:0,status:'ready',note:'',startTime:null,service:''},
-  {id:4,name:'Tú',initials:'TU',turns:0,status:'ready',note:'',startTime:null,service:''},
-  {id:5,name:'Bích',initials:'BI',turns:0,status:'ready',note:'',startTime:null,service:''},
-  {id:6,name:'Linh',initials:'LI',turns:0,status:'ready',note:'',startTime:null,service:''},
-  {id:7,name:'Ngọc',initials:'NG',turns:0,status:'ready',note:'',startTime:null,service:''},
-  {id:8,name:'Thảo',initials:'TH',turns:0,status:'ready',note:'',startTime:null,service:''},
-  {id:9,name:'Yến',initials:'YE',turns:0,status:'ready',note:'',startTime:null,service:''},
-  {id:10,name:'Dung',initials:'DU',turns:0,status:'ready',note:'',startTime:null,service:''},
+  {id:1,name:'Lan',initials:'LA',turns:0,status:'ready',note:'',startTime:null,service:'',revenue:0,tip:0,totalRevenue:0,totalTip:0},
+  {id:2,name:'Hoa',initials:'HO',turns:0,status:'ready',note:'',startTime:null,service:'',revenue:0,tip:0,totalRevenue:0,totalTip:0},
+  {id:3,name:'Mai',initials:'MA',turns:0,status:'ready',note:'',startTime:null,service:'',revenue:0,tip:0,totalRevenue:0,totalTip:0},
+  {id:4,name:'Tú',initials:'TU',turns:0,status:'ready',note:'',startTime:null,service:'',revenue:0,tip:0,totalRevenue:0,totalTip:0},
+  {id:5,name:'Bích',initials:'BI',turns:0,status:'ready',note:'',startTime:null,service:'',revenue:0,tip:0,totalRevenue:0,totalTip:0},
+  {id:6,name:'Linh',initials:'LI',turns:0,status:'ready',note:'',startTime:null,service:'',revenue:0,tip:0,totalRevenue:0,totalTip:0},
+  {id:7,name:'Ngọc',initials:'NG',turns:0,status:'ready',note:'',startTime:null,service:'',revenue:0,tip:0,totalRevenue:0,totalTip:0},
+  {id:8,name:'Thảo',initials:'TH',turns:0,status:'ready',note:'',startTime:null,service:'',revenue:0,tip:0,totalRevenue:0,totalTip:0},
+  {id:9,name:'Yến',initials:'YE',turns:0,status:'ready',note:'',startTime:null,service:'',revenue:0,tip:0,totalRevenue:0,totalTip:0},
+  {id:10,name:'Dung',initials:'DU',turns:0,status:'ready',note:'',startTime:null,service:'',revenue:0,tip:0,totalRevenue:0,totalTip:0},
 ];
 
 const SERVICES=[
@@ -430,6 +456,11 @@ const SERVICES=[
   {value:'Eyebrow',label:'👁 Eyebrow',color:'#6366f1,#4f46e5'},
 ];
 let totalTurns=0,nextId=11,selectedId=null;
+
+function fmtMoney(n){
+  if(!n) return '0đ';
+  return n.toLocaleString('vi-VN')+'đ';
+}
 
 function fmtTimer(ms){
   const s=Math.floor(ms/1000);
@@ -472,6 +503,10 @@ function renderStats(){
   document.getElementById('cnt-ready').textContent=ready.length;
   document.getElementById('cnt-total').textContent=totalTurns;
   document.getElementById('queue-count').textContent=workers.length;
+  const totalRev=workers.reduce((s,w)=>s+w.totalRevenue,0);
+  const totalTipAll=workers.reduce((s,w)=>s+w.totalTip,0);
+  document.getElementById('cnt-rev').textContent=fmtMoney(totalRev);
+  document.getElementById('cnt-tip').textContent=fmtMoney(totalTipAll);
   const nc=document.getElementById('next-card');
   const nxt=ready[0];
   if(nxt){
@@ -513,7 +548,8 @@ function renderList(){
     const timerHtml=w.status==='busy'&&w.startTime?`<div class="note-tag" style="color:var(--amber);background:var(--amber-bg);border-color:var(--amber-border)">⏱ <span id="timer-${w.id}">${fmtTimer(Date.now()-w.startTime)}</span></div>`:'';
     const svc=w.service?SERVICES.find(s=>s.value===w.service):null;
     const svcHtml=svc?`<div class="note-tag" style="background:var(--blue-bg);color:var(--blue);border-color:var(--blue-border);font-style:normal;font-weight:600">${svc.label}</div>`:'';
-    info.innerHTML=`<div class="wname">${w.name}</div><div class="wmeta">${w.turns} turn hôm nay</div>${svcHtml}${timerHtml}${noteHtml}`;
+    const revHtml=(w.totalRevenue||w.totalTip)?`<div class="rev-tag">💰 ${fmtMoney(w.totalRevenue)}${w.totalTip?' + tip '+fmtMoney(w.totalTip):''}</div>`:'';
+    info.innerHTML=`<div class="wname">${w.name}</div><div class="wmeta">${w.turns} turn hôm nay</div>${svcHtml}${timerHtml}${revHtml}${noteHtml}`;
     const bdg=document.createElement('span');
     if(isNext){bdg.className='badge b-next';bdg.textContent='Tiếp theo';}
     else if(w.status==='ready'){bdg.className='badge b-ready';bdg.textContent='Rảnh';}
@@ -554,6 +590,16 @@ function renderAction(){
       <div style="margin-bottom:10px">
         <div style="font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">Dịch vụ</div>
         <select class="svc-select" id="svc-input-${w.id}" onchange="saveService(${w.id})">${svcOptions}</select>
+      </div>
+      <div class="rev-row">
+        <div class="rev-group">
+          <div class="rev-label">Tiền dịch vụ</div>
+          <input class="rev-input" type="number" id="rev-input-${w.id}" min="0" step="1000" placeholder="0" value="${w.revenue||''}">
+        </div>
+        <div class="rev-group">
+          <div class="rev-label">Tip</div>
+          <input class="rev-input" type="number" id="tip-input-${w.id}" min="0" step="1000" placeholder="0" value="${w.tip||''}">
+        </div>
       </div>
       <div style="margin-bottom:10px">
         <div style="font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">Ghi chú ca này</div>
@@ -624,12 +670,20 @@ function assignWorker(id){assignWorkerWithNote(id);}
 
 function finishWorker(id){
   const w=workers.find(x=>x.id===id);if(!w)return;
-  const el=document.getElementById('note-input-'+id);
-  if(el) w.note=el.value.trim();
+  const noteEl=document.getElementById('note-input-'+id);
+  if(noteEl) w.note=noteEl.value.trim();
+  const revEl=document.getElementById('rev-input-'+id);
+  const tipEl=document.getElementById('tip-input-'+id);
+  const rev=revEl?parseFloat(revEl.value)||0:0;
+  const tip=tipEl?parseFloat(tipEl.value)||0:0;
+  w.totalRevenue=(w.totalRevenue||0)+rev;
+  w.totalTip=(w.totalTip||0)+tip;
   workers=workers.filter(x=>x.id!==id);
-  w.status='ready';w.note='';w.startTime=null;w.service='';workers.push(w);
+  w.status='ready';w.note='';w.startTime=null;w.service='';w.revenue=0;w.tip=0;
+  workers.push(w);
   selectedId=null;
-  toast(w.name+' xong việc — về cuối hàng 👏');render();
+  const revMsg=rev?` | 💰${fmtMoney(rev)}`:'';
+  toast(w.name+' xong việc — về cuối hàng 👏'+revMsg);render();
 }
 function setStatus(id,s){
   const w=workers.find(x=>x.id===id);if(!w)return;
