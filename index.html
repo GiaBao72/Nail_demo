@@ -281,6 +281,36 @@ button{font-family:inherit;cursor:pointer;transition:all .15s;border:none;outlin
 }
 /* revenue total in stats */
 .stat-row.s-rev .stat-val{color:var(--green);font-size:16px}
+
+/* view toggle */
+.view-btn{
+  background:var(--surface2);color:var(--text-2);
+  border:0.5px solid var(--border-md);border-radius:8px;
+  padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;
+}
+.view-btn.active{background:var(--text);color:#fff;border-color:var(--text)}
+
+/* grid table */
+.grid-table{width:100%;border-collapse:collapse;font-size:12px}
+.grid-table th{
+  font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.07em;text-transform:uppercase;
+  padding:8px 10px;text-align:left;border-bottom:1px solid var(--border-md);
+  white-space:nowrap;background:var(--surface);
+}
+.grid-table td{
+  padding:10px 10px;border-bottom:0.5px solid var(--border);
+  vertical-align:middle;
+}
+.grid-table tr{background:var(--surface);transition:background .1s;cursor:pointer}
+.grid-table tr:hover{background:var(--surface2)}
+.grid-table tr.gr-busy{background:var(--amber-bg)}
+.grid-table tr.gr-busy:hover{background:#fde4a0}
+.grid-table tr.gr-off{opacity:.45}
+.grid-table tr.gr-selected{background:var(--pink-sel,#fff8fb);outline:1px solid var(--pink)}
+.gr-name{font-weight:600;font-size:13px}
+.gr-timer{font-variant-numeric:tabular-nums;font-weight:700;color:var(--amber)}
+.gr-rev{font-weight:600;color:var(--green)}
+.gr-tip{font-weight:600;color:var(--blue)}
 .svc-tag{
   font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;
   white-space:nowrap;letter-spacing:.02em;display:inline-block;margin-top:3px;
@@ -406,8 +436,15 @@ button{font-family:inherit;cursor:pointer;transition:all .15s;border:none;outlin
 
   <!-- COL 2: DANH SÁCH NHÂN VIÊN -->
   <div class="col-list">
-    <div class="section-label">Danh sách nhân viên <span class="pill" id="queue-count">0</span></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="section-label" style="margin-bottom:0">Danh sách nhân viên <span class="pill" id="queue-count">0</span></div>
+      <div style="display:flex;gap:4px">
+        <button id="btn-view-list" onclick="setView('list')" class="view-btn active">☰ Danh sách</button>
+        <button id="btn-view-grid" onclick="setView('grid')" class="view-btn">⊞ Bảng</button>
+      </div>
+    </div>
     <div class="queue" id="queue"></div>
+    <div id="grid-view" style="display:none"></div>
   </div>
 
   <!-- COL 3: CHỌN HÀNH ĐỘNG -->
@@ -455,7 +492,16 @@ const SERVICES=[
   {value:'Waxing',label:'🪡 Waxing',color:'#f97316,#ea580c'},
   {value:'Eyebrow',label:'👁 Eyebrow',color:'#6366f1,#4f46e5'},
 ];
-let totalTurns=0,nextId=11,selectedId=null;
+let totalTurns=0,nextId=11,selectedId=null,currentView='list';
+
+function setView(v){
+  currentView=v;
+  document.getElementById('btn-view-list').className='view-btn'+(v==='list'?' active':'');
+  document.getElementById('btn-view-grid').className='view-btn'+(v==='grid'?' active':'');
+  document.getElementById('queue').style.display=v==='list'?'flex':'none';
+  document.getElementById('grid-view').style.display=v==='grid'?'block':'none';
+  render();
+}
 
 function fmtMoney(n){
   if(!n) return '0đ';
@@ -478,12 +524,14 @@ function clockTick(){
   const n=new Date();
   document.getElementById('clock').textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
   document.getElementById('date-lbl').textContent=String(n.getDate()).padStart(2,'0')+'/'+String(n.getMonth()+1).padStart(2,'0');
-  // update all timer displays
+  // update all timer displays (list + grid)
   workers.filter(w=>w.status==='busy'&&w.startTime).forEach(w=>{
     const el=document.getElementById('timer-'+w.id);
     if(el) el.textContent=fmtTimer(Date.now()-w.startTime);
     const elAp=document.getElementById('ap-timer-'+w.id);
     if(elAp) elAp.textContent=fmtTimer(Date.now()-w.startTime);
+    const elG=document.getElementById('gtimer-'+w.id);
+    if(elG) elG.textContent=fmtTimer(Date.now()-w.startTime);
   });
 }
 clockTick();setInterval(clockTick,1000);
@@ -626,7 +674,51 @@ function renderAction(){
   </div>`;
 }
 
-function render(){renderStats();renderList();renderAction();}
+function renderGrid(){
+  const ready=readyW();
+  const gv=document.getElementById('grid-view');
+  const all=[...ready,...workers.filter(w=>w.status==='busy'),...workers.filter(w=>w.status==='off')];
+  let rows=all.map(w=>{
+    const isNext=w===ready[0];
+    const isSel=w.id===selectedId;
+    let rowCls='';
+    if(w.status==='busy') rowCls='gr-busy';
+    else if(w.status==='off') rowCls='gr-off';
+    if(isSel) rowCls+=' gr-selected';
+    const svc=w.service?SERVICES.find(s=>s.value===w.service):null;
+    const timerCell=w.status==='busy'&&w.startTime
+      ?`<span class="gr-timer" id="gtimer-${w.id}">${fmtTimer(Date.now()-w.startTime)}</span>`
+      :`<span style="color:var(--text-3)">—</span>`;
+    const statusBadge=isNext
+      ?`<span class="badge b-next">Tiếp theo</span>`
+      :w.status==='ready'?`<span class="badge b-ready">Rảnh</span>`
+      :w.status==='busy'?`<span class="badge b-busy">Làm</span>`
+      :`<span class="badge b-off">Nghỉ</span>`;
+    const rankCell=w.status==='ready'?`<b style="color:var(--blue)">${ready.indexOf(w)+1}</b>`:'—';
+    return `<tr class="${rowCls}" onclick="selectedId=${isSel?'null':w.id};render()">
+      <td class="gr-name">${w.initials}<br><span style="font-size:11px;color:var(--text-2);font-weight:400">${w.name}</span></td>
+      <td>${statusBadge}</td>
+      <td style="text-align:center">${rankCell}</td>
+      <td>${svc?svc.label:'<span style="color:var(--text-3)">—</span>'}</td>
+      <td>${timerCell}</td>
+      <td style="text-align:center">${w.turns}</td>
+      <td class="gr-rev">${w.totalRevenue?fmtMoney(w.totalRevenue):'—'}</td>
+      <td class="gr-tip">${w.totalTip?fmtMoney(w.totalTip):'—'}</td>
+    </tr>`;
+  }).join('');
+  gv.innerHTML=`<div style="overflow-x:auto;border-radius:var(--r-lg);border:0.5px solid var(--border);box-shadow:var(--shadow-sm)">
+    <table class="grid-table">
+      <thead><tr>
+        <th>Thợ</th><th>Trạng thái</th><th style="text-align:center">Hàng</th>
+        <th>Dịch vụ</th><th>Thời gian</th><th style="text-align:center">Turn</th>
+        <th>Doanh thu</th><th>Tip</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+function render(){renderStats();if(currentView==='list')renderList();else renderGrid();renderAction();}
 function deselect(){selectedId=null;render();}
 
 function saveNote(id){
