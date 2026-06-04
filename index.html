@@ -748,6 +748,37 @@ function renderList(){
     }
     q.appendChild(item);
   });
+
+  // ── Penalty section ──
+  const penalized=workers.filter(w=>w.status==='penalized');
+  if(penalized.length>0){
+    const sep=document.createElement('div');
+    sep.style.cssText='margin:14px 0 8px;display:flex;align-items:center;gap:8px';
+    sep.innerHTML='<div style="flex:1;height:1px;background:rgba(176,40,40,0.15)"></div>'
+      +'<span style="font-size:10px;font-weight:700;color:var(--red);letter-spacing:.07em;text-transform:uppercase;white-space:nowrap">🔒 Đang bị phạt</span>'
+      +'<div style="flex:1;height:1px;background:rgba(176,40,40,0.15)"></div>';
+    q.appendChild(sep);
+    penalized.forEach(w=>{
+      const pt=penaltyTimers[w.id];
+      const remaining=pt?fmtPenalty(pt.unlockTime):'--:--';
+      const isSel=w.id===selectedId;
+      const pcard=document.createElement('div');
+      pcard.className='wcard penalized'+(isSel?' selected':'');
+      pcard.onclick=()=>{selectedId=isSel?null:w.id;render();};
+      pcard.innerHTML=
+        '<div class="rank" style="color:var(--red)">🔒</div>'
+        +'<div class="avatar av-off">'+w.initials+'</div>'
+        +'<div class="winfo">'
+          +'<div class="wname">'+w.name+'</div>'
+          +'<div style="margin-top:5px;display:flex;align-items:center;gap:6px">'
+            +'<span style="font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--red)" id="pentimer-'+w.id+'">'+remaining+'</span>'
+            +'<span style="font-size:10px;color:var(--text-3)">còn lại</span>'
+          +'</div>'
+        +'</div>'
+        +'<span class="badge" style="background:#fdeaea;color:var(--red);border:0.5px solid rgba(176,40,40,0.2)">Bị phạt</span>';
+      q.appendChild(pcard);
+    });
+  }
 }
 
 function renderAction(){
