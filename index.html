@@ -471,17 +471,7 @@ button{font-family:inherit;cursor:pointer;transition:all .15s;border:none;outlin
         Thêm thợ mới
       </button>
     </div>
-    <div class="panel-card" style="margin-top:4px">
-      <div class="panel-title">⚙️ Cài đặt turn</div>
-      <div style="font-size:11px;color:var(--text-2);margin-bottom:8px;line-height:1.5">Mức giá tối thiểu để tính 1 turn. Dưới mức này hệ thống gợi ý ½ turn.</div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <input id="min-turn-price" type="number" min="0" step="10000" placeholder="0 = tắt"
-          value="0"
-          style="flex:1;font-family:inherit;font-size:12px;font-weight:600;border:0.5px solid var(--border-strong);border-radius:10px;padding:7px 10px;outline:none;background:var(--surface2);color:var(--text)"
-          oninput="minTurnPrice=parseFloat(this.value)||0">
-        <span style="font-size:11px;color:var(--text-3)">VNĐ</span>
-      </div>
-    </div>
+    
   </div>
 
   <!-- COL 2: DANH SÁCH NHÂN VIÊN -->
@@ -544,7 +534,6 @@ const SERVICES=[
 ];
 let totalTurns=0,nextId=11,selectedId=null,currentView='list';
 let expandedHistory=new Set();
-let minTurnPrice=0; // 0 = disabled
 
 function setView(v){
   currentView=v;
@@ -734,19 +723,11 @@ function renderAction(){
           <div class="note-saved" id="note-saved-${w.id}">✓ Đã lưu</div>
         </div>
       </div>`;
-    // suggest turn weight based on revenue vs minTurnPrice
-    const curRev=parseFloat(document.getElementById('rev-input-'+w.id)?.value)||w.revenue||0;
-    let suggestW=1;
-    if(minTurnPrice>0&&curRev>0&&curRev<minTurnPrice) suggestW=0.5;
-    if(minTurnPrice>0&&curRev===0) suggestW=0;
-    const hl1=suggestW===1?'btn-main':'btn-ghost';
-    const hl2=suggestW===0.5?'btn-main':'btn-ghost';
-    const hl0=suggestW===0?'btn-main':'btn-ghost';
     btns+=`<div style="margin-bottom:6px;font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.06em;text-transform:uppercase">Xong việc — tính turn</div>`;
     btns+=`<div style="display:flex;gap:6px">`
-      +`<button class="${hl1}" onclick="finishWorker(${w.id},1)" style="flex:1;padding:9px 6px;font-size:12px">1 turn</button>`
-      +`<button class="${hl2}" onclick="finishWorker(${w.id},0.5)" style="flex:1;padding:9px 6px;font-size:12px">½ turn</button>`
-      +`<button class="${hl0}" onclick="finishWorker(${w.id},0)" style="flex:1;padding:9px 6px;font-size:12px;color:var(--text-3)">Không tính</button>`
+      +`<button class="btn-main" onclick="finishWorker(${w.id},1)" style="flex:1;padding:9px 6px;font-size:12px">1 turn</button>`
+      +`<button class="btn-ghost" onclick="finishWorker(${w.id},0.5)" style="flex:1;padding:9px 6px;font-size:12px">½ turn</button>`
+      +`<button class="btn-ghost" onclick="finishWorker(${w.id},0)" style="flex:1;padding:9px 6px;font-size:12px;color:var(--text-3)">Không tính</button>`
       +`</div>`;
   } else {
     btns+=`<button class="btn-main" onclick="setStatus(${w.id},'ready')">✅ Vào làm lại</button>`;
