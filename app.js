@@ -484,17 +484,15 @@ let currentTab = 'shift'; // 'shift' | 'staff' | 'report'
 
 function setTab(tab) {
   currentTab = tab;
-  // Update nav buttons
-  document.querySelectorAll('.nav-btn').forEach((b, i) => {
-    const tabs = ['shift', 'staff', 'report'];
-    b.className = 'nav-btn' + (tabs[i] === tab ? ' active' : '');
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    const t = b.getAttribute('onclick') || '';
+    b.className = 'nav-btn' + (t.includes("'" + tab + "'") ? ' active' : '');
   });
   const mc = document.getElementById('main-content');
   if (tab === 'shift') {
     mc.innerHTML = getShiftHTML();
     renderStats();
     renderGrid();
-    bindShiftEvents();
   } else if (tab === 'staff') {
     mc.innerHTML = getStaffHTML();
     renderStaffTab();
@@ -800,13 +798,6 @@ function renderReport() {
 }
 
 // ── INIT ──
-// Wire up nav buttons
-document.querySelectorAll('.nav-btn').forEach((b, i) => {
-  const tabs = ['shift', 'staff', 'report'];
-  b.onclick = () => setTab(tabs[i]);
-});
-
-// Init shift tab content
 const mc = document.getElementById('main-content');
 mc.innerHTML = getShiftHTML();
 renderStats();
