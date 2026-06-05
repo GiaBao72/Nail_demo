@@ -451,19 +451,20 @@ input, select, textarea { font-family: inherit; }
   backdrop-filter: blur(4px);
   z-index: 500;
   display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: center;
   padding: 20px;
   animation: fadeIn .18s;
 }
 @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
 .popup {
-  width: 320px;
+  width: 360px;
+  max-height: 90vh;
+  overflow-y: auto;
   background: var(--surface);
   border-radius: var(--r-xl);
   box-shadow: var(--s-popup);
   animation: popIn .22s var(--ease);
-  overflow: hidden;
 }
 @keyframes popIn { from { opacity:0; transform:scale(.95) translateY(10px) } to { opacity:1; transform:scale(1) translateY(0) } }
 .popup-head {
@@ -662,8 +663,8 @@ input, select, textarea { font-family: inherit; }
   .stat-pill { padding: 5px 10px; }
   .sp-val { font-size: 15px; }
   .staff-grid { grid-template-columns: 1fr 1fr; }
-  .popup { width: 100%; border-radius: var(--r-xl) var(--r-xl) 0 0; }
-  .popup-overlay { padding: 0; align-items: flex-end; }
+  .popup { width: 100%; max-width: 100%; border-radius: var(--r-xl) var(--r-xl) 0 0; }
+  .popup-overlay { padding: 0; align-items: flex-end; justify-content: center; }
 }
 @media (max-width: 480px) {
   .staff-grid { grid-template-columns: 1fr; }
