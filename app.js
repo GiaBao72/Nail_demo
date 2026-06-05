@@ -183,7 +183,7 @@ function renderGroupCard(gid, members, rd) {
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
         <button class="qa-btn qa-green" style="padding:5px 10px;font-size:11px" onclick="event.stopPropagation();finishW(${m.id},1)">✓ Xong</button>
-        <button class="qa-btn" style="padding:5px 10px;font-size:11px" onclick="event.stopPropagation();openPopup(${m.id})">Chi tiết</button>
+        <button class="qa-btn" style="padding:5px 10px;font-size:11px" onclick="event.stopPropagation();openDetail(${m.id})">Chi tiết</button>
       </div>
     </div>`;
   }).join('');
@@ -250,14 +250,15 @@ function renderSingleCard(w, rd) {
     qaHtml = `<button class="qa-btn ${isChk ? 'qa-primary' : ''}" onclick="event.stopPropagation();toggleChk(${w.id})">${isChk ? '✓ Đã chọn' : 'Chọn'}</button>`;
   } else if (w.status === 'ready') {
     qaHtml = `<button class="qa-btn qa-primary" onclick="event.stopPropagation();assignW(${w.id})">Giao turn</button>
-      <button class="qa-btn" onclick="event.stopPropagation();openPopup(${w.id})">Chi tiết</button>`;
+      <button class="qa-btn" onclick="event.stopPropagation();openDetail(${w.id})">Chi tiết</button>`;
   } else if (w.status === 'busy') {
     qaHtml = `<button class="qa-btn qa-green" onclick="event.stopPropagation();finishW(${w.id},1)">✓ Xong</button>
-      <button class="qa-btn" onclick="event.stopPropagation();openPopup(${w.id})">Chi tiết</button>`;
+      <button class="qa-btn" onclick="event.stopPropagation();openDetail(${w.id})">Chi tiết</button>`;
   } else if (isPen) {
-    qaHtml = `<button class="qa-btn qa-green" onclick="event.stopPropagation();remPen(${w.id})">Gỡ phạt</button>`;
+    qaHtml = `<button class="qa-btn qa-green" onclick="event.stopPropagation();remPen(${w.id})">Gỡ phạt</button>
+      <button class="qa-btn" onclick="event.stopPropagation();openDetail(${w.id})">Chi tiết</button>`;
   } else {
-    qaHtml = `<button class="qa-btn qa-primary" onclick="event.stopPropagation();setSt(${w.id},'ready')">Vào làm lại</button>`;
+    qaHtml = `<button class="qa-btn qa-primary" onclick="event.stopPropagation();openDetail(${w.id})">Chi tiết</button>`;
   }
 
   let histHtml = '';
@@ -311,8 +312,46 @@ function render() {
   if (bm) { bm.style.background = multiMode ? '#1D4ED8' : ''; bm.style.color = multiMode ? '#fff' : '#3B82F6'; }
 }
 
-// ── POPUP ──
+// ── POPUP: HISTORY (click card) ──
 function openPopup(id) {
+  selId = id;
+  const w = W.find(x => x.id === id); if (!w) return;
+  const avCls = w.status === 'ready' ? 'av-ready' : w.status === 'busy' ? 'av-busy' : w.status === 'penalized' ? 'av-pen' : 'av-off';
+  const stLbl = w.status === 'ready' ? 'Rảnh' : w.status === 'busy' ? 'Đang làm' : w.status === 'penalized' ? 'Bị phạt' : 'Nghỉ';
+
+  document.getElementById('popup-head').innerHTML = `
+    <div class="popup-av ${avCls}">${w.ini}</div>
+    <div>
+      <div class="popup-name">${w.name}</div>
+      <div class="popup-meta">${w.turns} turn · ${fmtM(w.totalRevenue)}${w.totalTip ? ' · tip ' + fmtM(w.totalTip) : ''}</div>
+    </div>
+    <button class="popup-close" onclick="closePopup()">✕</button>`;
+
+  const histRows = w.history.length
+    ? w.history.map(h => `<div class="hr">
+        <div><div class="hr-t">${h.ti}</div><div class="hr-d">${h.dur}</div></div>
+        <div><div class="hr-s">${h.svc ? svcL(h.svc) : '—'}</div>${h.note ? '<div class="hr-n">' + h.note + '</div>' : ''}</div>
+        <div><div class="hr-r">${h.rev ? fmtM(h.rev) : '—'}</div>${h.tip ? '<div class="hr-tp">tip ' + fmtM(h.tip) + '</div>' : ''}</div>
+      </div>`).join('')
+    : '<div style="text-align:center;padding:24px 0;color:var(--t4);font-size:13px">Chưa có lịch sử ca nào</div>';
+
+  document.getElementById('popup-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div class="mini-stat"><div class="ms-val">${w.turns}</div><div class="ms-lbl">Turn hôm nay</div></div>
+      <div class="mini-stat"><div class="ms-val" style="color:var(--c-ready)">${fmtM(w.totalRevenue)}</div><div class="ms-lbl">Doanh thu</div></div>
+      <div class="mini-stat"><div class="ms-val" style="color:#3B82F6">${fmtM(w.totalTip)}</div><div class="ms-lbl">Tip</div></div>
+    </div>
+    <div>
+      <div class="f-label" style="margin-bottom:8px">Lịch sử ca hôm nay</div>
+      <div style="max-height:280px;overflow-y:auto">${histRows}</div>
+    </div>
+    <button class="btn btn-ghost" onclick="closePopup()">Đóng</button>`;
+
+  document.getElementById('popup-overlay').style.display = 'flex';
+}
+
+// ── POPUP: DETAIL / ACTIONS (nút Chi tiết) ──
+function openDetail(id) {
   selId = id;
   const w = W.find(x => x.id === id); if (!w) return;
   const avCls = w.status === 'ready' ? 'av-ready' : w.status === 'busy' ? 'av-busy' : w.status === 'penalized' ? 'av-pen' : 'av-off';
