@@ -182,14 +182,7 @@ function renderGrid() {
   if (!html) html = '<div style="text-align:center;padding:40px;color:var(--t4);font-size:13px">Không tìm thấy thợ nào</div>';
 
   document.getElementById('staff-grid').innerHTML = html;
-
-  // Bind drag events for ready workers
-  document.querySelectorAll('.staff-card[draggable="true"]').forEach(el => {
-    el.addEventListener('dragstart', onDragStart);
-    el.addEventListener('dragover', onDragOver);
-    el.addEventListener('drop', onDrop);
-    el.addEventListener('dragend', onDragEnd);
-  });
+  initDragDelegation();
 }
 
 
@@ -651,10 +644,10 @@ function getShiftHTML() {
         <input class="search-input" id="search-input" placeholder="Tìm thợ..." oninput="onSearch(this.value)" value="${searchQ}">
       </div>
       <div class="filter-tabs">
-        <button class="filter-btn ${filterStatus==='all'?'active':''}" onclick="setFilter('all')">Tất cả</button>
-        <button class="filter-btn ${filterStatus==='ready'?'active':''}" onclick="setFilter('ready')">Rảnh</button>
-        <button class="filter-btn ${filterStatus==='busy'?'active':''}" onclick="setFilter('busy')">Đang làm</button>
-        <button class="filter-btn ${filterStatus==='off'?'active':''}" onclick="setFilter('off')">Nghỉ</button>
+        <button class="filter-btn active" data-f="all" onclick="setFilter('all')">Tất cả</button>
+        <button class="filter-btn" data-f="ready" onclick="setFilter('ready')">Rảnh</button>
+        <button class="filter-btn" data-f="busy" onclick="setFilter('busy')">Đang làm</button>
+        <button class="filter-btn" data-f="off" onclick="setFilter('off')">Nghỉ</button>
       </div>
     </div>
     <div class="staff-grid" id="staff-grid"></div>`;
