@@ -257,6 +257,7 @@ function renderGrid() {
 }
 
 function render() {
+  if (currentTab !== 'shift') return;
   renderStats();
   renderGrid();
   // multi bar
@@ -478,5 +479,335 @@ function remPen(id) {
   closePopup();
 }
 
+// ── TABS ──
+let currentTab = 'shift'; // 'shift' | 'staff' | 'report'
+
+function setTab(tab) {
+  currentTab = tab;
+  // Update nav buttons
+  document.querySelectorAll('.nav-btn').forEach((b, i) => {
+    const tabs = ['shift', 'staff', 'report'];
+    b.className = 'nav-btn' + (tabs[i] === tab ? ' active' : '');
+  });
+  const mc = document.getElementById('main-content');
+  if (tab === 'shift') {
+    mc.innerHTML = getShiftHTML();
+    renderStats();
+    renderGrid();
+    bindShiftEvents();
+  } else if (tab === 'staff') {
+    mc.innerHTML = getStaffHTML();
+    renderStaffTab();
+  } else if (tab === 'report') {
+    mc.innerHTML = getReportHTML();
+    renderReport();
+  }
+}
+
+function getShiftHTML() {
+  return `
+    <div class="action-bar">
+      <div class="next-worker-card" id="next-worker-card">
+        <div>
+          <div class="nwc-label" id="nwc-label">LƯỢT TIẾP THEO</div>
+          <div class="nwc-name" id="nwc-name">—</div>
+          <div class="nwc-sub" id="nwc-sub">Không có thợ rảnh</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:8px;flex-shrink:0">
+          <button class="btn btn-rose btn-sm" onclick="assignNext()" style="width:auto;padding:9px 18px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+            Giao turn
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="addWorker()" style="width:auto;padding:9px 14px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Thêm thợ
+          </button>
+          <button class="btn btn-ghost btn-sm" id="btn-multi" onclick="toggleMulti()" style="width:auto;padding:9px 14px;color:#3B82F6;border-color:rgba(59,130,246,.25)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            Chọn nhóm
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="multi-bar" class="multi-bar" style="display:none">
+      <div>
+        <div class="mb-txt">Đã chọn <span id="multi-cnt">0</span> thợ — giao cùng 1 khách</div>
+        <div class="mb-sub">Click vào thợ rảnh để chọn/bỏ chọn</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-rose btn-sm" onclick="assignMulti()" style="width:auto">Giao ca</button>
+        <button class="btn btn-ghost btn-sm" onclick="cancelMulti()" style="width:auto">✕</button>
+      </div>
+    </div>
+    <div class="staff-grid" id="staff-grid"></div>`;
+}
+
+function bindShiftEvents() {}
+
+// ── STAFF TAB ──
+function getStaffHTML() {
+  return `
+    <div class="tab-header">
+      <div>
+        <div class="tab-title">Quản lý nhân viên</div>
+        <div class="tab-sub">Danh sách thợ trong tiệm</div>
+      </div>
+      <button class="btn btn-rose btn-sm" onclick="openAddStaff()" style="width:auto;padding:9px 18px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Thêm nhân viên
+      </button>
+    </div>
+    <div id="staff-table-wrap"></div>`;
+}
+
+function renderStaffTab() {
+  const sorted = [...W].sort((a, b) => b.totalRevenue - a.totalRevenue);
+  let rows = sorted.map((w, i) => {
+    const avCls = w.status === 'busy' ? 'av-busy' : w.status === 'off' ? 'av-off' : w.status === 'penalized' ? 'av-pen' : 'av-ready';
+    const stBadge = w.status === 'busy'
+      ? '<span class="sc-badge sb-busy">Đang làm</span>'
+      : w.status === 'off'
+      ? '<span class="sc-badge sb-off">Nghỉ</span>'
+      : w.status === 'penalized'
+      ? '<span class="sc-badge sb-pen">Bị phạt</span>'
+      : '<span class="sc-badge sb-ready">Rảnh</span>';
+    const avgRev = w.history.length ? Math.round(w.totalRevenue / w.history.length) : 0;
+    return `<tr onclick="openStaffDetail(${w.id})" style="cursor:pointer">
+      <td style="padding:14px 16px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="sc-avatar ${avCls}" style="width:38px;height:38px;font-size:11px">${w.ini}</div>
+          <div>
+            <div style="font-size:14px;font-weight:700">${w.name}</div>
+            <div style="font-size:11px;color:var(--t3)">ID #${w.id}</div>
+          </div>
+        </div>
+      </td>
+      <td>${stBadge}</td>
+      <td style="font-weight:700;font-variant-numeric:tabular-nums;text-align:center">${w.turns}</td>
+      <td style="font-weight:700;color:var(--c-ready);font-variant-numeric:tabular-nums">${fmtM(w.totalRevenue)}</td>
+      <td style="font-weight:700;color:#3B82F6;font-variant-numeric:tabular-nums">${fmtM(w.totalTip)}</td>
+      <td style="font-size:12px;color:var(--t3);font-variant-numeric:tabular-nums">${fmtM(avgRev)}/turn</td>
+      <td style="font-size:12px;color:var(--t3)">${w.history.length} ca</td>
+      <td>
+        <div style="display:flex;gap:5px">
+          <button class="qa-btn" onclick="event.stopPropagation();openEditStaff(${w.id})" style="flex:none;padding:6px 10px;font-size:11px">Sửa</button>
+          <button class="qa-btn" onclick="event.stopPropagation();confirmRemoveStaff(${w.id})" style="flex:none;padding:6px 10px;font-size:11px;color:var(--c-pen);border-color:var(--c-pen-b)">Xóa</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('staff-table-wrap').innerHTML = `
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nhân viên</th>
+            <th>Trạng thái</th>
+            <th style="text-align:center">Turn hôm nay</th>
+            <th>Doanh thu</th>
+            <th>Tip</th>
+            <th>TB/turn</th>
+            <th>Lịch sử</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function openStaffDetail(id) {
+  const w = W.find(x => x.id === id); if (!w) return;
+  const avCls = w.status === 'busy' ? 'av-busy' : w.status === 'off' ? 'av-off' : w.status === 'penalized' ? 'av-pen' : 'av-ready';
+  const histRows = w.history.length
+    ? w.history.map(h => `<div class="hr">
+        <div><div class="hr-t">${h.ti}</div><div class="hr-d">${h.dur}</div></div>
+        <div><div class="hr-s">${h.svc ? svcL(h.svc) : '—'}</div>${h.note ? '<div class="hr-n">' + h.note + '</div>' : ''}</div>
+        <div><div class="hr-r">${h.rev ? fmtM(h.rev) : '—'}</div>${h.tip ? '<div class="hr-tp">tip ' + fmtM(h.tip) + '</div>' : ''}</div>
+      </div>`).join('')
+    : '<div style="text-align:center;padding:20px;color:var(--t4);font-size:13px">Chưa có lịch sử ca nào</div>';
+
+  document.getElementById('popup-head').innerHTML = `
+    <div class="popup-av ${avCls}">${w.ini}</div>
+    <div>
+      <div class="popup-name">${w.name}</div>
+      <div class="popup-meta">${w.turns} turn · ${fmtM(w.totalRevenue)} doanh thu</div>
+    </div>
+    <button class="popup-close" onclick="closePopup()">✕</button>`;
+
+  document.getElementById('popup-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div class="mini-stat"><div class="ms-val">${w.turns}</div><div class="ms-lbl">Turn hôm nay</div></div>
+      <div class="mini-stat"><div class="ms-val" style="color:var(--c-ready)">${fmtM(w.totalRevenue)}</div><div class="ms-lbl">Doanh thu</div></div>
+      <div class="mini-stat"><div class="ms-val" style="color:#3B82F6">${fmtM(w.totalTip)}</div><div class="ms-lbl">Tip</div></div>
+    </div>
+    <div>
+      <div class="f-label" style="margin-bottom:8px">Lịch sử ca hôm nay</div>
+      <div style="max-height:260px;overflow-y:auto">${histRows}</div>
+    </div>
+    <button class="btn btn-ghost" onclick="closePopup()">Đóng</button>`;
+
+  document.getElementById('popup-overlay').style.display = 'flex';
+}
+
+function openAddStaff() {
+  document.getElementById('popup-head').innerHTML = `
+    <div class="popup-av av-ready">+</div>
+    <div><div class="popup-name">Thêm nhân viên</div><div class="popup-meta">Nhập thông tin thợ mới</div></div>
+    <button class="popup-close" onclick="closePopup()">✕</button>`;
+  document.getElementById('popup-body').innerHTML = `
+    <div><div class="f-label">Tên nhân viên</div><input class="f-input" id="add-name" placeholder="VD: Nguyễn Thị Lan" style="font-size:13px;font-weight:500"></div>
+    <div><div class="f-label">Chữ viết tắt (2 ký tự)</div><input class="f-input" id="add-ini" placeholder="VD: LA" maxlength="2" style="text-transform:uppercase;font-size:13px;font-weight:700;letter-spacing:.05em"></div>
+    <button class="btn btn-rose" onclick="saveAddStaff()">Thêm nhân viên</button>
+    <button class="btn btn-ghost" onclick="closePopup()">Hủy</button>`;
+  document.getElementById('popup-overlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('add-name').focus(), 100);
+}
+
+function saveAddStaff() {
+  const nm = document.getElementById('add-name').value.trim();
+  const ini = document.getElementById('add-ini').value.trim().toUpperCase();
+  if (!nm) { toast('Nhập tên nhân viên!'); return; }
+  const autoIni = ini || nm.split(' ').map(p => p[0]).join('').toUpperCase().slice(0, 2);
+  W.push(mkW(nextId++, nm, autoIni));
+  toast('Đã thêm ' + nm + ' ✨');
+  closePopup();
+  if (currentTab === 'staff') renderStaffTab();
+}
+
+function openEditStaff(id) {
+  const w = W.find(x => x.id === id); if (!w) return;
+  document.getElementById('popup-head').innerHTML = `
+    <div class="popup-av av-ready">${w.ini}</div>
+    <div><div class="popup-name">Sửa thông tin</div><div class="popup-meta">${w.name}</div></div>
+    <button class="popup-close" onclick="closePopup()">✕</button>`;
+  document.getElementById('popup-body').innerHTML = `
+    <div><div class="f-label">Tên nhân viên</div><input class="f-input" id="edit-name" value="${w.name}" style="font-size:13px;font-weight:500"></div>
+    <div><div class="f-label">Chữ viết tắt</div><input class="f-input" id="edit-ini" value="${w.ini}" maxlength="2" style="text-transform:uppercase;font-size:13px;font-weight:700;letter-spacing:.05em"></div>
+    <button class="btn btn-dark" onclick="saveEditStaff(${id})">Lưu thay đổi</button>
+    <button class="btn btn-ghost" onclick="closePopup()">Hủy</button>`;
+  document.getElementById('popup-overlay').style.display = 'flex';
+}
+
+function saveEditStaff(id) {
+  const w = W.find(x => x.id === id); if (!w) return;
+  const nm = document.getElementById('edit-name').value.trim();
+  const ini = document.getElementById('edit-ini').value.trim().toUpperCase();
+  if (!nm) { toast('Tên không được để trống!'); return; }
+  w.name = nm; if (ini) w.ini = ini;
+  toast('Đã cập nhật ' + nm);
+  closePopup();
+  if (currentTab === 'staff') renderStaffTab();
+}
+
+function confirmRemoveStaff(id) {
+  const w = W.find(x => x.id === id); if (!w) return;
+  document.getElementById('popup-head').innerHTML = `
+    <div class="popup-av" style="background:var(--c-pen-bg);color:var(--c-pen)">!</div>
+    <div><div class="popup-name">Xóa nhân viên</div><div class="popup-meta">${w.name}</div></div>
+    <button class="popup-close" onclick="closePopup()">✕</button>`;
+  document.getElementById('popup-body').innerHTML = `
+    <div style="text-align:center;padding:8px 0;color:var(--t2);font-size:13px;line-height:1.7">Xóa <strong>${w.name}</strong> khỏi danh sách?<br><span style="color:var(--t3);font-size:12px">Lịch sử ca sẽ mất đi.</span></div>
+    <button class="btn btn-ghost" style="color:var(--c-pen);border-color:var(--c-pen-b)" onclick="doRemoveStaff(${id})">Xác nhận xóa</button>
+    <button class="btn btn-ghost" onclick="closePopup()">Hủy</button>`;
+  document.getElementById('popup-overlay').style.display = 'flex';
+}
+
+function doRemoveStaff(id) {
+  const w = W.find(x => x.id === id);
+  W = W.filter(x => x.id !== id);
+  delete penT[id];
+  toast((w ? w.name : 'Thợ') + ' đã xóa');
+  closePopup();
+  if (currentTab === 'staff') renderStaffTab();
+}
+
+// ── REPORT TAB ──
+function getReportHTML() {
+  return `
+    <div class="tab-header">
+      <div>
+        <div class="tab-title">Báo cáo ca hôm nay</div>
+        <div class="tab-sub">Tổng kết doanh thu và hiệu suất</div>
+      </div>
+    </div>
+    <div id="report-wrap"></div>`;
+}
+
+function renderReport() {
+  const sorted = [...W].sort((a, b) => b.totalRevenue - a.totalRevenue);
+  const totalRev = W.reduce((s, w) => s + w.totalRevenue, 0);
+  const totalTip = W.reduce((s, w) => s + w.totalTip, 0);
+  const topWorker = sorted[0];
+
+  const rows = sorted.filter(w => w.turns > 0 || w.totalRevenue > 0).map(w => {
+    const share = totalRev > 0 ? Math.round((w.totalRevenue / totalRev) * 100) : 0;
+    return `<tr>
+      <td style="padding:12px 16px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="sc-avatar av-ready" style="width:34px;height:34px;font-size:10px">${w.ini}</div>
+          <div style="font-size:13px;font-weight:700">${w.name}</div>
+        </div>
+      </td>
+      <td style="text-align:center;font-weight:700">${w.turns}</td>
+      <td style="font-weight:700;color:var(--c-ready)">${fmtM(w.totalRevenue)}</td>
+      <td style="font-weight:700;color:#3B82F6">${fmtM(w.totalTip)}</td>
+      <td style="font-weight:700">${fmtM(w.totalRevenue + w.totalTip)}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:6px;background:var(--surface-3);border-radius:99px;overflow:hidden">
+            <div style="height:100%;width:${share}%;background:linear-gradient(90deg,var(--rose),var(--rose-dark));border-radius:99px"></div>
+          </div>
+          <span style="font-size:11px;font-weight:700;color:var(--t3);min-width:28px;text-align:right">${share}%</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('report-wrap').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+      <div class="report-stat-card">
+        <div class="rsc-val">${totalTurns}</div>
+        <div class="rsc-lbl">Tổng turn</div>
+      </div>
+      <div class="report-stat-card">
+        <div class="rsc-val" style="color:var(--c-ready)">${fmtM(totalRev)}</div>
+        <div class="rsc-lbl">Doanh thu</div>
+      </div>
+      <div class="report-stat-card">
+        <div class="rsc-val" style="color:#3B82F6">${fmtM(totalTip)}</div>
+        <div class="rsc-lbl">Tổng tip</div>
+      </div>
+      <div class="report-stat-card">
+        <div class="rsc-val" style="color:var(--rose)">${topWorker && topWorker.totalRevenue > 0 ? topWorker.name : '—'}</div>
+        <div class="rsc-lbl">Top doanh thu</div>
+      </div>
+    </div>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead><tr>
+          <th>Nhân viên</th>
+          <th style="text-align:center">Turn</th>
+          <th>Doanh thu</th>
+          <th>Tip</th>
+          <th>Tổng cộng</th>
+          <th>Tỷ trọng</th>
+        </tr></thead>
+        <tbody>${rows || '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--t4)">Chưa có dữ liệu ca hôm nay</td></tr>'}</tbody>
+      </table>
+    </div>`;
+}
+
 // ── INIT ──
-render();
+// Wire up nav buttons
+document.querySelectorAll('.nav-btn').forEach((b, i) => {
+  const tabs = ['shift', 'staff', 'report'];
+  b.onclick = () => setTab(tabs[i]);
+});
+
+// Init shift tab content
+const mc = document.getElementById('main-content');
+mc.innerHTML = getShiftHTML();
+renderStats();
+renderGrid();
