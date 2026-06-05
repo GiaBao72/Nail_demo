@@ -483,9 +483,31 @@ function saveInfo(id) {
 function assignNext() {
   const rd = readyW(); if (!rd.length) { toast('Không có thợ rảnh!'); return; }
   const w = rd[0];
+  // Confirm popup
+  document.getElementById('popup-head').innerHTML = `
+    <div class="popup-av av-ready">${w.ini}</div>
+    <div>
+      <div class="popup-name">${w.name}</div>
+      <div class="popup-meta">Lượt #${rd.indexOf(w)+1} trong hàng chờ</div>
+    </div>
+    <button class="popup-close" onclick="closePopup()">✕</button>`;
+  document.getElementById('popup-body').innerHTML = `
+    <div style="text-align:center;padding:8px 0 4px">
+      <div style="font-size:13px;color:var(--t2);line-height:1.7">Giao ca cho <strong>${w.name}</strong>?<br><span style="font-size:12px;color:var(--t3)">${rd.length} thợ đang chờ turn</span></div>
+    </div>
+    <button class="btn btn-rose" onclick="confirmAssignNext(${w.id})">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+      Xác nhận giao ca
+    </button>
+    <button class="btn btn-ghost" onclick="closePopup()">Hủy</button>`;
+  document.getElementById('popup-overlay').style.display = 'flex';
+}
+
+function confirmAssignNext(id) {
+  const w = W.find(x => x.id === id); if (!w || w.status !== 'ready') return;
   w.status = 'busy'; w.turns++; totalTurns++; w.note = ''; w.startTime = Date.now(); w.service = '';
   toast('Giao turn cho ' + w.name + ' 💅');
-  render();
+  closePopup();
 }
 
 function assignW(id) {
@@ -615,10 +637,6 @@ function getShiftHTML() {
           <button class="btn btn-rose btn-sm" onclick="assignNext()" style="width:auto;padding:9px 18px">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
             Giao turn
-          </button>
-          <button class="btn btn-ghost btn-sm" onclick="addWorker()" style="width:auto;padding:9px 14px">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Thêm thợ
           </button>
           <button class="btn btn-ghost btn-sm" id="btn-multi" onclick="toggleMulti()" style="width:auto;padding:9px 14px;color:#3B82F6;border-color:rgba(59,130,246,.25)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
