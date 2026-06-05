@@ -188,27 +188,17 @@ function renderGrid() {
     // Quick action buttons
     let qaHtml = '';
     if (multiMode && w.status === 'ready') {
-      qaHtml = `<div class="sc-actions">
-        <button class="qa-btn ${isChk ? 'qa-primary' : ''}" onclick="event.stopPropagation();toggleChk(${w.id})">${isChk ? '✓ Đã chọn' : 'Chọn'}</button>
-      </div>`;
+      qaHtml = `<button class="qa-btn ${isChk ? 'qa-primary' : ''}" onclick="event.stopPropagation();toggleChk(${w.id})">${isChk ? '✓ Đã chọn' : 'Chọn'}</button>`;
     } else if (w.status === 'ready') {
-      qaHtml = `<div class="sc-actions">
-        <button class="qa-btn qa-primary" onclick="event.stopPropagation();assignW(${w.id})">Giao turn</button>
-        <button class="qa-btn" onclick="event.stopPropagation();openPopup(${w.id})">Chi tiết</button>
-      </div>`;
+      qaHtml = `<button class="qa-btn qa-primary" onclick="event.stopPropagation();assignW(${w.id})">Giao turn</button>
+        <button class="qa-btn" onclick="event.stopPropagation();openPopup(${w.id})">Chi tiết</button>`;
     } else if (w.status === 'busy') {
-      qaHtml = `<div class="sc-actions">
-        <button class="qa-btn qa-green" onclick="event.stopPropagation();finishW(${w.id},1)">✓ Xong (1 turn)</button>
-        <button class="qa-btn" onclick="event.stopPropagation();openPopup(${w.id})">Chi tiết</button>
-      </div>`;
+      qaHtml = `<button class="qa-btn qa-green" onclick="event.stopPropagation();finishW(${w.id},1)">✓ Xong</button>
+        <button class="qa-btn" onclick="event.stopPropagation();openPopup(${w.id})">Chi tiết</button>`;
     } else if (isPen) {
-      qaHtml = `<div class="sc-actions">
-        <button class="qa-btn qa-green" onclick="event.stopPropagation();remPen(${w.id})">Gỡ phạt</button>
-      </div>`;
+      qaHtml = `<button class="qa-btn qa-green" onclick="event.stopPropagation();remPen(${w.id})">Gỡ phạt</button>`;
     } else {
-      qaHtml = `<div class="sc-actions">
-        <button class="qa-btn qa-primary" onclick="event.stopPropagation();setSt(${w.id},'ready')">Vào làm lại</button>
-      </div>`;
+      qaHtml = `<button class="qa-btn qa-primary" onclick="event.stopPropagation();setSt(${w.id},'ready')">Vào làm lại</button>`;
     }
 
     // History
@@ -236,18 +226,18 @@ function renderGrid() {
         <div class="${stripCls}"></div>
         <div class="sc-body">
           <div class="sc-top">
-            <div class="${avCls}">${rank ? '<span style="font-size:9px;font-weight:800;color:inherit;opacity:.6;margin-bottom:1px">#' + rank + '</span><br>' : ''}${w.ini}</div>
+            <div class="${avCls}">${w.ini}</div>
             <div class="sc-info">
-              <div class="sc-name">${w.name}</div>
+              <div class="sc-name">${rank ? '<span style="font-size:10px;color:var(--t4);font-weight:700;margin-right:4px">#'+rank+'</span>' : ''}${w.name}</div>
               <div class="sc-turns">${w.turns} turn hôm nay</div>
+              ${progressHtml}
+              ${tagsHtml}
+              ${revHtml}
             </div>
             ${badge}
           </div>
-          ${progressHtml}
-          ${tagsHtml}
-          ${revHtml}
+          <div class="sc-actions">${qaHtml}</div>
         </div>
-        ${qaHtml}
       </div>
       ${histHtml}
     </div>`;
