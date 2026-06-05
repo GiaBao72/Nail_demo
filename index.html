@@ -1,560 +1,150 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nail Turn — Quản lý lượt thợ</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bg:#F9F6F2;--surface:#FFF;--s2:#F5F0EB;--s3:#EDE6DD;
-  --rose:#C8566A;--rose2:#E07088;--rosebg:#FFF5F7;--roseb:rgba(200,86,106,.18);
-  --gold:#B8892A;--gold2:#D4A843;
-  --green:#2D7A5A;--green2:#38955F;--greenbg:#F0FAF5;--greenb:rgba(45,122,90,.16);
-  --amber:#9A6010;--amber2:#B87820;--amberbg:#FFF9EE;--amberb:rgba(154,96,16,.16);
-  --blue:#2A5FAA;--bluebg:#EEF4FF;--blueb:rgba(42,95,170,.16);
-  --red:#B83030;--redbg:#FFF2F2;--redb:rgba(184,48,48,.16);
-  --t1:#1C1410;--t2:#5A4A3A;--t3:#9C8870;--t4:#C4B4A0;
-  --br:rgba(60,35,15,.07);--br2:rgba(60,35,15,.12);--br3:rgba(60,35,15,.20);
-  --sxs:0 1px 3px rgba(60,35,15,.06);
-  --ssm:0 2px 8px rgba(60,35,15,.07),0 0 0 .5px rgba(60,35,15,.04);
-  --smd:0 6px 20px rgba(60,35,15,.09),0 1px 4px rgba(60,35,15,.05);
-  --slg:0 16px 48px rgba(60,35,15,.11),0 3px 10px rgba(60,35,15,.06);
-  --ease:cubic-bezier(.16,1,.3,1);--spring:cubic-bezier(.34,1.56,.64,1);
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;font-size:13.5px;line-height:1.5;-webkit-font-smoothing:antialiased}
-button{font-family:inherit;cursor:pointer;border:none;outline:none}
-/* TOPBAR */
-.topbar{background:rgba(255,255,255,.92);backdrop-filter:blur(28px);border-bottom:1px solid var(--br);position:sticky;top:0;z-index:100;height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 28px}
-.logo-mark{width:38px;height:38px;border-radius:12px;background:linear-gradient(145deg,#E07088,#C8566A,#A83A52);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(200,86,106,.32);flex-shrink:0}
-.logo-mark svg{width:18px;height:18px;color:#fff}
-.brand-name{font-family:'Playfair Display',Georgia,serif;font-size:18px;font-weight:700;letter-spacing:-.01em;color:var(--t1);line-height:1}
-.brand-tag{font-size:10px;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;margin-top:1px}
-.shift-badge{font-size:11px;font-weight:600;color:var(--rose);background:var(--rosebg);border:1px solid var(--roseb);border-radius:20px;padding:4px 12px}
-.clock-val{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--t1);letter-spacing:-.02em;line-height:1;text-align:right}
-.clock-date{font-size:10px;color:var(--t4);margin-top:2px;text-align:right}
-/* LAYOUT */
-.layout{display:grid;grid-template-columns:264px minmax(320px,1fr) 292px;gap:16px;max-width:1220px;margin:0 auto;padding:20px 24px 60px;align-items:start}
-/* COL LEFT */
-.col-left{position:sticky;top:76px;display:flex;flex-direction:column;gap:12px}
-/* PANEL */
-.panel{background:var(--surface);border:1px solid var(--br);border-radius:18px;padding:18px;box-shadow:var(--ssm)}
-.panel-lbl{font-size:9.5px;font-weight:700;color:var(--t4);letter-spacing:.09em;text-transform:uppercase;margin-bottom:12px}
-/* STATS */
-.stat-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:10px;background:var(--s2);border:1px solid var(--br);margin-bottom:5px}
-.stat-dot{width:7px;height:7px;border-radius:50%}
-.stat-name{font-size:12px;font-weight:500;color:var(--t2);margin-left:8px}
-.stat-val{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
-/* NEXT CARD */
-.next-card{border-radius:18px;padding:16px 18px;border:1px solid var(--br);background:var(--surface);transition:all .2s var(--ease)}
-.next-card.active{background:linear-gradient(135deg,var(--greenbg),#CCF0E0);border-color:var(--greenb)}
-.next-ey{font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
-.next-card.active .next-ey{color:var(--green2)}
-.next-card:not(.active) .next-ey{color:var(--t4)}
-.next-name{font-family:'Playfair Display',Georgia,serif;font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1;color:var(--t1)}
-.next-sub{font-size:11px;color:var(--t3);margin-top:6px}
-/* BUTTONS */
-.btn{display:flex;align-items:center;justify-content:center;gap:7px;border-radius:12px;font-size:13px;font-weight:600;padding:11px 16px;width:100%;transition:all .2s var(--ease)}
-.btn:active{transform:scale(.98)}
-.btn-rose{background:linear-gradient(145deg,var(--rose2),var(--rose));color:#fff;box-shadow:0 3px 12px rgba(200,86,106,.30)}
-.btn-rose:hover{box-shadow:0 6px 20px rgba(200,86,106,.38);transform:translateY(-1px)}
-.btn-dark{background:var(--t1);color:#fff;box-shadow:0 2px 8px rgba(28,20,16,.22)}
-.btn-dark:hover{background:#2E2218;transform:translateY(-1px)}
-.btn-ghost{background:var(--surface);color:var(--t2);border:1px solid var(--br2);box-shadow:var(--sxs)}
-.btn-ghost:hover{background:var(--s2);border-color:var(--br3)}
-.btn-blue{background:var(--bluebg);color:var(--blue);border:1px solid var(--blueb)}
-.btn-blue:hover{background:#DDE8FF}
-.btn-sm{padding:8px 12px;font-size:12px}
-.btn-xs{padding:6px 10px;font-size:11px}
-/* ORNAMENT */
-.ornament{text-align:center;color:var(--t4);font-size:11px;letter-spacing:.2em;margin:4px 0;opacity:.4}
-/* MULTI BANNER */
-.multi-banner{background:var(--bluebg);border:1px solid var(--blueb);border-radius:14px;padding:12px 15px;display:flex;align-items:center;justify-content:space-between;gap:8px;animation:slideDown .18s var(--ease)}
-/* SECTION HEADER */
-.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.sec-lbl{font-size:9.5px;font-weight:700;color:var(--t4);letter-spacing:.09em;text-transform:uppercase;display:flex;align-items:center;gap:6px}
-.count-pill{background:var(--s3);color:var(--t3);padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;border:1px solid var(--br)}
-.vt-wrap{display:flex;gap:3px}
-.vt-btn{background:var(--s2);color:var(--t3);border:1px solid var(--br2);border-radius:8px;padding:5px 11px;font-size:11px;font-weight:600;transition:all .12s}
-.vt-btn:hover{background:var(--s3);color:var(--t2)}
-.vt-btn.on{background:var(--t1);color:#fff;border-color:var(--t1)}
-/* WORKER LIST */
-.wlist{display:flex;flex-direction:column;gap:7px}
-.witem{display:flex;flex-direction:column}
-.witem.has-hist .wcard{border-radius:14px 14px 0 0;border-bottom-color:transparent}
-/* WORKER CARD */
-.wcard{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--br);border-radius:14px;padding:11px 13px;cursor:pointer;user-select:none;box-shadow:var(--sxs);position:relative;overflow:hidden;transition:box-shadow .2s,border-color .2s,transform .12s var(--spring),background .2s}
-.wcard::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;border-radius:0 3px 3px 0;background:transparent;transition:background .2s}
-.wcard:hover{box-shadow:var(--smd);border-color:var(--br2);transform:translateY(-2px)}
-.wcard:active{transform:scale(.99)}
-.wc-next{border-color:var(--blueb);background:var(--bluebg)}
-.wc-next::before{background:var(--blue)}
-.wc-busy{background:var(--amberbg);border-color:var(--amberb)}
-.wc-busy::before{background:var(--amber2)}
-.wc-off{opacity:.42}
-.wc-off::before{background:var(--t4)}
-.wc-sel{border-color:var(--rose)!important;box-shadow:0 0 0 3px rgba(200,86,106,.12),var(--smd)!important;background:var(--rosebg)!important}
-.wc-sel::before{background:var(--rose)!important}
-.wc-pen{background:var(--redbg);border-color:var(--redb)}
-.wc-pen::before{background:var(--red)}
-.wc-chk{border-color:var(--blue)!important;background:var(--bluebg)!important;box-shadow:0 0 0 3px rgba(42,95,170,.12),var(--smd)!important}
-/* RANK */
-.wrank{font-size:11px;font-weight:700;color:var(--t4);min-width:16px;text-align:center}
-.wrank.top{color:var(--blue);font-size:13px}
-/* AVATAR */
-.av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;letter-spacing:.03em}
-.av-r{background:linear-gradient(135deg,#CCF0DE,#9ADDC0);color:var(--green)}
-.av-b{background:linear-gradient(135deg,#FEE8B0,#FAC870);color:var(--amber)}
-.av-o{background:var(--s3);color:var(--t4)}
-.av-n{background:linear-gradient(135deg,#C8DAFC,#9EC0F8);color:var(--blue)}
-.av-p{background:linear-gradient(135deg,#FDDCDC,#FAB8B8);color:var(--red)}
-/* CHECK */
-.chk-ind{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--br3);display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--surface);transition:all .2s var(--spring)}
-.wc-chk .chk-ind{background:var(--blue);border-color:var(--blue)}
-.chk-ind svg{width:10px;height:10px;color:#fff;display:none}
-.wc-chk .chk-ind svg{display:block}
-/* WINFO */
-.winfo{flex:1;min-width:0}
-.wname{font-size:13.5px;font-weight:700;letter-spacing:-.01em;line-height:1.3}
-.wmeta{font-size:10px;color:var(--t4);margin-top:1px}
-.wtags{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
-.wrev{font-size:11px;color:var(--green2);font-weight:600;margin-top:3px}
-/* TAGS */
-.tag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;border:1px solid;white-space:nowrap;line-height:1.8}
-.t-svc{background:var(--bluebg);color:var(--blue);border-color:var(--blueb)}
-.t-timer{background:var(--amberbg);color:var(--amber2);border-color:var(--amberb)}
-.t-pen{background:var(--redbg);color:var(--red);border-color:var(--redb);font-weight:800;font-variant-numeric:tabular-nums}
-.t-grp{background:var(--bluebg);color:var(--blue);border-color:var(--blueb)}
-.t-note{background:var(--s2);color:var(--t3);border-color:var(--br);font-style:italic;max-width:150px;overflow:hidden;text-overflow:ellipsis}
-/* BADGE */
-.badge{font-size:9.5px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid;white-space:nowrap}
-.b-r{background:var(--greenbg);color:var(--green2);border-color:var(--greenb)}
-.b-b{background:var(--amberbg);color:var(--amber2);border-color:var(--amberb)}
-.b-o{background:var(--s3);color:var(--t3);border-color:var(--br2)}
-.b-n{background:var(--bluebg);color:var(--blue);border-color:var(--blueb)}
-.b-p{background:var(--redbg);color:var(--red);border-color:var(--redb)}
-/* HISTORY */
-.hist-panel{background:var(--s2);border:1px solid var(--br2);border-top:none;border-radius:0 0 14px 14px;overflow:hidden}
-.hist-tog{display:flex;align-items:center;justify-content:space-between;padding:7px 15px;cursor:pointer;font-size:9.5px;font-weight:700;color:var(--t4);letter-spacing:.07em;text-transform:uppercase;background:var(--s2);transition:background .12s}
-.hist-tog:hover{background:var(--s3)}
-.hist-tog svg{width:10px;height:10px;transition:transform .2s var(--ease)}
-.hist-tog.open svg{transform:rotate(180deg)}
-.hist-body{display:none;padding:4px 15px 14px}
-.hist-tog.open+.hist-body{display:block}
-.hr{display:grid;grid-template-columns:58px 1fr auto;gap:10px;align-items:start;padding:9px 0;border-bottom:1px solid var(--br)}
-.hr:last-child{border-bottom:none}
-.hr-t{font-size:12px;font-weight:700;color:var(--t1);font-variant-numeric:tabular-nums}
-.hr-d{font-size:10px;color:var(--t4);margin-top:1px}
-.hr-s{font-size:12px;font-weight:600;color:var(--t1)}
-.hr-n{font-size:11px;color:var(--t3);margin-top:2px;font-style:italic}
-.hr-r{font-size:12px;font-weight:700;color:var(--green2);text-align:right}
-.hr-tp{font-size:10px;color:var(--blue);text-align:right;margin-top:2px}
-/* ACTION COL */
-.col-right{position:sticky;top:76px}
-.a-empty{background:var(--surface);border:1.5px dashed var(--br3);border-radius:22px;padding:48px 20px;text-align:center}
-.a-empty-icon{width:52px;height:52px;border-radius:50%;background:var(--s2);display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
-.a-empty-icon svg{width:24px;height:24px;color:var(--t4)}
-.a-empty-title{font-size:14px;font-weight:700;color:var(--t3);margin-bottom:6px}
-.a-empty-sub{font-size:12px;color:var(--t4);line-height:1.7}
-.a-panel{background:var(--surface);border:1px solid var(--br2);border-radius:22px;padding:22px;box-shadow:var(--slg);animation:slideUp .22s var(--ease)}
-.a-head{display:flex;align-items:center;gap:14px;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--br)}
-.a-av{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0}
-.a-name{font-family:'Playfair Display',Georgia,serif;font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
-.a-meta{font-size:11px;color:var(--t3);margin-top:3px}
-.a-btns{display:flex;flex-direction:column;gap:8px}
-.a-timer{font-size:40px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--amber2);letter-spacing:-.04em;line-height:1;text-align:center;margin:4px 0}
-.a-timer-sub{font-size:9.5px;color:var(--t4);font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-align:center;margin-bottom:16px}
-.pen-disp{background:var(--redbg);border-radius:12px;padding:14px;text-align:center;margin-bottom:14px}
-.pen-val{font-size:32px;font-weight:700;color:var(--red);font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1}
-.pen-sub{font-size:9.5px;color:var(--red);text-transform:uppercase;font-weight:700;letter-spacing:.08em;margin-top:4px;opacity:.7}
-.f-lbl{font-size:9.5px;font-weight:700;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:5px}
-.f-sel{width:100%;font-family:inherit;font-size:13px;font-weight:500;border:1px solid var(--br2);border-radius:12px;padding:9px 32px 9px 11px;outline:none;background:var(--s2);color:var(--t1);cursor:pointer;transition:border-color .2s,box-shadow .2s;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239C8870' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center}
-.f-sel:focus{border-color:var(--rose);box-shadow:0 0 0 3px rgba(200,86,106,.10);background:var(--surface)}
-.rev-row{display:flex;gap:8px;margin-bottom:12px}
-.rev-grp{flex:1}
-.f-input{width:100%;font-family:inherit;font-size:14px;font-weight:700;border:1px solid var(--br2);border-radius:12px;padding:8px 11px;outline:none;background:var(--s2);color:var(--t1);transition:border-color .2s;font-variant-numeric:tabular-nums}
-.f-input:focus{border-color:var(--green2);box-shadow:0 0 0 3px rgba(45,122,90,.10);background:var(--surface)}
-.f-area{width:100%;font-family:inherit;font-size:12.5px;border:1px solid var(--br2);border-radius:12px;padding:9px 11px;resize:none;outline:none;background:var(--s2);color:var(--t1);transition:border-color .2s;line-height:1.5}
-.f-area:focus{border-color:var(--rose);box-shadow:0 0 0 3px rgba(200,86,106,.10);background:var(--surface)}
-.f-area::placeholder{color:var(--t4)}
-.note-ok{font-size:11px;color:var(--green2);display:flex;align-items:center;gap:4px;opacity:0;transition:opacity .2s}
-.note-ok.show{opacity:1}
-.pen-panel{background:var(--redbg);border:1px solid var(--redb);border-radius:12px;padding:12px}
-.pen-title{font-size:9.5px;font-weight:700;color:var(--red);letter-spacing:.07em;text-transform:uppercase;margin-bottom:9px}
-.pen-btns{display:flex;gap:5px;flex-wrap:wrap}
-.pen-btn{flex:1;min-width:52px;padding:7px 4px;font-size:11px;font-weight:600;border-radius:8px;border:1px solid var(--redb);background:rgba(255,255,255,.75);color:var(--red);cursor:pointer;font-family:inherit;transition:all .12s var(--spring)}
-.pen-btn:hover{background:#fff;box-shadow:var(--ssm);transform:translateY(-1px)}
-.sec-div{display:flex;align-items:center;gap:8px;margin:6px 0 4px}
-.sec-div-line{flex:1;height:1px;background:var(--br2)}
-.sec-div-txt{font-size:9.5px;font-weight:700;color:var(--t4);letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}
-/* GRID TABLE */
-.grid-wrap{overflow-x:auto;border-radius:16px;border:.5px solid var(--br);box-shadow:var(--ssm)}
-.gt{width:100%;border-collapse:collapse;font-size:12px}
-.gt th{font-size:9.5px;font-weight:700;color:var(--t4);letter-spacing:.07em;text-transform:uppercase;padding:9px 13px;text-align:left;border-bottom:1px solid var(--br2);background:var(--surface);white-space:nowrap}
-.gt td{padding:11px 13px;border-bottom:1px solid var(--br);vertical-align:middle}
-.gt tr{background:var(--surface);transition:background .12s;cursor:pointer}
-.gt tr:hover{background:var(--s2)}
-.gt tr.gr-busy{background:var(--amberbg)}
-.gt tr.gr-busy:hover{background:#FEE9B4}
-.gt tr.gr-off{opacity:.42}
-.gt tr.gr-sel{background:var(--rosebg)}
-/* TOAST */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(14px);background:rgba(28,20,16,.93);backdrop-filter:blur(20px);color:#fff;border-radius:18px;padding:10px 20px;font-size:13px;font-weight:500;opacity:0;transition:opacity .2s,transform .2s var(--ease);pointer-events:none;white-space:nowrap;z-index:999;display:flex;align-items:center;gap:9px}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast-ic{color:var(--rose2);font-size:14px}
-@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
-@media(max-width:960px){.layout{grid-template-columns:220px 1fr 250px;gap:12px;padding:16px 16px 60px}}
-@media(max-width:700px){.layout{grid-template-columns:1fr;padding:12px 12px 60px}.col-left,.col-right{position:static}.topbar{padding:0 16px}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nail Turn — Quản lý lượt thợ</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="topbar">
-  <div style="display:flex;align-items:center;gap:12px">
-    <div class="logo-mark">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+<!-- TOP STATS BAR -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+      </div>
+      <span class="brand-name">Nail Turn</span>
     </div>
-    <div><div class="brand-name">Nail Turn</div><div class="brand-tag">Quản lý lượt thợ</div></div>
+
+    <div class="stat-pills">
+      <div class="stat-pill sp-ready">
+        <div class="sp-dot" style="background:var(--c-ready)"></div>
+        <span class="sp-label">Rảnh</span>
+        <span class="sp-val" id="stat-ready">0</span>
+      </div>
+      <div class="stat-pill sp-busy">
+        <div class="sp-dot" style="background:var(--c-busy)"></div>
+        <span class="sp-label">Đang làm</span>
+        <span class="sp-val" id="stat-busy">0</span>
+      </div>
+      <div class="stat-pill sp-turns">
+        <div class="sp-dot" style="background:#7C6EBA"></div>
+        <span class="sp-label">Tổng turn</span>
+        <span class="sp-val" id="stat-turns">0</span>
+      </div>
+      <div class="stat-pill sp-rev">
+        <div class="sp-dot" style="background:var(--c-ready)"></div>
+        <span class="sp-label">Doanh thu</span>
+        <span class="sp-val" id="stat-rev">0đ</span>
+      </div>
+      <div class="stat-pill sp-tip">
+        <div class="sp-dot" style="background:#3B82F6"></div>
+        <span class="sp-label">Tip</span>
+        <span class="sp-val" id="stat-tip">0đ</span>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <span class="shift-tag" id="shift-tag">Ca sáng</span>
+      <div class="clock-display">
+        <div class="clock-time" id="clock">--:--</div>
+        <div class="clock-day" id="clock-day">--/--</div>
+      </div>
+    </div>
   </div>
-  <div style="display:flex;align-items:center;gap:12px">
-    <div class="shift-badge" id="shift-badge">Ca sáng</div>
-    <div style="width:1px;height:28px;background:var(--br2)"></div>
-    <div><div class="clock-val" id="clock">--:--</div><div class="clock-date" id="clock-date">--/--/----</div></div>
+</header>
+
+<!-- APP BODY -->
+<div class="app-body">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <button class="nav-btn active" title="Ca làm việc">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      Ca
+    </button>
+    <button class="nav-btn" title="Nhân viên">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      Thợ
+    </button>
+    <div class="nav-divider"></div>
+    <button class="nav-btn" title="Báo cáo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+      </svg>
+      Báo cáo
+    </button>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- ACTION BAR -->
+    <div class="action-bar">
+      <div class="next-worker-card" id="next-worker-card">
+        <div>
+          <div class="nwc-label" id="nwc-label">LƯỢT TIẾP THEO</div>
+          <div class="nwc-name" id="nwc-name">—</div>
+          <div class="nwc-sub" id="nwc-sub">Không có thợ rảnh</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:8px;flex-shrink:0">
+          <button class="btn btn-rose btn-sm" onclick="assignNext()" style="width:auto;padding:9px 18px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+            Giao turn
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="addWorker()" style="width:auto;padding:9px 14px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Thêm thợ
+          </button>
+          <button class="btn btn-ghost btn-sm" id="btn-multi" onclick="toggleMulti()" style="width:auto;padding:9px 14px;color:#3B82F6;border-color:rgba(59,130,246,.25)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            Chọn nhóm
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MULTI SELECT BANNER -->
+    <div id="multi-bar" class="multi-bar" style="display:none">
+      <div>
+        <div class="mb-txt">Đã chọn <span id="multi-cnt">0</span> thợ — giao cùng 1 khách</div>
+        <div class="mb-sub">Click vào thợ rảnh để chọn/bỏ chọn</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-rose btn-sm" onclick="assignMulti()" style="width:auto">Giao ca</button>
+        <button class="btn btn-ghost btn-sm" onclick="cancelMulti()" style="width:auto">✕</button>
+      </div>
+    </div>
+
+    <!-- STAFF GRID -->
+    <div class="staff-grid" id="staff-grid"></div>
+
+  </main>
+</div>
+
+<!-- ACTION POPUP -->
+<div class="popup-overlay" id="popup-overlay" style="display:none" onclick="closePopupOnOverlay(event)">
+  <div class="popup" id="popup">
+    <div class="popup-head" id="popup-head"></div>
+    <div class="popup-body" id="popup-body"></div>
   </div>
 </div>
 
-<div class="layout">
-  <div class="col-left" id="col-left"></div>
-  <div>
-    <div class="sec-hd">
-      <div class="sec-lbl">Nhân viên <span class="count-pill" id="count-pill">0</span></div>
-      <div class="vt-wrap">
-        <button class="vt-btn on" id="vt-list" onclick="setView('list')">☰ Danh sách</button>
-        <button class="vt-btn" id="vt-grid" onclick="setView('grid')">⊞ Bảng</button>
-      </div>
-    </div>
-    <div id="col-mid"></div>
-  </div>
-  <div class="col-right" id="col-right"></div>
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-dot"></div>
+  <span id="toast-txt"></span>
 </div>
 
-<div class="toast" id="toast"><div class="toast-ic">✦</div><span id="toast-txt"></span></div>
-
-<script>
-const SVCS=[
-  {v:'',l:'— Chọn dịch vụ —'},
-  {v:'Manicure',l:'💅 Manicure'},{v:'Pedicure',l:'🦶 Pedicure'},
-  {v:'Gel',l:'✨ Gel Nails'},{v:'Dip',l:'🌸 Dip Powder'},
-  {v:'Acrylic',l:'💎 Acrylic'},{v:'Art',l:'🎨 Nail Art'},
-  {v:'Wax',l:'🪡 Waxing'},{v:'Brow',l:'👁 Eyebrow'},
-  {v:'Combo',l:'⭐ Combo Set'},
-];
-function svcL(v){const s=SVCS.find(x=>x.v===v);return s?s.l:v;}
-
-function mkW(id,name,ini){
-  return{id,name,ini,turns:0,status:'ready',note:'',startTime:null,service:'',revenue:0,tip:0,totalRevenue:0,totalTip:0,history:[],groupId:null};
-}
-let W=[
-  mkW(1,'Lan','LA'),mkW(2,'Hoa','HO'),mkW(3,'Mai','MA'),mkW(4,'Tú','TU'),mkW(5,'Bích','BI'),
-  mkW(6,'Linh','LI'),mkW(7,'Ngọc','NG'),mkW(8,'Thảo','TH'),mkW(9,'Yến','YE'),mkW(10,'Dung','DU'),
-];
-let totalTurns=0,nextId=11,selId=null,view='list';
-let exHist=new Set(),multiMode=false,multiSel=new Set(),penT={};
-
-function ready(){return W.filter(w=>w.status==='ready');}
-function fmtM(n){if(!n)return '0đ';return n.toLocaleString('vi-VN')+'đ';}
-function fmtT(ms){const s=Math.floor(ms/1000),m=Math.floor(s/60),h=Math.floor(m/60);if(h>0)return h+'h '+String(m%60).padStart(2,'0')+'m';return String(m).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
-function fmtP(ut){const ms=Math.max(0,ut-Date.now()),s=Math.floor(ms/1000),m=Math.floor(s/60),h=Math.floor(m/60);if(h>0)return h+'h '+String(m%60).padStart(2,'0')+'m';return String(m).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
-function toast(msg){const el=document.getElementById('toast');document.getElementById('toast-txt').textContent=msg;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2500);}
-
-// CLOCK
-function tick(){
-  const n=new Date();
-  document.getElementById('clock').textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
-  const days=['CN','T2','T3','T4','T5','T6','T7'];
-  document.getElementById('clock-date').textContent=days[n.getDay()]+' '+String(n.getDate()).padStart(2,'0')+'/'+String(n.getMonth()+1).padStart(2,'0')+'/'+n.getFullYear();
-  const h=n.getHours();
-  document.getElementById('shift-badge').textContent=h<12?'Ca sáng':h<17?'Ca chiều':'Ca tối';
-  W.filter(w=>w.status==='busy'&&w.startTime).forEach(w=>{
-    const t=fmtT(Date.now()-w.startTime);
-    ['t-','apt-','gt-'].forEach(p=>{const e=document.getElementById(p+w.id);if(e)e.textContent=t;});
-  });
-  let nr=false;
-  Object.keys(penT).forEach(sid=>{
-    const id=parseInt(sid),pt=penT[id];if(!pt)return;
-    if(Date.now()>=pt.ut){
-      const w=W.find(x=>x.id===id);
-      if(w){W=W.filter(x=>x.id!==id);w.status='ready';delete penT[id];W.push(w);}
-      nr=true;
-    }else{
-      ['ptt-','aptt-'].forEach(p=>{const e=document.getElementById(p+id);if(e)e.textContent=fmtP(pt.ut);});
-    }
-  });
-  if(nr)render();
-}
-tick();setInterval(tick,1000);
-
-// RENDER LEFT COL
-function renderLeft(){
-  const rd=ready(),busy=W.filter(w=>w.status==='busy');
-  const rv=W.reduce((s,w)=>s+w.totalRevenue,0),tp=W.reduce((s,w)=>s+w.totalTip,0);
-  const nxt=rd[0];
-  document.getElementById('col-left').innerHTML=`
-    <div class="panel">
-      <div class="panel-lbl">Thống kê ca hôm nay</div>
-      <div class="stat-item"><div style="display:flex;align-items:center"><div class="stat-dot" style="background:#F59E0B"></div><div class="stat-name">Đang làm</div></div><div class="stat-val" style="color:var(--amber2)">${busy.length}</div></div>
-      <div class="stat-item"><div style="display:flex;align-items:center"><div class="stat-dot" style="background:#38955F"></div><div class="stat-name">Chờ turn</div></div><div class="stat-val" style="color:var(--green2)">${rd.length}</div></div>
-      <div class="stat-item"><div style="display:flex;align-items:center"><div class="stat-dot" style="background:#7C6EBA"></div><div class="stat-name">Tổng turn</div></div><div class="stat-val" style="color:#7C6EBA">${totalTurns}</div></div>
-      <div class="stat-item" style="background:var(--greenbg);border-color:var(--greenb)"><div style="display:flex;align-items:center"><div class="stat-dot" style="background:var(--green2)"></div><div class="stat-name">Doanh thu</div></div><div class="stat-val" style="color:var(--green);font-size:14px">${fmtM(rv)}</div></div>
-      <div class="stat-item" style="background:var(--bluebg);border-color:var(--blueb)"><div style="display:flex;align-items:center"><div class="stat-dot" style="background:var(--blue)"></div><div class="stat-name">Tip</div></div><div class="stat-val" style="color:var(--blue);font-size:14px">${fmtM(tp)}</div></div>
-    </div>
-    <div class="next-card ${nxt?'active':''}">
-      <div class="next-ey">Lượt tiếp theo</div>
-      <div class="next-name">${nxt?nxt.name:'—'}</div>
-      <div class="next-sub">${nxt?rd.length+' thợ đang chờ':'Không có thợ rảnh'}</div>
-    </div>
-    ${multiMode?`<div class="multi-banner"><div><div style="font-size:12px;font-weight:700;color:var(--blue)">Đã chọn <span id="mc">${multiSel.size}</span> thợ</div><div style="font-size:10px;color:var(--t3);margin-top:1px">Giao cùng 1 khách</div></div><div style="display:flex;gap:6px"><button class="btn btn-rose btn-sm" onclick="assignMulti()">Giao ca</button><button class="btn btn-ghost btn-sm" onclick="cancelMulti()">✕</button></div></div>`:''}
-    <div class="ornament">✦ ✦ ✦</div>
-    <div style="display:flex;flex-direction:column;gap:7px">
-      <button class="btn btn-rose" onclick="assignNext()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-        Có khách — Giao turn
-      </button>
-      <button class="btn btn-ghost" onclick="addWorker()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Thêm thợ vào ca
-      </button>
-      <button class="btn ${multiMode?'btn-dark':'btn-blue'}" onclick="toggleMulti()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        ${multiMode?'Thoát chọn nhóm':'Chọn nhiều thợ'}
-      </button>
-    </div>`;
-}
-
-// RENDER MID COL
-function renderMid(){
-  document.getElementById('count-pill').textContent=W.length;
-  if(view==='grid'){renderGrid();return;}
-  const rd=ready();
-  const all=[...rd,...W.filter(w=>w.status==='busy'),...W.filter(w=>w.status==='off'),...W.filter(w=>w.status==='penalized')];
-  let html='<div class="wlist">';
-  all.forEach(w=>{
-    const isNext=w===rd[0],isSel=w.id===selId,isChk=multiSel.has(w.id);
-    const isPen=w.status==='penalized',hasH=w.history&&w.history.length>0,isExp=exHist.has(w.id);
-    let cls='wcard';
-    if(isNext)cls+=' wc-next';
-    if(w.status==='busy')cls+=' wc-busy';
-    if(w.status==='off')cls+=' wc-off';
-    if(isPen)cls+=' wc-pen';
-    if(isSel)cls+=' wc-sel';
-    if(isChk)cls+=' wc-chk';
-    const rankN=w.status==='ready'?rd.indexOf(w)+1:'—';
-    const rankC=isNext?'wrank top':'wrank';
-    const avC=isNext?'av-n':w.status==='ready'?'av-r':w.status==='busy'?'av-b':isPen?'av-p':'av-o';
-    const pt=penT[w.id];
-    const timerTag=w.status==='busy'&&w.startTime?`<span class="tag t-timer">⏱ <span id="t-${w.id}">${fmtT(Date.now()-w.startTime)}</span></span>`:'';
-    const svcTag=w.service?`<span class="tag t-svc">${svcL(w.service)}</span>`:'';
-    const penTag=isPen&&pt?`<span class="tag t-pen" id="ptt-${w.id}">${fmtP(pt.ut)}</span>`:'';
-    const grpTag=w.groupId?'<span class="tag t-grp">👥 Nhóm</span>':'';
-    const noteTag=w.note?`<span class="tag t-note">${w.note}</span>`:'';
-    const tags=(timerTag||svcTag||penTag||grpTag||noteTag)?`<div class="wtags">${svcTag}${timerTag}${penTag}${grpTag}${noteTag}</div>`:'';
-    const revLine=w.totalRevenue?`<div class="wrev">${fmtM(w.totalRevenue)}${w.totalTip?' · tip '+fmtM(w.totalTip):''}</div>`:'';
-    let badge='';
-    if(isPen)badge='<span class="badge b-p">Bị phạt</span>';
-    else if(isNext)badge='<span class="badge b-n">Tiếp theo</span>';
-    else if(w.status==='ready')badge='<span class="badge b-r">Rảnh</span>';
-    else if(w.status==='busy')badge='<span class="badge b-b">Đang làm</span>';
-    else badge='<span class="badge b-o">Nghỉ</span>';
-    const chk=multiMode&&w.status==='ready'?`<div class="chk-ind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>`:'';
-    const click=multiMode&&w.status==='ready'?`onclick="toggleChk(${w.id})"`:`onclick="selW(${w.id})"`;
-    html+=`<div class="witem${hasH?' has-hist':''}">
-      <div class="${cls}" ${click}>${chk}
-        <div class="${rankC}">${isPen?'🔒':rankN}</div>
-        <div class="av ${avC}">${w.ini}</div>
-        <div class="winfo"><div class="wname">${w.name}</div><div class="wmeta">${w.turns} turn hôm nay</div>${tags}${revLine}</div>
-        ${badge}
-      </div>`;
-    if(hasH){
-      html+=`<div class="hist-panel"><div class="hist-tog${isExp?' open':''}" onclick="togHist(event,${w.id})"><span>Lịch sử (${w.history.length})</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
-      <div class="hist-body">${w.history.map(h=>`<div class="hr"><div><div class="hr-t">${h.ti}</div><div class="hr-d">${h.dur}</div></div><div><div class="hr-s">${h.svc?svcL(h.svc):'—'}</div>${h.note?'<div class="hr-n">'+h.note+'</div>':''}</div><div><div class="hr-r">${h.rev?fmtM(h.rev):'—'}</div>${h.tip?'<div class="hr-tp">tip '+fmtM(h.tip)+'</div>':''}</div></div>`).join('')}</div></div>`;
-    }
-    html+='</div>';
-  });
-  html+='</div>';
-  document.getElementById('col-mid').innerHTML=html;
-}
-
-function renderGrid(){
-  const rd=ready();
-  const all=[...rd,...W.filter(w=>w.status==='busy'),...W.filter(w=>w.status==='off')];
-  const rows=all.map(w=>{
-    const isNext=w===rd[0],isSel=w.id===selId;
-    let rc='';if(w.status==='busy')rc='gr-busy';if(w.status==='off')rc='gr-off';if(isSel)rc+=' gr-sel';
-    const timer=w.status==='busy'&&w.startTime?`<span style="font-weight:700;color:var(--amber2);font-variant-numeric:tabular-nums" id="gt-${w.id}">${fmtT(Date.now()-w.startTime)}</span>`:'—';
-    let badge='';
-    if(isNext)badge='<span class="badge b-n">Tiếp theo</span>';
-    else if(w.status==='ready')badge='<span class="badge b-r">Rảnh</span>';
-    else if(w.status==='busy')badge='<span class="badge b-b">Đang làm</span>';
-    else badge='<span class="badge b-o">Nghỉ</span>';
-    const rank=w.status==='ready'?`<b style="color:var(--blue)">${rd.indexOf(w)+1}</b>`:'—';
-    return `<tr class="${rc}" onclick="selW(${isSel?'null':w.id})">
-      <td style="font-weight:700;font-size:13px">${w.ini}<br><span style="font-size:11px;color:var(--t2);font-weight:400">${w.name}</span></td>
-      <td>${badge}</td><td style="text-align:center">${rank}</td>
-      <td>${w.service?svcL(w.service):'<span style="color:var(--t4)">—</span>'}</td>
-      <td>${timer}</td>
-      <td style="text-align:center;font-weight:700">${w.turns}</td>
-      <td style="font-weight:700;color:var(--green2)">${w.totalRevenue?fmtM(w.totalRevenue):'—'}</td>
-      <td style="font-weight:700;color:var(--blue)">${w.totalTip?fmtM(w.totalTip):'—'}</td>
-    </tr>`;
-  }).join('');
-  document.getElementById('col-mid').innerHTML=`<div class="grid-wrap"><table class="gt"><thead><tr><th>Thợ</th><th>Trạng thái</th><th style="text-align:center">Hàng</th><th>Dịch vụ</th><th>Thời gian</th><th style="text-align:center">Turn</th><th>Doanh thu</th><th>Tip</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-}
-
-// RENDER RIGHT COL
-function renderRight(){
-  const el=document.getElementById('col-right');
-  if(!selId){
-    el.innerHTML=`<div class="a-empty"><div class="a-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg></div><div class="a-empty-title">Chọn nhân viên</div><div class="a-empty-sub">Chọn một thợ để<br>xem hành động</div></div>`;
-    return;
-  }
-  const w=W.find(x=>x.id===selId);if(!w){el.innerHTML='';return;}
-  const avC=w.status==='ready'?'av-r':w.status==='busy'?'av-b':w.status==='penalized'?'av-p':'av-o';
-  const stLbl=w.status==='ready'?'Rảnh':w.status==='busy'?'Đang làm':w.status==='penalized'?'Bị phạt':'Nghỉ';
-  let body='',btns='';
-  if(w.status==='busy'){
-    const elapsed=w.startTime?Date.now()-w.startTime:0;
-    const startStr=w.startTime?new Date(w.startTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):'--:--';
-    const opts=SVCS.map(s=>`<option value="${s.v}"${w.service===s.v?' selected':''}>${s.l}</option>`).join('');
-    body=`<div class="a-timer" id="apt-${w.id}">${fmtT(elapsed)}</div>
-      <div class="a-timer-sub">Bắt đầu lúc ${startStr}</div>
-      <div style="margin-bottom:10px"><div class="f-lbl">Dịch vụ</div><select class="f-sel" id="sv-${w.id}" onchange="saveSvc(${w.id})">${opts}</select></div>
-      <div class="rev-row">
-        <div class="rev-grp"><div class="f-lbl">Tiền dịch vụ</div><input class="f-input" type="number" id="rv-${w.id}" min="0" step="1000" placeholder="0" value="${w.revenue||''}"></div>
-        <div class="rev-grp"><div class="f-lbl">Tip</div><input class="f-input" type="number" id="tp-${w.id}" min="0" step="1000" placeholder="0" value="${w.tip||''}"></div>
-      </div>
-      <div style="margin-bottom:12px"><div class="f-lbl">Ghi chú</div><textarea class="f-area" id="nt-${w.id}" rows="2" placeholder="VD: Khách VIP, hẹn lại...">${w.note||''}</textarea>
-        <div style="display:flex;align-items:center;gap:8px;margin-top:6px"><button class="btn btn-ghost btn-xs" style="flex:1" onclick="saveNote(${w.id})">💾 Lưu ghi chú</button><div class="note-ok" id="nok-${w.id}">✓ Đã lưu</div></div>
-      </div>
-      <div class="sec-div"><div class="sec-div-line"></div><div class="sec-div-txt">Xong việc</div><div class="sec-div-line"></div></div>`;
-    btns=`<div style="display:flex;gap:6px">
-      <button class="btn btn-dark btn-sm" style="flex:1" onclick="finishW(${w.id},1)">1 turn</button>
-      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="finishW(${w.id},0.5)">½ turn</button>
-      <button class="btn btn-ghost btn-sm" style="flex:1;color:var(--t3)" onclick="finishW(${w.id},0)">0 turn</button>
-    </div>`;
-  }else if(w.status==='penalized'){
-    const pt=penT[w.id];
-    body=`<div class="pen-disp"><div class="pen-val" id="aptt-${w.id}">${pt?fmtP(pt.ut):'--:--'}</div><div class="pen-sub">Còn lại</div></div>`;
-    btns=`<button class="btn btn-ghost" style="color:var(--green2);border-color:var(--greenb)" onclick="remPen(${w.id})">✅ Gỡ phạt sớm</button>`;
-  }else if(w.status==='ready'){
-    btns=`<button class="btn btn-rose" onclick="assignW(${w.id})">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-        Giao turn ngay
-      </button>
-      <button class="btn btn-ghost" onclick="setSt(${w.id},'off')">😴 Cho nghỉ</button>
-      <div class="pen-panel"><div class="pen-title">🔒 Phạt / Khóa ca</div><div class="pen-btns">
-        <button class="pen-btn" onclick="penW(${w.id},0.5)">30 phút</button>
-        <button class="pen-btn" onclick="penW(${w.id},1)">1 giờ</button>
-        <button class="pen-btn" onclick="penW(${w.id},2)">2 giờ</button>
-        <button class="pen-btn" onclick="penW(${w.id},3)">3 giờ</button>
-      </div></div>`;
-  }else{
-    btns=`<button class="btn btn-dark" onclick="setSt(${w.id},'ready')">✅ Vào làm lại</button>
-      <button class="btn btn-ghost" style="color:var(--red);border-color:var(--redb)" onclick="removeW(${w.id})">Xóa khỏi ca</button>`;
-  }
-  btns+=`<button class="btn btn-ghost" style="color:var(--t3)" onclick="desel()">✕ Bỏ chọn</button>`;
-  el.innerHTML=`<div class="a-panel">
-    <div class="a-head">
-      <div class="a-av ${avC}">${w.ini}</div>
-      <div><div class="a-name">${w.name}</div><div class="a-meta">${w.turns} turn · ${stLbl}</div></div>
-    </div>
-    ${body}<div class="a-btns">${btns}</div>
-  </div>`;
-}
-
-function render(){renderLeft();renderMid();renderRight();}
-
-// ACTIONS
-function selW(id){selId=(selId===id||id===null)?null:id;render();}
-function desel(){selId=null;render();}
-function togHist(e,id){e.stopPropagation();exHist.has(id)?exHist.delete(id):exHist.add(id);renderMid();}
-function toggleChk(id){multiSel.has(id)?multiSel.delete(id):multiSel.add(id);render();}
-function setView(v){view=v;document.getElementById('vt-list').className='vt-btn'+(v==='list'?' on':'');document.getElementById('vt-grid').className='vt-btn'+(v==='grid'?' on':'');renderMid();}
-function saveSvc(id){const e=document.getElementById('sv-'+id);const w=W.find(x=>x.id===id);if(w&&e)w.service=e.value;renderMid();}
-function saveNote(id){
-  const e=document.getElementById('nt-'+id),w=W.find(x=>x.id===id);
-  if(!e||!w)return;w.note=e.value.trim();
-  const ok=document.getElementById('nok-'+id);if(ok){ok.classList.add('show');setTimeout(()=>ok.classList.remove('show'),1800);}
-  renderMid();
-}
-function assignNext(){
-  const rd=ready();if(!rd.length){toast('Không có thợ rảnh!');return;}
-  const w=rd[0];w.status='busy';w.turns++;totalTurns++;w.note='';w.startTime=Date.now();w.service='';selId=w.id;
-  toast('Giao turn cho '+w.name+' 💅');render();
-}
-function assignW(id){
-  const w=W.find(x=>x.id===id);if(!w||w.status!=='ready')return;
-  w.status='busy';w.turns++;totalTurns++;w.note='';w.startTime=Date.now();w.service='';selId=w.id;
-  toast('Giao turn cho '+w.name+' 💅');render();
-}
-function finishW(id,tw){
-  const w=W.find(x=>x.id===id);if(!w)return;
-  const ne=document.getElementById('nt-'+id),re=document.getElementById('rv-'+id),te=document.getElementById('tp-'+id);
-  if(ne)w.note=ne.value.trim();
-  const rev=re?parseFloat(re.value)||0:0,tip=te?parseFloat(te.value)||0:0;
-  w.totalRevenue=(w.totalRevenue||0)+rev;w.totalTip=(w.totalTip||0)+tip;
-  w.turns=Math.round((w.turns-1+tw)*10)/10;
-  totalTurns=Math.round((totalTurns-1+tw)*10)/10;
-  const dur=w.startTime?Date.now()-w.startTime:0;
-  const ti=w.startTime?new Date(w.startTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):'-';
-  if(!w.history)w.history=[];
-  w.history.push({ti,dur:fmtT(dur),svc:w.service,rev,tip,note:w.note,tw});
-  exHist.add(w.id);
-  W=W.filter(x=>x.id!==id);w.status='ready';w.note='';w.startTime=null;w.service='';w.revenue=0;w.tip=0;w.groupId=null;W.push(w);
-  selId=null;toast(w.name+' xong việc — về cuối hàng ✓');render();
-}
-function setSt(id,s){
-  const w=W.find(x=>x.id===id);if(!w)return;
-  W=W.filter(x=>x.id!==id);w.status=s;W.push(w);selId=null;
-  toast(w.name+': '+(s==='off'?'Cho nghỉ 😴':'Vào làm lại ✅'));render();
-}
-function removeW(id){
-  const w=W.find(x=>x.id===id);if(!confirm('Xóa '+w.name+' khỏi ca?'))return;
-  W=W.filter(x=>x.id!==id);selId=null;render();
-}
-function addWorker(){
-  const nm=prompt('Tên thợ mới:');if(!nm||!nm.trim())return;
-  const n=nm.trim(),ini=n.split(' ').map(p=>p[0]).join('').toUpperCase().slice(0,2);
-  W.push(mkW(nextId++,n,ini));toast('Đã thêm '+n+' ✨');render();
-}
-function toggleMulti(){multiMode=!multiMode;multiSel.clear();selId=null;render();}
-function cancelMulti(){multiMode=false;multiSel.clear();render();}
-function assignMulti(){
-  if(multiSel.size<2){toast('Chọn ít nhất 2 thợ!');return;}
-  const gid='G'+Date.now();
-  [...multiSel].forEach(id=>{
-    const w=W.find(x=>x.id===id);if(!w||w.status!=='ready')return;
-    w.status='busy';w.turns++;w.note='';w.startTime=Date.now();w.service='';w.groupId=gid;
-  });
-  totalTurns+=multiSel.size;multiMode=false;multiSel.clear();
-  toast('Đã giao ca cho nhóm '+[...multiSel].length+' thợ');render();
-}
-function penW(id,hours){
-  const w=W.find(x=>x.id===id);if(!w)return;
-  W=W.filter(x=>x.id!==id);w.status='penalized';
-  penT[w.id]={ut:Date.now()+(hours*3600000)};W.push(w);selId=null;
-  const lbl=hours<1?(hours*60)+' phút':hours+' giờ';
-  toast(w.name+' bị phạt '+lbl+' 🔒');render();
-}
-function remPen(id){
-  const w=W.find(x=>x.id===id);if(!w)return;
-  W=W.filter(x=>x.id!==id);w.status='ready';delete penT[id];W.push(w);selId=null;
-  toast('Gỡ phạt cho '+w.name+' ✅');render();
-}
-
-render();
-</script>
+<script src="app.js"></script>
 </body>
 </html>

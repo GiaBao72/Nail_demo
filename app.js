@@ -1,0 +1,482 @@
+// ═══════════════════════════════════════
+//  NAIL TURN — app.js
+//  International Standard Logic
+// ═══════════════════════════════════════
+
+const SVCS = [
+  { v: '', l: '— Chọn dịch vụ —' },
+  { v: 'Manicure',   l: '💅 Manicure' },
+  { v: 'Pedicure',   l: '🦶 Pedicure' },
+  { v: 'Gel',        l: '✨ Gel Nails' },
+  { v: 'Dip',        l: '🌸 Dip Powder' },
+  { v: 'Acrylic',    l: '💎 Acrylic' },
+  { v: 'Art',        l: '🎨 Nail Art' },
+  { v: 'Wax',        l: '🪡 Waxing' },
+  { v: 'Brow',       l: '👁 Eyebrow' },
+  { v: 'Combo',      l: '⭐ Combo Set' },
+];
+
+// ── STATE ──
+function mkW(id, name, ini) {
+  return { id, name, ini, turns: 0, status: 'ready', note: '', startTime: null, service: '', revenue: 0, tip: 0, totalRevenue: 0, totalTip: 0, history: [], groupId: null };
+}
+
+let W = [
+  mkW(1,'Lan','LA'), mkW(2,'Hoa','HO'), mkW(3,'Mai','MA'), mkW(4,'Tú','TU'),
+  mkW(5,'Bích','BI'), mkW(6,'Linh','LI'), mkW(7,'Ngọc','NG'),
+  mkW(8,'Thảo','TH'), mkW(9,'Yến','YE'), mkW(10,'Dung','DU'),
+];
+
+let totalTurns = 0;
+let nextId = 11;
+let selId = null;
+let exHist = new Set();
+let multiMode = false;
+let multiSel = new Set();
+let penT = {};
+
+// max busy time before progress bar full (60 min)
+const MAX_BUSY_MS = 60 * 60 * 1000;
+
+// ── UTILS ──
+function svcL(v) { const s = SVCS.find(x => x.v === v); return s ? s.l : v; }
+function fmtM(n) { if (!n) return '0đ'; return n.toLocaleString('vi-VN') + 'đ'; }
+function fmtT(ms) {
+  const s = Math.floor(ms / 1000), m = Math.floor(s / 60), h = Math.floor(m / 60);
+  if (h > 0) return h + 'h ' + String(m % 60).padStart(2, '0') + 'm';
+  return String(m).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+}
+function fmtP(ut) {
+  const ms = Math.max(0, ut - Date.now());
+  return fmtT(ms);
+}
+function readyW() { return W.filter(w => w.status === 'ready'); }
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  document.getElementById('toast-txt').textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ── CLOCK ──
+function tick() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    String(n.getHours()).padStart(2, '0') + ':' + String(n.getMinutes()).padStart(2, '0');
+  const days = ['CN','T2','T3','T4','T5','T6','T7'];
+  document.getElementById('clock-day').textContent =
+    days[n.getDay()] + ' ' + String(n.getDate()).padStart(2, '0') + '/' + String(n.getMonth() + 1).padStart(2, '0');
+  const h = n.getHours();
+  document.getElementById('shift-tag').textContent = h < 12 ? 'Ca sáng' : h < 17 ? 'Ca chiều' : 'Ca tối';
+
+  // Update timers in cards
+  W.filter(w => w.status === 'busy' && w.startTime).forEach(w => {
+    const t = fmtT(Date.now() - w.startTime);
+    const e1 = document.getElementById('ct-' + w.id); if (e1) e1.textContent = t;
+    const e2 = document.getElementById('pt-' + w.id); if (e2) e2.textContent = t;
+    // Progress bar
+    const pb = document.getElementById('pb-' + w.id);
+    if (pb) {
+      const pct = Math.min(100, ((Date.now() - w.startTime) / MAX_BUSY_MS) * 100);
+      pb.style.width = pct + '%';
+    }
+  });
+
+  // Penalty countdowns
+  let needRender = false;
+  Object.keys(penT).forEach(sid => {
+    const id = parseInt(sid), pt = penT[id]; if (!pt) return;
+    if (Date.now() >= pt.ut) {
+      const w = W.find(x => x.id === id);
+      if (w) { W = W.filter(x => x.id !== id); w.status = 'ready'; delete penT[id]; W.push(w); }
+      needRender = true;
+    } else {
+      const e1 = document.getElementById('cpen-' + id); if (e1) e1.textContent = fmtP(pt.ut);
+      const e2 = document.getElementById('popen-' + id); if (e2) e2.textContent = fmtP(pt.ut);
+    }
+  });
+  if (needRender) render();
+}
+
+tick();
+setInterval(tick, 1000);
+
+// ── RENDER STATS ──
+function renderStats() {
+  const rd = readyW(), busy = W.filter(w => w.status === 'busy');
+  const rv = W.reduce((s, w) => s + w.totalRevenue, 0);
+  const tp = W.reduce((s, w) => s + w.totalTip, 0);
+  document.getElementById('stat-ready').textContent = rd.length;
+  document.getElementById('stat-busy').textContent = busy.length;
+  document.getElementById('stat-turns').textContent = totalTurns;
+  document.getElementById('stat-rev').textContent = fmtM(rv);
+  document.getElementById('stat-tip').textContent = fmtM(tp);
+
+  const nxt = rd[0];
+  const card = document.getElementById('next-worker-card');
+  document.getElementById('nwc-name').textContent = nxt ? nxt.name : '—';
+  document.getElementById('nwc-sub').textContent = nxt ? rd.length + ' thợ đang chờ' : 'Không có thợ rảnh';
+  document.getElementById('nwc-label').textContent = nxt ? 'LƯỢT TIẾP THEO' : 'HÀNG CHỜ';
+  card.className = 'next-worker-card' + (nxt ? '' : ' nwc-empty');
+}
+
+// ── RENDER STAFF GRID ──
+function renderGrid() {
+  const rd = readyW();
+  const all = [
+    ...rd,
+    ...W.filter(w => w.status === 'busy'),
+    ...W.filter(w => w.status === 'off'),
+    ...W.filter(w => w.status === 'penalized'),
+  ];
+
+  let html = '';
+  all.forEach(w => {
+    const isNext = w === rd[0];
+    const isSel = w.id === selId;
+    const isChk = multiSel.has(w.id);
+    const isPen = w.status === 'penalized';
+    const hasH = w.history && w.history.length > 0;
+    const isExp = exHist.has(w.id);
+    const pt = penT[w.id];
+
+    // Card classes
+    let cc = 'staff-card';
+    if (isNext) cc += ' sc-next';
+    if (w.status === 'busy') cc += ' sc-busy';
+    if (w.status === 'off') cc += ' sc-off';
+    if (isPen) cc += ' sc-pen';
+    if (isSel) cc += ' sc-selected';
+
+    // Strip color
+    let stripCls = 'sc-strip strip-' + (isNext ? 'next' : w.status === 'penalized' ? 'pen' : w.status);
+
+    // Avatar
+    let avCls = 'sc-avatar av-' + (isNext ? 'next' : w.status === 'penalized' ? 'pen' : w.status === 'busy' ? 'busy' : w.status === 'off' ? 'off' : 'ready');
+
+    // Badge
+    let badge = '';
+    if (isPen) badge = '<span class="sc-badge sb-pen">Bị phạt</span>';
+    else if (isNext) badge = '<span class="sc-badge sb-next">Tiếp theo</span>';
+    else if (w.status === 'ready') badge = '<span class="sc-badge sb-ready">Rảnh</span>';
+    else if (w.status === 'busy') badge = '<span class="sc-badge sb-busy">Đang làm</span>';
+    else badge = '<span class="sc-badge sb-off">Nghỉ</span>';
+
+    // Rank
+    const rank = w.status === 'ready' ? rd.indexOf(w) + 1 : null;
+
+    // Progress bar (busy only)
+    let progressHtml = '';
+    if (w.status === 'busy' && w.startTime) {
+      const pct = Math.min(100, ((Date.now() - w.startTime) / MAX_BUSY_MS) * 100);
+      progressHtml = `<div class="sc-progress"><div class="sc-progress-fill" id="pb-${w.id}" style="width:${pct}%"></div></div>`;
+    }
+
+    // Tags
+    let tags = '';
+    if (w.service) tags += `<span class="sc-tag t-svc">${svcL(w.service)}</span>`;
+    if (w.status === 'busy' && w.startTime) tags += `<span class="sc-tag t-timer">⏱ <span id="ct-${w.id}">${fmtT(Date.now() - w.startTime)}</span></span>`;
+    if (isPen && pt) tags += `<span class="sc-tag t-pen" id="cpen-${w.id}">${fmtP(pt.ut)}</span>`;
+    if (w.groupId) tags += '<span class="sc-tag t-group">👥 Nhóm</span>';
+    const tagsHtml = tags ? `<div class="sc-tags">${tags}</div>` : '';
+
+    // Revenue
+    const revHtml = w.totalRevenue ? `<div class="sc-rev">${fmtM(w.totalRevenue)}${w.totalTip ? ' · tip ' + fmtM(w.totalTip) : ''}</div>` : '';
+
+    // Quick action buttons
+    let qaHtml = '';
+    if (multiMode && w.status === 'ready') {
+      qaHtml = `<div class="sc-actions">
+        <button class="qa-btn ${isChk ? 'qa-primary' : ''}" onclick="event.stopPropagation();toggleChk(${w.id})">${isChk ? '✓ Đã chọn' : 'Chọn'}</button>
+      </div>`;
+    } else if (w.status === 'ready') {
+      qaHtml = `<div class="sc-actions">
+        <button class="qa-btn qa-primary" onclick="event.stopPropagation();assignW(${w.id})">Giao turn</button>
+        <button class="qa-btn" onclick="event.stopPropagation();openPopup(${w.id})">Chi tiết</button>
+      </div>`;
+    } else if (w.status === 'busy') {
+      qaHtml = `<div class="sc-actions">
+        <button class="qa-btn qa-green" onclick="event.stopPropagation();finishW(${w.id},1)">✓ Xong (1 turn)</button>
+        <button class="qa-btn" onclick="event.stopPropagation();openPopup(${w.id})">Chi tiết</button>
+      </div>`;
+    } else if (isPen) {
+      qaHtml = `<div class="sc-actions">
+        <button class="qa-btn qa-green" onclick="event.stopPropagation();remPen(${w.id})">Gỡ phạt</button>
+      </div>`;
+    } else {
+      qaHtml = `<div class="sc-actions">
+        <button class="qa-btn qa-primary" onclick="event.stopPropagation();setSt(${w.id},'ready')">Vào làm lại</button>
+      </div>`;
+    }
+
+    // History
+    let histHtml = '';
+    if (hasH) {
+      histHtml = `<div class="hist-wrap">
+        <div class="hist-toggle${isExp ? ' open' : ''}" onclick="togHist(event,${w.id})">
+          <span>Lịch sử (${w.history.length})</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="hist-body">
+          ${w.history.map(h => `<div class="hr">
+            <div><div class="hr-t">${h.ti}</div><div class="hr-d">${h.dur}</div></div>
+            <div><div class="hr-s">${h.svc ? svcL(h.svc) : '—'}</div>${h.note ? '<div class="hr-n">' + h.note + '</div>' : ''}</div>
+            <div><div class="hr-r">${h.rev ? fmtM(h.rev) : '—'}</div>${h.tip ? '<div class="hr-tp">tip ' + fmtM(h.tip) + '</div>' : ''}</div>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    }
+
+    const clickFn = multiMode && w.status === 'ready' ? `toggleChk(${w.id})` : `openPopup(${w.id})`;
+
+    html += `<div>
+      <div class="${cc}" onclick="${clickFn}">
+        <div class="${stripCls}"></div>
+        <div class="sc-body">
+          <div class="sc-top">
+            <div class="${avCls}">${rank ? '<span style="font-size:9px;font-weight:800;color:inherit;opacity:.6;margin-bottom:1px">#' + rank + '</span><br>' : ''}${w.ini}</div>
+            <div class="sc-info">
+              <div class="sc-name">${w.name}</div>
+              <div class="sc-turns">${w.turns} turn hôm nay</div>
+            </div>
+            ${badge}
+          </div>
+          ${progressHtml}
+          ${tagsHtml}
+          ${revHtml}
+        </div>
+        ${qaHtml}
+      </div>
+      ${histHtml}
+    </div>`;
+  });
+
+  document.getElementById('staff-grid').innerHTML = html;
+}
+
+function render() {
+  renderStats();
+  renderGrid();
+  // multi bar
+  const mb = document.getElementById('multi-bar');
+  if (mb) { mb.style.display = multiMode ? 'flex' : 'none'; }
+  const mc = document.getElementById('multi-cnt'); if (mc) mc.textContent = multiSel.size;
+  const bm = document.getElementById('btn-multi');
+  if (bm) { bm.style.background = multiMode ? '#1D4ED8' : ''; bm.style.color = multiMode ? '#fff' : '#3B82F6'; }
+}
+
+// ── POPUP ──
+function openPopup(id) {
+  selId = id;
+  const w = W.find(x => x.id === id); if (!w) return;
+  const avCls = w.status === 'ready' ? 'av-ready' : w.status === 'busy' ? 'av-busy' : w.status === 'penalized' ? 'av-pen' : 'av-off';
+  const stLbl = w.status === 'ready' ? 'Rảnh' : w.status === 'busy' ? 'Đang làm' : w.status === 'penalized' ? 'Bị phạt' : 'Nghỉ';
+
+  document.getElementById('popup-head').innerHTML = `
+    <div class="popup-av ${avCls}">${w.ini}</div>
+    <div>
+      <div class="popup-name">${w.name}</div>
+      <div class="popup-meta">${w.turns} turn hôm nay · ${stLbl}</div>
+    </div>
+    <button class="popup-close" onclick="closePopup()">✕</button>`;
+
+  let body = '';
+
+  if (w.status === 'busy') {
+    const elapsed = w.startTime ? Date.now() - w.startTime : 0;
+    const startStr = w.startTime ? new Date(w.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+    const opts = SVCS.map(s => `<option value="${s.v}"${w.service === s.v ? ' selected' : ''}>${s.l}</option>`).join('');
+    body = `
+      <div class="popup-timer">
+        <div class="pt-val" id="pt-${w.id}">${fmtT(elapsed)}</div>
+        <div class="pt-sub">Bắt đầu lúc ${startStr}</div>
+      </div>
+      <div>
+        <div class="f-label">Dịch vụ</div>
+        <select class="f-select" id="sv-${w.id}" onchange="saveSvc(${w.id})">${opts}</select>
+      </div>
+      <div class="f-row">
+        <div class="f-group">
+          <div class="f-label">Tiền dịch vụ</div>
+          <input class="f-input" type="number" id="rv-${w.id}" min="0" step="1000" placeholder="0" value="${w.revenue || ''}">
+        </div>
+        <div class="f-group">
+          <div class="f-label">Tip</div>
+          <input class="f-input" type="number" id="tp-${w.id}" min="0" step="1000" placeholder="0" value="${w.tip || ''}">
+        </div>
+      </div>
+      <div>
+        <div class="f-label">Ghi chú</div>
+        <textarea class="f-textarea" id="nt-${w.id}" rows="2" placeholder="Khách VIP, hẹn lại...">${w.note || ''}</textarea>
+      </div>
+      <div class="sec-div"><div class="sec-div-line"></div><div class="sec-div-txt">Xong việc — tính turn</div><div class="sec-div-line"></div></div>
+      <div class="btn-row">
+        <button class="btn btn-dark btn-sm" style="flex:1" onclick="finishW(${w.id},1)">1 turn</button>
+        <button class="btn btn-ghost btn-sm" style="flex:1" onclick="finishW(${w.id},0.5)">½ turn</button>
+        <button class="btn btn-ghost btn-sm" style="flex:1;color:var(--t3)" onclick="finishW(${w.id},0)">0 turn</button>
+      </div>`;
+  } else if (w.status === 'penalized') {
+    const pt = penT[w.id];
+    body = `
+      <div class="pen-timer-display">
+        <div class="ptd-val" id="popen-${w.id}">${pt ? fmtP(pt.ut) : '--:--'}</div>
+        <div class="ptd-sub">Còn lại</div>
+      </div>
+      <button class="btn btn-green" onclick="remPen(${w.id})">✅ Gỡ phạt sớm</button>`;
+  } else if (w.status === 'ready') {
+    body = `
+      <button class="btn btn-rose" onclick="assignW(${w.id})">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        Giao turn ngay
+      </button>
+      <button class="btn btn-ghost" onclick="setSt(${w.id},'off')">😴 Cho nghỉ</button>
+      <div>
+        <div class="f-label" style="margin-bottom:8px">🔒 Phạt / Khóa ca</div>
+        <div class="pen-grid">
+          <button class="pen-opt" onclick="penW(${w.id},0.5)">30 phút</button>
+          <button class="pen-opt" onclick="penW(${w.id},1)">1 giờ</button>
+          <button class="pen-opt" onclick="penW(${w.id},2)">2 giờ</button>
+          <button class="pen-opt" onclick="penW(${w.id},3)">3 giờ</button>
+        </div>
+      </div>`;
+  } else {
+    body = `
+      <button class="btn btn-dark" onclick="setSt(${w.id},'ready')">✅ Vào làm lại</button>
+      <button class="btn btn-ghost" style="color:var(--c-pen);border-color:var(--c-pen-b)" onclick="removeW(${w.id})">Xóa khỏi ca</button>`;
+  }
+
+  document.getElementById('popup-body').innerHTML = body;
+  document.getElementById('popup-overlay').style.display = 'flex';
+}
+
+function closePopup() {
+  document.getElementById('popup-overlay').style.display = 'none';
+  selId = null;
+  render();
+}
+
+function closePopupOnOverlay(e) {
+  if (e.target === document.getElementById('popup-overlay')) closePopup();
+}
+
+// ── ACTIONS ──
+function togHist(e, id) {
+  e.stopPropagation();
+  exHist.has(id) ? exHist.delete(id) : exHist.add(id);
+  renderGrid();
+}
+
+function toggleChk(id) {
+  multiSel.has(id) ? multiSel.delete(id) : multiSel.add(id);
+  render();
+}
+
+function saveSvc(id) {
+  const e = document.getElementById('sv-' + id);
+  const w = W.find(x => x.id === id);
+  if (w && e) { w.service = e.value; renderGrid(); }
+}
+
+function assignNext() {
+  const rd = readyW(); if (!rd.length) { toast('Không có thợ rảnh!'); return; }
+  const w = rd[0];
+  w.status = 'busy'; w.turns++; totalTurns++; w.note = ''; w.startTime = Date.now(); w.service = '';
+  toast('Giao turn cho ' + w.name + ' 💅');
+  render();
+}
+
+function assignW(id) {
+  const w = W.find(x => x.id === id); if (!w || w.status !== 'ready') return;
+  w.status = 'busy'; w.turns++; totalTurns++; w.note = ''; w.startTime = Date.now(); w.service = '';
+  toast('Giao turn cho ' + w.name + ' 💅');
+  closePopup();
+}
+
+function finishW(id, tw) {
+  const w = W.find(x => x.id === id); if (!w) return;
+  const ne = document.getElementById('nt-' + id);
+  const re = document.getElementById('rv-' + id);
+  const te = document.getElementById('tp-' + id);
+  if (ne) w.note = ne.value.trim();
+  const rev = re ? parseFloat(re.value) || 0 : 0;
+  const tip = te ? parseFloat(te.value) || 0 : 0;
+  w.totalRevenue = (w.totalRevenue || 0) + rev;
+  w.totalTip = (w.totalTip || 0) + tip;
+  w.turns = Math.round((w.turns - 1 + tw) * 10) / 10;
+  totalTurns = Math.round((totalTurns - 1 + tw) * 10) / 10;
+  const dur = w.startTime ? Date.now() - w.startTime : 0;
+  const ti = w.startTime ? new Date(w.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '-';
+  if (!w.history) w.history = [];
+  w.history.push({ ti, dur: fmtT(dur), svc: w.service, rev, tip, note: w.note, tw });
+  exHist.add(w.id);
+  W = W.filter(x => x.id !== id);
+  w.status = 'ready'; w.note = ''; w.startTime = null; w.service = ''; w.revenue = 0; w.tip = 0; w.groupId = null;
+  W.push(w);
+  selId = null;
+  toast(w.name + ' xong việc — về cuối hàng ✓');
+  closePopup();
+}
+
+function setSt(id, s) {
+  const w = W.find(x => x.id === id); if (!w) return;
+  W = W.filter(x => x.id !== id); w.status = s; W.push(w); selId = null;
+  toast(w.name + ': ' + (s === 'off' ? 'Cho nghỉ 😴' : 'Vào làm lại ✅'));
+  closePopup();
+}
+
+function removeW(id) {
+  const w = W.find(x => x.id === id);
+  if (!confirm('Xóa ' + w.name + ' khỏi ca?')) return;
+  W = W.filter(x => x.id !== id); selId = null;
+  closePopup();
+}
+
+function addWorker() {
+  const nm = prompt('Tên thợ mới:'); if (!nm || !nm.trim()) return;
+  const n = nm.trim(), ini = n.split(' ').map(p => p[0]).join('').toUpperCase().slice(0, 2);
+  W.push(mkW(nextId++, n, ini));
+  toast('Đã thêm ' + n + ' ✨');
+  render();
+}
+
+function toggleMulti() {
+  multiMode = !multiMode; multiSel.clear(); selId = null; render();
+}
+
+function cancelMulti() {
+  multiMode = false; multiSel.clear(); render();
+}
+
+function assignMulti() {
+  if (multiSel.size < 2) { toast('Chọn ít nhất 2 thợ!'); return; }
+  const gid = 'G' + Date.now();
+  [...multiSel].forEach(id => {
+    const w = W.find(x => x.id === id); if (!w || w.status !== 'ready') return;
+    w.status = 'busy'; w.turns++; w.note = ''; w.startTime = Date.now(); w.service = ''; w.groupId = gid;
+  });
+  totalTurns += multiSel.size;
+  toast('Đã giao ca cho ' + multiSel.size + ' thợ 👥');
+  multiMode = false; multiSel.clear();
+  render();
+}
+
+function penW(id, hours) {
+  const w = W.find(x => x.id === id); if (!w) return;
+  W = W.filter(x => x.id !== id); w.status = 'penalized';
+  penT[w.id] = { ut: Date.now() + hours * 3600000 }; W.push(w); selId = null;
+  const lbl = hours < 1 ? (hours * 60) + ' phút' : hours + ' giờ';
+  toast(w.name + ' bị phạt ' + lbl + ' 🔒');
+  closePopup();
+}
+
+function remPen(id) {
+  const w = W.find(x => x.id === id); if (!w) return;
+  W = W.filter(x => x.id !== id); w.status = 'ready'; delete penT[id]; W.push(w); selId = null;
+  toast('Gỡ phạt cho ' + w.name + ' ✅');
+  closePopup();
+}
+
+// ── INIT ──
+render();
