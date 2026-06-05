@@ -339,7 +339,7 @@ function openPopup(id) {
       </div>
       <div>
         <div class="f-label">Dịch vụ</div>
-        <select class="f-select" id="sv-${w.id}" onchange="saveSvc(${w.id})">${opts}</select>
+        <select class="f-select" id="sv-${w.id}">${opts}</select>
       </div>
       <div class="f-row">
         <div class="f-group">
@@ -355,6 +355,10 @@ function openPopup(id) {
         <div class="f-label">Ghi chú</div>
         <textarea class="f-textarea" id="nt-${w.id}" rows="2" placeholder="Khách VIP, hẹn lại...">${w.note || ''}</textarea>
       </div>
+      <button class="btn btn-dark" onclick="saveInfo(${w.id})" style="margin-top:2px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Lưu thông tin
+      </button>
       <div class="sec-div"><div class="sec-div-line"></div><div class="sec-div-txt">Xong việc — tính turn</div><div class="sec-div-line"></div></div>
       <div class="btn-row">
         <button class="btn btn-dark btn-sm" style="flex:1" onclick="finishW(${w.id},1)">1 turn</button>
@@ -421,6 +425,20 @@ function saveSvc(id) {
   const e = document.getElementById('sv-' + id);
   const w = W.find(x => x.id === id);
   if (w && e) { w.service = e.value; renderGrid(); }
+}
+
+function saveInfo(id) {
+  const w = W.find(x => x.id === id); if (!w) return;
+  const sv = document.getElementById('sv-' + id);
+  const rv = document.getElementById('rv-' + id);
+  const tp = document.getElementById('tp-' + id);
+  const nt = document.getElementById('nt-' + id);
+  if (sv) w.service = sv.value;
+  if (rv) w.revenue = parseFloat(rv.value) || 0;
+  if (tp) w.tip = parseFloat(tp.value) || 0;
+  if (nt) w.note = nt.value.trim();
+  toast('Đã lưu thông tin ' + w.name + ' ✓');
+  renderGrid();
 }
 
 function assignNext() {
