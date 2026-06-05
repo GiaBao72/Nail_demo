@@ -76,12 +76,20 @@ function tick() {
     const t = fmtT(Date.now() - w.startTime);
     const e1 = document.getElementById('ct-' + w.id); if (e1) e1.textContent = t;
     const e2 = document.getElementById('pt-' + w.id); if (e2) e2.textContent = t;
-    // Progress bar
     const pb = document.getElementById('pb-' + w.id);
-    if (pb) {
-      const pct = Math.min(100, ((Date.now() - w.startTime) / MAX_BUSY_MS) * 100);
-      pb.style.width = pct + '%';
-    }
+    if (pb) pb.style.width = Math.min(100, ((Date.now() - w.startTime) / MAX_BUSY_MS) * 100) + '%';
+  });
+  // Group timers
+  const groups = {};
+  W.filter(w => w.status === 'busy' && w.groupId).forEach(w => {
+    if (!groups[w.groupId]) groups[w.groupId] = w;
+  });
+  Object.entries(groups).forEach(([gid, w]) => {
+    if (!w.startTime) return;
+    const t = fmtT(Date.now() - w.startTime);
+    const e = document.getElementById('ct-g-' + gid); if (e) e.textContent = t;
+    const pb = document.getElementById('pb-g-' + gid);
+    if (pb) pb.style.width = Math.min(100, ((Date.now() - w.startTime) / MAX_BUSY_MS) * 100) + '%';
   });
 
   // Penalty countdowns
@@ -125,15 +133,62 @@ function renderStats() {
 // ── RENDER STAFF GRID ──
 function renderGrid() {
   const rd = readyW();
-  const all = [
+
+  // Group busy workers by groupId
+  const groups = {};
+  W.filter(w => w.status === 'busy' && w.groupId).forEach(w => {
+    if (!groups[w.groupId]) groups[w.groupId] = [];
+    groups[w.groupId].push(w);
+  });
+  const groupedIds = new Set(W.filter(w => w.groupId).map(w => w.id));
+
+  const singles = [
     ...rd,
-    ...W.filter(w => w.status === 'busy'),
+    ...W.filter(w => w.status === 'busy' && !w.groupId),
     ...W.filter(w => w.status === 'off'),
     ...W.filter(w => w.status === 'penalized'),
   ];
 
   let html = '';
-  all.forEach(w => {
+
+  // Render group cards first
+  Object.entries(groups).forEach(([gid, members]) => {
+    const elapsed = members[0].startTime ? Date.now() - members[0].startTime : 0;
+    const pct = Math.min(100, (elapsed / MAX_BUSY_MS) * 100);
+    const svc = members[0].service;
+    const avatars = members.map(m =>
+      `<div class="sc-avatar av-busy" style="width:34px;height:34px;font-size:10px;border:2px solid #fff">${m.ini}</div>`
+    ).join('');
+    const names = members.map(m => m.name).join(', ');
+    const timerTag = `<span class="sc-tag t-timer">⏱ <span id="ct-g-${gid}">${fmtT(elapsed)}</span></span>`;
+    const svcTag = svc ? `<span class="sc-tag t-svc">${svcL(svc)}</span>` : '';
+
+    html += `<div>
+      <div class="staff-card sc-busy" onclick="openGroupPopup('${gid}')">
+        <div class="sc-strip strip-busy"></div>
+        <div class="sc-body">
+          <div class="sc-top">
+            <div style="display:flex;margin-right:4px">${avatars}</div>
+            <div class="sc-info">
+              <div class="sc-name"><span style="font-size:10px;color:var(--t4);font-weight:700;margin-right:4px">👥 NHÓM</span>${names}</div>
+              <div class="sc-turns">${members.length} thợ · cùng 1 khách</div>
+              <div class="sc-progress" style="margin-top:6px"><div class="sc-progress-fill" id="pb-g-${gid}" style="width:${pct}%"></div></div>
+              <div class="sc-tags">${svcTag}${timerTag}</div>
+            </div>
+            <span class="sc-badge sb-busy">Đang làm</span>
+          </div>
+          <div class="sc-actions">
+            <button class="qa-btn qa-green" onclick="event.stopPropagation();finishGroup('${gid}',1)">✓ Xong nhóm</button>
+            <button class="qa-btn" onclick="event.stopPropagation();openGroupPopup('${gid}')">Chi tiết</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  // Render single worker cards
+  singles.forEach(w => {
+    if (groupedIds.has(w.id)) return; // skip — already in a group card
     const isNext = w === rd[0];
     const isSel = w.id === selId;
     const isChk = multiSel.has(w.id);
@@ -142,7 +197,6 @@ function renderGrid() {
     const isExp = exHist.has(w.id);
     const pt = penT[w.id];
 
-    // Card classes
     let cc = 'staff-card';
     if (isNext) cc += ' sc-next';
     if (w.status === 'busy') cc += ' sc-busy';
@@ -150,13 +204,9 @@ function renderGrid() {
     if (isPen) cc += ' sc-pen';
     if (isSel) cc += ' sc-selected';
 
-    // Strip color
     let stripCls = 'sc-strip strip-' + (isNext ? 'next' : w.status === 'penalized' ? 'pen' : w.status);
-
-    // Avatar
     let avCls = 'sc-avatar av-' + (isNext ? 'next' : w.status === 'penalized' ? 'pen' : w.status === 'busy' ? 'busy' : w.status === 'off' ? 'off' : 'ready');
 
-    // Badge
     let badge = '';
     if (isPen) badge = '<span class="sc-badge sb-pen">Bị phạt</span>';
     else if (isNext) badge = '<span class="sc-badge sb-next">Tiếp theo</span>';
@@ -164,28 +214,21 @@ function renderGrid() {
     else if (w.status === 'busy') badge = '<span class="sc-badge sb-busy">Đang làm</span>';
     else badge = '<span class="sc-badge sb-off">Nghỉ</span>';
 
-    // Rank
     const rank = w.status === 'ready' ? rd.indexOf(w) + 1 : null;
 
-    // Progress bar (busy only)
     let progressHtml = '';
     if (w.status === 'busy' && w.startTime) {
       const pct = Math.min(100, ((Date.now() - w.startTime) / MAX_BUSY_MS) * 100);
       progressHtml = `<div class="sc-progress"><div class="sc-progress-fill" id="pb-${w.id}" style="width:${pct}%"></div></div>`;
     }
 
-    // Tags
     let tags = '';
     if (w.service) tags += `<span class="sc-tag t-svc">${svcL(w.service)}</span>`;
     if (w.status === 'busy' && w.startTime) tags += `<span class="sc-tag t-timer">⏱ <span id="ct-${w.id}">${fmtT(Date.now() - w.startTime)}</span></span>`;
     if (isPen && pt) tags += `<span class="sc-tag t-pen" id="cpen-${w.id}">${fmtP(pt.ut)}</span>`;
-    if (w.groupId) tags += '<span class="sc-tag t-group">👥 Nhóm</span>';
     const tagsHtml = tags ? `<div class="sc-tags">${tags}</div>` : '';
-
-    // Revenue
     const revHtml = w.totalRevenue ? `<div class="sc-rev">${fmtM(w.totalRevenue)}${w.totalTip ? ' · tip ' + fmtM(w.totalTip) : ''}</div>` : '';
 
-    // Quick action buttons
     let qaHtml = '';
     if (multiMode && w.status === 'ready') {
       qaHtml = `<button class="qa-btn ${isChk ? 'qa-primary' : ''}" onclick="event.stopPropagation();toggleChk(${w.id})">${isChk ? '✓ Đã chọn' : 'Chọn'}</button>`;
@@ -201,7 +244,6 @@ function renderGrid() {
       qaHtml = `<button class="qa-btn qa-primary" onclick="event.stopPropagation();setSt(${w.id},'ready')">Vào làm lại</button>`;
     }
 
-    // History
     let histHtml = '';
     if (hasH) {
       histHtml = `<div class="hist-wrap">
@@ -785,6 +827,89 @@ function renderReport() {
         <tbody>${rows || '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--t4)">Chưa có dữ liệu ca hôm nay</td></tr>'}</tbody>
       </table>
     </div>`;
+}
+
+function openGroupPopup(gid) {
+  const members = W.filter(w => w.groupId === gid && w.status === 'busy');
+  if (!members.length) return;
+  const elapsed = members[0].startTime ? Date.now() - members[0].startTime : 0;
+  const startStr = members[0].startTime ? new Date(members[0].startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+  const avatars = members.map(m => `<div class="sc-avatar av-busy" style="width:32px;height:32px;font-size:10px">${m.ini}</div>`).join('');
+
+  document.getElementById('popup-head').innerHTML = `
+    <div style="display:flex;gap:4px">${avatars}</div>
+    <div>
+      <div class="popup-name">Nhóm ${members.length} thợ</div>
+      <div class="popup-meta">${members.map(m => m.name).join(', ')}</div>
+    </div>
+    <button class="popup-close" onclick="closePopup()">✕</button>`;
+
+  const opts = SVCS.map(s => `<option value="${s.v}"${members[0].service === s.v ? ' selected' : ''}>${s.l}</option>`).join('');
+
+  document.getElementById('popup-body').innerHTML = `
+    <div class="popup-timer">
+      <div class="pt-val" id="pt-g-${gid}">${fmtT(elapsed)}</div>
+      <div class="pt-sub">Bắt đầu lúc ${startStr}</div>
+    </div>
+    <div><div class="f-label">Dịch vụ (áp dụng cho cả nhóm)</div>
+      <select class="f-select" onchange="saveGroupSvc('${gid}',this.value)">${opts}</select>
+    </div>
+    <div class="f-row">
+      <div class="f-group"><div class="f-label">Tiền dịch vụ (chia đều)</div>
+        <input class="f-input" type="number" id="grv-${gid}" min="0" step="1000" placeholder="0"></div>
+      <div class="f-group"><div class="f-label">Tip (chia đều)</div>
+        <input class="f-input" type="number" id="gtp-${gid}" min="0" step="1000" placeholder="0"></div>
+    </div>
+    <div class="sec-div"><div class="sec-div-line"></div><div class="sec-div-txt">Xong việc</div><div class="sec-div-line"></div></div>
+    <div class="btn-row">
+      <button class="btn btn-dark btn-sm" style="flex:1" onclick="finishGroup('${gid}',1)">1 turn / thợ</button>
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="finishGroup('${gid}',0.5)">½ turn / thợ</button>
+      <button class="btn btn-ghost btn-sm" style="flex:1;color:var(--t3)" onclick="finishGroup('${gid}',0)">0 turn</button>
+    </div>`;
+
+  // update timer in popup
+  const popupTimer = setInterval(() => {
+    const e = document.getElementById('pt-g-' + gid);
+    if (!e) { clearInterval(popupTimer); return; }
+    e.textContent = fmtT(Date.now() - members[0].startTime);
+  }, 1000);
+
+  document.getElementById('popup-overlay').style.display = 'flex';
+}
+
+function saveGroupSvc(gid, val) {
+  W.filter(w => w.groupId === gid).forEach(w => w.service = val);
+  renderGrid();
+}
+
+function finishGroup(gid, tw) {
+  const members = W.filter(w => w.groupId === gid && w.status === 'busy');
+  const reEl = document.getElementById('grv-' + gid);
+  const tpEl = document.getElementById('gtp-' + gid);
+  const totalRev = reEl ? parseFloat(reEl.value) || 0 : 0;
+  const totalTip = tpEl ? parseFloat(tpEl.value) || 0 : 0;
+  const perRev = members.length ? Math.round(totalRev / members.length) : 0;
+  const perTip = members.length ? Math.round(totalTip / members.length) : 0;
+
+  members.forEach(w => {
+    w.totalRevenue = (w.totalRevenue || 0) + perRev;
+    w.totalTip = (w.totalTip || 0) + perTip;
+    w.turns = Math.round((w.turns - 1 + tw) * 10) / 10;
+    const dur = w.startTime ? Date.now() - w.startTime : 0;
+    const ti = w.startTime ? new Date(w.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '-';
+    if (!w.history) w.history = [];
+    w.history.push({ ti, dur: fmtT(dur), svc: w.service, rev: perRev, tip: perTip, note: '👥 Nhóm', tw });
+    exHist.add(w.id);
+  });
+  totalTurns = Math.round((totalTurns - members.length + members.length * tw) * 10) / 10;
+
+  members.forEach(w => {
+    W = W.filter(x => x.id !== w.id);
+    w.status = 'ready'; w.note = ''; w.startTime = null; w.service = ''; w.revenue = 0; w.tip = 0; w.groupId = null;
+    W.push(w);
+  });
+  toast('Nhóm ' + members.length + ' thợ xong việc ✓');
+  closePopup();
 }
 
 // ── INIT ──
