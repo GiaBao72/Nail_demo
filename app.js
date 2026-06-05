@@ -151,13 +151,26 @@ function renderGrid() {
 
   let html = '';
 
-  // Render group cards first
+  // Render singles first (ready workers at top), then group cards, then off/penalized
+  // Order: ready → busy solo → busy groups → off → penalized
+  const readyItems = rd;
+  const busySolo = W.filter(w => w.status === 'busy' && !w.groupId);
+  const offItems = W.filter(w => w.status === 'off');
+  const penItems = W.filter(w => w.status === 'penalized');
+
+  // Render ready workers
+  readyItems.forEach(w => { html += renderSingleCard(w, rd); });
+
+  // Render busy solo workers
+  busySolo.forEach(w => { html += renderSingleCard(w, rd); });
+
+  // Render group cards (busy groups) — after solo busy workers
   Object.entries(groups).forEach(([gid, members]) => {
     const elapsed = members[0].startTime ? Date.now() - members[0].startTime : 0;
     const pct = Math.min(100, (elapsed / MAX_BUSY_MS) * 100);
     const svc = members[0].service;
     const avatars = members.map(m =>
-      `<div class="sc-avatar av-busy" style="width:34px;height:34px;font-size:10px;border:2px solid #fff">${m.ini}</div>`
+      `<div class="sc-avatar av-busy" style="width:34px;height:34px;font-size:10px;border:2px solid #fff;margin-right:-8px">${m.ini}</div>`
     ).join('');
     const names = members.map(m => m.name).join(', ');
     const timerTag = `<span class="sc-tag t-timer">⏱ <span id="ct-g-${gid}">${fmtT(elapsed)}</span></span>`;
@@ -168,7 +181,7 @@ function renderGrid() {
         <div class="sc-strip strip-busy"></div>
         <div class="sc-body">
           <div class="sc-top">
-            <div style="display:flex;margin-right:4px">${avatars}</div>
+            <div style="display:flex;align-items:center;padding-right:12px">${avatars}</div>
             <div class="sc-info">
               <div class="sc-name"><span style="font-size:10px;color:var(--t4);font-weight:700;margin-right:4px">👥 NHÓM</span>${names}</div>
               <div class="sc-turns">${members.length} thợ · cùng 1 khách</div>
@@ -186,106 +199,109 @@ function renderGrid() {
     </div>`;
   });
 
-  // Render single worker cards
-  singles.forEach(w => {
-    if (groupedIds.has(w.id)) return; // skip — already in a group card
-    const isNext = w === rd[0];
-    const isSel = w.id === selId;
-    const isChk = multiSel.has(w.id);
-    const isPen = w.status === 'penalized';
-    const hasH = w.history && w.history.length > 0;
-    const isExp = exHist.has(w.id);
-    const pt = penT[w.id];
+  // Render off workers
+  offItems.forEach(w => { html += renderSingleCard(w, rd); });
 
-    let cc = 'staff-card';
-    if (isNext) cc += ' sc-next';
-    if (w.status === 'busy') cc += ' sc-busy';
-    if (w.status === 'off') cc += ' sc-off';
-    if (isPen) cc += ' sc-pen';
-    if (isSel) cc += ' sc-selected';
-
-    let stripCls = 'sc-strip strip-' + (isNext ? 'next' : w.status === 'penalized' ? 'pen' : w.status);
-    let avCls = 'sc-avatar av-' + (isNext ? 'next' : w.status === 'penalized' ? 'pen' : w.status === 'busy' ? 'busy' : w.status === 'off' ? 'off' : 'ready');
-
-    let badge = '';
-    if (isPen) badge = '<span class="sc-badge sb-pen">Bị phạt</span>';
-    else if (isNext) badge = '<span class="sc-badge sb-next">Tiếp theo</span>';
-    else if (w.status === 'ready') badge = '<span class="sc-badge sb-ready">Rảnh</span>';
-    else if (w.status === 'busy') badge = '<span class="sc-badge sb-busy">Đang làm</span>';
-    else badge = '<span class="sc-badge sb-off">Nghỉ</span>';
-
-    const rank = w.status === 'ready' ? rd.indexOf(w) + 1 : null;
-
-    let progressHtml = '';
-    if (w.status === 'busy' && w.startTime) {
-      const pct = Math.min(100, ((Date.now() - w.startTime) / MAX_BUSY_MS) * 100);
-      progressHtml = `<div class="sc-progress"><div class="sc-progress-fill" id="pb-${w.id}" style="width:${pct}%"></div></div>`;
-    }
-
-    let tags = '';
-    if (w.service) tags += `<span class="sc-tag t-svc">${svcL(w.service)}</span>`;
-    if (w.status === 'busy' && w.startTime) tags += `<span class="sc-tag t-timer">⏱ <span id="ct-${w.id}">${fmtT(Date.now() - w.startTime)}</span></span>`;
-    if (isPen && pt) tags += `<span class="sc-tag t-pen" id="cpen-${w.id}">${fmtP(pt.ut)}</span>`;
-    const tagsHtml = tags ? `<div class="sc-tags">${tags}</div>` : '';
-    const revHtml = w.totalRevenue ? `<div class="sc-rev">${fmtM(w.totalRevenue)}${w.totalTip ? ' · tip ' + fmtM(w.totalTip) : ''}</div>` : '';
-
-    let qaHtml = '';
-    if (multiMode && w.status === 'ready') {
-      qaHtml = `<button class="qa-btn ${isChk ? 'qa-primary' : ''}" onclick="event.stopPropagation();toggleChk(${w.id})">${isChk ? '✓ Đã chọn' : 'Chọn'}</button>`;
-    } else if (w.status === 'ready') {
-      qaHtml = `<button class="qa-btn qa-primary" onclick="event.stopPropagation();assignW(${w.id})">Giao turn</button>
-        <button class="qa-btn" onclick="event.stopPropagation();openPopup(${w.id})">Chi tiết</button>`;
-    } else if (w.status === 'busy') {
-      qaHtml = `<button class="qa-btn qa-green" onclick="event.stopPropagation();finishW(${w.id},1)">✓ Xong</button>
-        <button class="qa-btn" onclick="event.stopPropagation();openPopup(${w.id})">Chi tiết</button>`;
-    } else if (isPen) {
-      qaHtml = `<button class="qa-btn qa-green" onclick="event.stopPropagation();remPen(${w.id})">Gỡ phạt</button>`;
-    } else {
-      qaHtml = `<button class="qa-btn qa-primary" onclick="event.stopPropagation();setSt(${w.id},'ready')">Vào làm lại</button>`;
-    }
-
-    let histHtml = '';
-    if (hasH) {
-      histHtml = `<div class="hist-wrap">
-        <div class="hist-toggle${isExp ? ' open' : ''}" onclick="togHist(event,${w.id})">
-          <span>Lịch sử (${w.history.length})</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-        <div class="hist-body">
-          ${w.history.map(h => `<div class="hr">
-            <div><div class="hr-t">${h.ti}</div><div class="hr-d">${h.dur}</div></div>
-            <div><div class="hr-s">${h.svc ? svcL(h.svc) : '—'}</div>${h.note ? '<div class="hr-n">' + h.note + '</div>' : ''}</div>
-            <div><div class="hr-r">${h.rev ? fmtM(h.rev) : '—'}</div>${h.tip ? '<div class="hr-tp">tip ' + fmtM(h.tip) + '</div>' : ''}</div>
-          </div>`).join('')}
-        </div>
-      </div>`;
-    }
-
-    const clickFn = multiMode && w.status === 'ready' ? `toggleChk(${w.id})` : `openPopup(${w.id})`;
-
-    html += `<div>
-      <div class="${cc}" onclick="${clickFn}">
-        <div class="${stripCls}"></div>
-        <div class="sc-body">
-          <div class="sc-top">
-            <div class="${avCls}">${w.ini}</div>
-            <div class="sc-info">
-              <div class="sc-name">${rank ? '<span style="font-size:10px;color:var(--t4);font-weight:700;margin-right:4px">#'+rank+'</span>' : ''}${w.name}</div>
-              <div class="sc-turns">${w.turns} turn hôm nay</div>
-              ${progressHtml}
-              ${tagsHtml}
-              ${revHtml}
-            </div>
-            ${badge}
-          </div>
-          <div class="sc-actions">${qaHtml}</div>
-        </div>
-      </div>
-      ${histHtml}
-    </div>`;
-  });
+  // Render penalized workers
+  penItems.forEach(w => { html += renderSingleCard(w, rd); });
 
   document.getElementById('staff-grid').innerHTML = html;
+}
+
+function renderSingleCard(w, rd) {
+  if (w.groupId) return ''; // skip grouped workers
+  const isNext = w === rd[0];
+  const isSel = w.id === selId;
+  const isChk = multiSel.has(w.id);
+  const isPen = w.status === 'penalized';
+  const hasH = w.history && w.history.length > 0;
+  const isExp = exHist.has(w.id);
+  const pt = penT[w.id];
+
+  let cc = 'staff-card';
+  if (isNext) cc += ' sc-next';
+  if (w.status === 'busy') cc += ' sc-busy';
+  if (w.status === 'off') cc += ' sc-off';
+  if (isPen) cc += ' sc-pen';
+  if (isSel) cc += ' sc-selected';
+
+  let stripCls = 'sc-strip strip-' + (isNext ? 'next' : w.status === 'penalized' ? 'pen' : w.status);
+  let avCls = 'sc-avatar av-' + (isNext ? 'next' : w.status === 'penalized' ? 'pen' : w.status === 'busy' ? 'busy' : w.status === 'off' ? 'off' : 'ready');
+
+  let badge = '';
+  if (isPen) badge = '<span class="sc-badge sb-pen">Bị phạt</span>';
+  else if (isNext) badge = '<span class="sc-badge sb-next">Tiếp theo</span>';
+  else if (w.status === 'ready') badge = '<span class="sc-badge sb-ready">Rảnh</span>';
+  else if (w.status === 'busy') badge = '<span class="sc-badge sb-busy">Đang làm</span>';
+  else badge = '<span class="sc-badge sb-off">Nghỉ</span>';
+
+  const rank = w.status === 'ready' ? rd.indexOf(w) + 1 : null;
+
+  let progressHtml = '';
+  if (w.status === 'busy' && w.startTime) {
+    const pct = Math.min(100, ((Date.now() - w.startTime) / MAX_BUSY_MS) * 100);
+    progressHtml = `<div class="sc-progress"><div class="sc-progress-fill" id="pb-${w.id}" style="width:${pct}%"></div></div>`;
+  }
+
+  let tags = '';
+  if (w.service) tags += `<span class="sc-tag t-svc">${svcL(w.service)}</span>`;
+  if (w.status === 'busy' && w.startTime) tags += `<span class="sc-tag t-timer">⏱ <span id="ct-${w.id}">${fmtT(Date.now() - w.startTime)}</span></span>`;
+  if (isPen && pt) tags += `<span class="sc-tag t-pen" id="cpen-${w.id}">${fmtP(pt.ut)}</span>`;
+  const tagsHtml = tags ? `<div class="sc-tags">${tags}</div>` : '';
+  const revHtml = w.totalRevenue ? `<div class="sc-rev">${fmtM(w.totalRevenue)}${w.totalTip ? ' · tip ' + fmtM(w.totalTip) : ''}</div>` : '';
+
+  let qaHtml = '';
+  if (multiMode && w.status === 'ready') {
+    qaHtml = `<button class="qa-btn ${isChk ? 'qa-primary' : ''}" onclick="event.stopPropagation();toggleChk(${w.id})">${isChk ? '✓ Đã chọn' : 'Chọn'}</button>`;
+  } else if (w.status === 'ready') {
+    qaHtml = `<button class="qa-btn qa-primary" onclick="event.stopPropagation();assignW(${w.id})">Giao turn</button>
+      <button class="qa-btn" onclick="event.stopPropagation();openPopup(${w.id})">Chi tiết</button>`;
+  } else if (w.status === 'busy') {
+    qaHtml = `<button class="qa-btn qa-green" onclick="event.stopPropagation();finishW(${w.id},1)">✓ Xong</button>
+      <button class="qa-btn" onclick="event.stopPropagation();openPopup(${w.id})">Chi tiết</button>`;
+  } else if (isPen) {
+    qaHtml = `<button class="qa-btn qa-green" onclick="event.stopPropagation();remPen(${w.id})">Gỡ phạt</button>`;
+  } else {
+    qaHtml = `<button class="qa-btn qa-primary" onclick="event.stopPropagation();setSt(${w.id},'ready')">Vào làm lại</button>`;
+  }
+
+  let histHtml = '';
+  if (hasH) {
+    histHtml = `<div class="hist-wrap">
+      <div class="hist-toggle${isExp ? ' open' : ''}" onclick="togHist(event,${w.id})">
+        <span>Lịch sử (${w.history.length})</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="hist-body">
+        ${w.history.map(h => `<div class="hr">
+          <div><div class="hr-t">${h.ti}</div><div class="hr-d">${h.dur}</div></div>
+          <div><div class="hr-s">${h.svc ? svcL(h.svc) : '—'}</div>${h.note ? '<div class="hr-n">' + h.note + '</div>' : ''}</div>
+          <div><div class="hr-r">${h.rev ? fmtM(h.rev) : '—'}</div>${h.tip ? '<div class="hr-tp">tip ' + fmtM(h.tip) + '</div>' : ''}</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  const clickFn = multiMode && w.status === 'ready' ? `toggleChk(${w.id})` : `openPopup(${w.id})`;
+
+  return `<div>
+    <div class="${cc}" onclick="${clickFn}">
+      <div class="${stripCls}"></div>
+      <div class="sc-body">
+        <div class="sc-top">
+          <div class="${avCls}">${w.ini}</div>
+          <div class="sc-info">
+            <div class="sc-name">${rank ? '<span style="font-size:10px;color:var(--t4);font-weight:700;margin-right:4px">#'+rank+'</span>' : ''}${w.name}</div>
+            <div class="sc-turns">${w.turns} turn hôm nay</div>
+            ${progressHtml}${tagsHtml}${revHtml}
+          </div>
+          ${badge}
+        </div>
+        <div class="sc-actions">${qaHtml}</div>
+      </div>
+    </div>
+    ${histHtml}
+  </div>`;
 }
 
 function render() {
