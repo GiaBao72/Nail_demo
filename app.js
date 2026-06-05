@@ -79,7 +79,7 @@ function tick() {
     const pb = document.getElementById('pb-' + w.id);
     if (pb) pb.style.width = Math.min(100, ((Date.now() - w.startTime) / MAX_BUSY_MS) * 100) + '%';
   });
-  // Group timers
+  // Group card timers
   const groups = {};
   W.filter(w => w.status === 'busy' && w.groupId).forEach(w => {
     if (!groups[w.groupId]) groups[w.groupId] = w;
@@ -133,21 +133,78 @@ function renderStats() {
 // ── RENDER STAFF GRID ──
 function renderGrid() {
   const rd = readyW();
-  const groupMembers = {};
-  W.filter(w => w.groupId).forEach(w => {
-    if (!groupMembers[w.groupId]) groupMembers[w.groupId] = [];
-    groupMembers[w.groupId].push(w.name);
+
+  // Build groups
+  const groups = {};
+  W.filter(w => w.status === 'busy' && w.groupId).forEach(w => {
+    if (!groups[w.groupId]) groups[w.groupId] = [];
+    groups[w.groupId].push(w);
   });
+  const groupedIds = new Set(Object.values(groups).flat().map(w => w.id));
+
   const order = [
     ...rd,
-    ...W.filter(w => w.status === 'busy'),
+    ...W.filter(w => w.status === 'busy' && !w.groupId),
     ...W.filter(w => w.status === 'off'),
     ...W.filter(w => w.status === 'penalized'),
   ];
-  document.getElementById('staff-grid').innerHTML = order.map(w => renderSingleCard(w, rd, groupMembers)).join('');
+
+  let html = '';
+
+  // Render single cards first (ready + solo busy + off + penalized)
+  order.forEach(w => {
+    if (groupedIds.has(w.id)) return;
+    html += renderSingleCard(w, rd);
+  });
+
+  // Render group cards
+  Object.entries(groups).forEach(([gid, members]) => {
+    html += renderGroupCard(gid, members, rd);
+  });
+
+  document.getElementById('staff-grid').innerHTML = html;
 }
 
-function renderSingleCard(w, rd, groupMembers) {
+function renderGroupCard(gid, members, rd) {
+  const elapsed = members[0].startTime ? Date.now() - members[0].startTime : 0;
+  const pct = Math.min(100, (elapsed / MAX_BUSY_MS) * 100);
+
+  const memberRows = members.map(m => {
+    const mElapsed = m.startTime ? Date.now() - m.startTime : 0;
+    const svcTag = m.service ? `<span class="sc-tag t-svc">${svcL(m.service)}</span>` : '';
+    const timerTag = `<span class="sc-tag t-timer">⏱ <span id="ct-${m.id}">${fmtT(mElapsed)}</span></span>`;
+    const revText = m.totalRevenue ? `<span style="font-size:11px;color:var(--c-ready);font-weight:700">${fmtM(m.totalRevenue)}${m.totalTip ? ' · tip ' + fmtM(m.totalTip) : ''}</span>` : '';
+    return `<div class="gm-row">
+      <div class="sc-avatar av-busy" style="width:34px;height:34px;font-size:11px;flex-shrink:0">${m.ini}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;line-height:1.3">${m.name}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${svcTag}${timerTag}</div>
+        ${revText ? `<div style="margin-top:3px">${revText}</div>` : ''}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+        <button class="qa-btn qa-green" style="padding:5px 10px;font-size:11px" onclick="event.stopPropagation();finishW(${m.id},1)">✓ Xong</button>
+        <button class="qa-btn" style="padding:5px 10px;font-size:11px" onclick="event.stopPropagation();openPopup(${m.id})">Chi tiết</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `<div class="group-card">
+    <div class="group-card-header">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:16px">👥</span>
+        <div>
+          <div style="font-size:12px;font-weight:800;color:var(--c-busy);letter-spacing:-.01em">Nhóm ${members.length} thợ</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:1px">Cùng 1 khách · <span id="ct-g-${gid}">${fmtT(elapsed)}</span></div>
+        </div>
+      </div>
+      <span class="sc-badge sb-busy">Đang làm</span>
+    </div>
+    <div class="sc-progress" style="margin:0 14px 10px"><div class="sc-progress-fill" id="pb-g-${gid}" style="width:${pct}%"></div></div>
+    <div class="group-members">${memberRows}</div>
+  </div>`;
+}
+
+function renderSingleCard(w, rd) {
   const isNext = w === rd[0];
   const isSel = w.id === selId;
   const isChk = multiSel.has(w.id);
@@ -185,10 +242,6 @@ function renderSingleCard(w, rd, groupMembers) {
   if (w.service) tags += `<span class="sc-tag t-svc">${svcL(w.service)}</span>`;
   if (w.status === 'busy' && w.startTime) tags += `<span class="sc-tag t-timer">⏱ <span id="ct-${w.id}">${fmtT(Date.now() - w.startTime)}</span></span>`;
   if (isPen && pt) tags += `<span class="sc-tag t-pen" id="cpen-${w.id}">${fmtP(pt.ut)}</span>`;
-  if (w.groupId && groupMembers && groupMembers[w.groupId]) {
-    const others = groupMembers[w.groupId].filter(n => n !== w.name);
-    if (others.length) tags += `<span class="sc-tag t-group">👥 cùng ${others.join(', ')}</span>`;
-  }
   const tagsHtml = tags ? `<div class="sc-tags">${tags}</div>` : '';
   const revHtml = w.totalRevenue ? `<div class="sc-rev">${fmtM(w.totalRevenue)}${w.totalTip ? ' · tip ' + fmtM(w.totalTip) : ''}</div>` : '';
 
