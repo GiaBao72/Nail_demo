@@ -631,6 +631,88 @@ input, select, textarea { font-family: inherit; }
   padding-bottom: 0;
 }
 
+/* ── SEARCH & FILTER BAR ── */
+.search-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--br2);
+  border-radius: var(--r);
+  padding: 7px 12px;
+  flex: 1;
+  max-width: 260px;
+  color: var(--t3);
+}
+.search-input {
+  border: none; outline: none;
+  background: transparent;
+  font-size: 13px; color: var(--t1);
+  width: 100%;
+}
+.search-input::placeholder { color: var(--t4); }
+.filter-tabs { display: flex; gap: 4px; }
+.filter-btn {
+  padding: 6px 12px; font-size: 11px; font-weight: 600;
+  border-radius: var(--r-sm); border: 1px solid var(--br2);
+  background: var(--surface); color: var(--t3);
+  cursor: pointer; font-family: inherit; transition: all .12s;
+}
+.filter-btn:hover { background: var(--surface-2); color: var(--t2); }
+.filter-btn.active { background: var(--t1); color: #fff; border-color: var(--t1); }
+
+/* ── DRAG & DROP ── */
+.staff-card[draggable="true"] { cursor: grab; }
+.staff-card[draggable="true"]:active { cursor: grabbing; }
+.staff-card.drag-over {
+  border-color: var(--rose) !important;
+  box-shadow: 0 0 0 3px var(--rose-b) !important;
+  transform: scale(1.01);
+}
+
+/* ── BAR CHART ── */
+.chart-wrap {
+  background: var(--surface);
+  border: 1px solid var(--br);
+  border-radius: var(--r-lg);
+  padding: 18px;
+  box-shadow: var(--s-sm);
+  margin-bottom: 12px;
+}
+.chart-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.chart-row:last-child { margin-bottom: 0; }
+.chart-name {
+  font-size: 12px; font-weight: 700;
+  color: var(--t2); width: 52px; flex-shrink: 0;
+  padding-top: 3px;
+}
+.chart-bars { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.chart-bar-wrap {
+  display: flex; align-items: center; gap: 8px;
+}
+.chart-bar {
+  height: 20px; border-radius: 4px;
+  min-width: 4px;
+  transition: width .4s var(--ease);
+}
+.cb-rev { background: linear-gradient(90deg, var(--rose-2), var(--rose-dark)); }
+.cb-tip { background: linear-gradient(90deg, #60A5FA, #2563EB); }
+.chart-val {
+  font-size: 11px; font-weight: 700;
+  color: var(--t2); white-space: nowrap;
+}
+
 /* ── TAB PAGES ── */
 .tab-header {
   display: flex; align-items: center; justify-content: space-between;

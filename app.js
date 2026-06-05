@@ -34,6 +34,10 @@ let exHist = new Set();
 let multiMode = false;
 let multiSel = new Set();
 let penT = {};
+let searchQ = '';
+let filterStatus = 'all';
+let dragSrcId = null;
+let dailyLogs = JSON.parse(localStorage.getItem('nt_dailyLogs') || '[]');
 
 // max busy time before progress bar full (60 min)
 const MAX_BUSY_MS = 60 * 60 * 1000;
@@ -133,14 +137,25 @@ function renderStats() {
 // ── RENDER STAFF GRID ──
 function renderGrid() {
   const rd = readyW();
-
-  // Build groups
+  const groupMembers = {};
+  W.filter(w => w.groupId).forEach(w => {
+    if (!groupMembers[w.groupId]) groupMembers[w.groupId] = [];
+    groupMembers[w.groupId].push(w.name);
+  });
   const groups = {};
   W.filter(w => w.status === 'busy' && w.groupId).forEach(w => {
     if (!groups[w.groupId]) groups[w.groupId] = [];
     groups[w.groupId].push(w);
   });
   const groupedIds = new Set(Object.values(groups).flat().map(w => w.id));
+
+  // Apply search + filter
+  const q = searchQ.toLowerCase();
+  function visible(w) {
+    if (q && !w.name.toLowerCase().includes(q)) return false;
+    if (filterStatus !== 'all' && w.status !== filterStatus) return false;
+    return true;
+  }
 
   const order = [
     ...rd,
@@ -151,58 +166,32 @@ function renderGrid() {
 
   let html = '';
 
-  // Render single cards first (ready + solo busy + off + penalized)
   order.forEach(w => {
     if (groupedIds.has(w.id)) return;
+    if (!visible(w)) return;
     html += renderSingleCard(w, rd);
   });
 
-  // Render group cards
+  // Group cards
   Object.entries(groups).forEach(([gid, members]) => {
+    const anyVisible = members.some(m => visible(m));
+    if (!anyVisible) return;
     html += renderGroupCard(gid, members, rd);
   });
 
+  if (!html) html = '<div style="text-align:center;padding:40px;color:var(--t4);font-size:13px">Không tìm thấy thợ nào</div>';
+
   document.getElementById('staff-grid').innerHTML = html;
+
+  // Bind drag events for ready workers
+  document.querySelectorAll('.staff-card[draggable="true"]').forEach(el => {
+    el.addEventListener('dragstart', onDragStart);
+    el.addEventListener('dragover', onDragOver);
+    el.addEventListener('drop', onDrop);
+    el.addEventListener('dragend', onDragEnd);
+  });
 }
 
-function renderGroupCard(gid, members, rd) {
-  const elapsed = members[0].startTime ? Date.now() - members[0].startTime : 0;
-  const pct = Math.min(100, (elapsed / MAX_BUSY_MS) * 100);
-
-  const memberRows = members.map(m => {
-    const mElapsed = m.startTime ? Date.now() - m.startTime : 0;
-    const svcTag = m.service ? `<span class="sc-tag t-svc">${svcL(m.service)}</span>` : '';
-    const timerTag = `<span class="sc-tag t-timer">⏱ <span id="ct-${m.id}">${fmtT(mElapsed)}</span></span>`;
-    const revText = m.totalRevenue ? `<span style="font-size:11px;color:var(--c-ready);font-weight:700">${fmtM(m.totalRevenue)}${m.totalTip ? ' · tip ' + fmtM(m.totalTip) : ''}</span>` : '';
-    return `<div class="gm-row">
-      <div class="sc-avatar av-busy" style="width:34px;height:34px;font-size:11px;flex-shrink:0">${m.ini}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:700;line-height:1.3">${m.name}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${svcTag}${timerTag}</div>
-        ${revText ? `<div style="margin-top:3px">${revText}</div>` : ''}
-      </div>
-      <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
-        <button class="qa-btn qa-green" style="padding:5px 10px;font-size:11px" onclick="event.stopPropagation();finishW(${m.id},1)">✓ Xong</button>
-        <button class="qa-btn" style="padding:5px 10px;font-size:11px" onclick="event.stopPropagation();openDetail(${m.id})">Chi tiết</button>
-      </div>
-    </div>`;
-  }).join('');
-
-  return `<div class="group-card">
-    <div class="group-card-header">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:16px">👥</span>
-        <div>
-          <div style="font-size:12px;font-weight:800;color:var(--c-busy);letter-spacing:-.01em">Nhóm ${members.length} thợ</div>
-          <div style="font-size:11px;color:var(--t3);margin-top:1px">Cùng 1 khách · <span id="ct-g-${gid}">${fmtT(elapsed)}</span></div>
-        </div>
-      </div>
-      <span class="sc-badge sb-busy">Đang làm</span>
-    </div>
-    <div class="sc-progress" style="margin:0 14px 10px"><div class="sc-progress-fill" id="pb-g-${gid}" style="width:${pct}%"></div></div>
-    <div class="group-members">${memberRows}</div>
-  </div>`;
-}
 
 function renderSingleCard(w, rd) {
   const isNext = w === rd[0];
@@ -280,8 +269,9 @@ function renderSingleCard(w, rd) {
 
   const clickFn = multiMode && w.status === 'ready' ? `toggleChk(${w.id})` : `openPopup(${w.id})`;
 
+  const draggable = w.status === 'ready' && !multiMode ? 'draggable="true" data-id="'+w.id+'"' : '';
   return `<div>
-    <div class="${cc}" onclick="${clickFn}">
+    <div class="${cc}" ${draggable} onclick="${clickFn}">
       <div class="${stripCls}"></div>
       <div class="sc-body">
         <div class="sc-top">
@@ -655,6 +645,18 @@ function getShiftHTML() {
         <button class="btn btn-ghost btn-sm" onclick="cancelMulti()" style="width:auto">✕</button>
       </div>
     </div>
+    <div class="search-filter-bar">
+      <div class="search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" id="search-input" placeholder="Tìm thợ..." oninput="onSearch(this.value)" value="${searchQ}">
+      </div>
+      <div class="filter-tabs">
+        <button class="filter-btn ${filterStatus==='all'?'active':''}" onclick="setFilter('all')">Tất cả</button>
+        <button class="filter-btn ${filterStatus==='ready'?'active':''}" onclick="setFilter('ready')">Rảnh</button>
+        <button class="filter-btn ${filterStatus==='busy'?'active':''}" onclick="setFilter('busy')">Đang làm</button>
+        <button class="filter-btn ${filterStatus==='off'?'active':''}" onclick="setFilter('off')">Nghỉ</button>
+      </div>
+    </div>
     <div class="staff-grid" id="staff-grid"></div>`;
 }
 
@@ -841,21 +843,70 @@ function doRemoveStaff(id) {
 
 // ── REPORT TAB ──
 function getReportHTML() {
+  const today = new Date().toISOString().slice(0, 10);
+  saveDayLog();
+  const dates = [...new Set(dailyLogs.map(l => l.date))].sort().reverse();
+  const dateOpts = dates.map(d => `<option value="${d}"${d===today?' selected':''}>${d}</option>`).join('');
   return `
     <div class="tab-header">
       <div>
-        <div class="tab-title">Báo cáo ca hôm nay</div>
+        <div class="tab-title">Báo cáo</div>
         <div class="tab-sub">Tổng kết doanh thu và hiệu suất</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select class="f-select" id="report-date" onchange="renderReport()" style="width:160px;font-size:13px">
+          ${dateOpts || '<option value="">Chưa có dữ liệu</option>'}
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="exportCSV()" style="width:auto;padding:8px 14px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Xuất CSV
+        </button>
       </div>
     </div>
     <div id="report-wrap"></div>`;
 }
 
 function renderReport() {
-  const sorted = [...W].sort((a, b) => b.totalRevenue - a.totalRevenue);
-  const totalRev = W.reduce((s, w) => s + w.totalRevenue, 0);
-  const totalTip = W.reduce((s, w) => s + w.totalTip, 0);
+  const sel = document.getElementById('report-date');
+  const date = sel ? sel.value : new Date().toISOString().slice(0, 10);
+  const log = dailyLogs.find(l => l.date === date);
+
+  // Use live data if today
+  const today = new Date().toISOString().slice(0, 10);
+  let workers, tTurns;
+  if (date === today || !log) {
+    workers = W.map(w => ({...w}));
+    tTurns = totalTurns;
+  } else {
+    workers = log.workers;
+    tTurns = log.totalTurns;
+  }
+
+  const sorted = [...workers].sort((a, b) => b.totalRevenue - a.totalRevenue);
+  const totalRev = workers.reduce((s, w) => s + w.totalRevenue, 0);
+  const totalTip = workers.reduce((s, w) => s + w.totalTip, 0);
   const topWorker = sorted[0];
+  const activeWorkers = sorted.filter(w => w.turns > 0 || w.totalRevenue > 0);
+
+  // Bar chart
+  const maxRev = Math.max(...activeWorkers.map(w => w.totalRevenue), 1);
+  const bars = activeWorkers.map(w => {
+    const pct = Math.round((w.totalRevenue / maxRev) * 100);
+    const tipPct = Math.round((w.totalTip / maxRev) * 100);
+    return `<div class="chart-row">
+      <div class="chart-name">${w.name}</div>
+      <div class="chart-bars">
+        <div class="chart-bar-wrap">
+          <div class="chart-bar cb-rev" style="width:${pct}%"></div>
+          <span class="chart-val">${fmtM(w.totalRevenue)}</span>
+        </div>
+        ${w.totalTip ? `<div class="chart-bar-wrap">
+          <div class="chart-bar cb-tip" style="width:${tipPct}%"></div>
+          <span class="chart-val" style="color:#3B82F6">${fmtM(w.totalTip)}</span>
+        </div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
 
   const rows = sorted.filter(w => w.turns > 0 || w.totalRevenue > 0).map(w => {
     const share = totalRev > 0 ? Math.round((w.totalRevenue / totalRev) * 100) : 0;
@@ -883,123 +934,39 @@ function renderReport() {
 
   document.getElementById('report-wrap').innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
-      <div class="report-stat-card">
-        <div class="rsc-val">${totalTurns}</div>
-        <div class="rsc-lbl">Tổng turn</div>
-      </div>
-      <div class="report-stat-card">
-        <div class="rsc-val" style="color:var(--c-ready)">${fmtM(totalRev)}</div>
-        <div class="rsc-lbl">Doanh thu</div>
-      </div>
-      <div class="report-stat-card">
-        <div class="rsc-val" style="color:#3B82F6">${fmtM(totalTip)}</div>
-        <div class="rsc-lbl">Tổng tip</div>
-      </div>
-      <div class="report-stat-card">
-        <div class="rsc-val" style="color:var(--rose)">${topWorker && topWorker.totalRevenue > 0 ? topWorker.name : '—'}</div>
-        <div class="rsc-lbl">Top doanh thu</div>
-      </div>
+      <div class="report-stat-card"><div class="rsc-val">${tTurns}</div><div class="rsc-lbl">Tổng turn</div></div>
+      <div class="report-stat-card"><div class="rsc-val" style="color:var(--c-ready)">${fmtM(totalRev)}</div><div class="rsc-lbl">Doanh thu</div></div>
+      <div class="report-stat-card"><div class="rsc-val" style="color:#3B82F6">${fmtM(totalTip)}</div><div class="rsc-lbl">Tổng tip</div></div>
+      <div class="report-stat-card"><div class="rsc-val" style="color:var(--rose);font-size:16px">${topWorker && topWorker.totalRevenue > 0 ? topWorker.name : '—'}</div><div class="rsc-lbl">Top doanh thu</div></div>
     </div>
+    ${activeWorkers.length ? `<div class="chart-wrap"><div class="panel-lbl" style="margin-bottom:12px">Doanh thu theo thợ</div>${bars}<div style="display:flex;gap:16px;margin-top:10px"><span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t3)"><span style="width:10px;height:10px;border-radius:2px;background:var(--rose);display:inline-block"></span>Doanh thu</span><span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t3)"><span style="width:10px;height:10px;border-radius:2px;background:#3B82F6;display:inline-block"></span>Tip</span></div></div>` : ''}
     <div class="data-table-wrap">
       <table class="data-table">
-        <thead><tr>
-          <th>Nhân viên</th>
-          <th style="text-align:center">Turn</th>
-          <th>Doanh thu</th>
-          <th>Tip</th>
-          <th>Tổng cộng</th>
-          <th>Tỷ trọng</th>
-        </tr></thead>
-        <tbody>${rows || '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--t4)">Chưa có dữ liệu ca hôm nay</td></tr>'}</tbody>
+        <thead><tr><th>Nhân viên</th><th style="text-align:center">Turn</th><th>Doanh thu</th><th>Tip</th><th>Tổng cộng</th><th>Tỷ trọng</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--t4)">Chưa có dữ liệu</td></tr>'}</tbody>
       </table>
     </div>`;
 }
 
-function openGroupPopup(gid) {
-  const members = W.filter(w => w.groupId === gid && w.status === 'busy');
-  if (!members.length) return;
-  const elapsed = members[0].startTime ? Date.now() - members[0].startTime : 0;
-  const startStr = members[0].startTime ? new Date(members[0].startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '--:--';
-  const avatars = members.map(m => `<div class="sc-avatar av-busy" style="width:32px;height:32px;font-size:10px">${m.ini}</div>`).join('');
-
-  document.getElementById('popup-head').innerHTML = `
-    <div style="display:flex;gap:4px">${avatars}</div>
-    <div>
-      <div class="popup-name">Nhóm ${members.length} thợ</div>
-      <div class="popup-meta">${members.map(m => m.name).join(', ')}</div>
-    </div>
-    <button class="popup-close" onclick="closePopup()">✕</button>`;
-
-  const opts = SVCS.map(s => `<option value="${s.v}"${members[0].service === s.v ? ' selected' : ''}>${s.l}</option>`).join('');
-
-  document.getElementById('popup-body').innerHTML = `
-    <div class="popup-timer">
-      <div class="pt-val" id="pt-g-${gid}">${fmtT(elapsed)}</div>
-      <div class="pt-sub">Bắt đầu lúc ${startStr}</div>
-    </div>
-    <div><div class="f-label">Dịch vụ (áp dụng cho cả nhóm)</div>
-      <select class="f-select" onchange="saveGroupSvc('${gid}',this.value)">${opts}</select>
-    </div>
-    <div class="f-row">
-      <div class="f-group"><div class="f-label">Tiền dịch vụ (chia đều)</div>
-        <input class="f-input" type="number" id="grv-${gid}" min="0" step="1000" placeholder="0"></div>
-      <div class="f-group"><div class="f-label">Tip (chia đều)</div>
-        <input class="f-input" type="number" id="gtp-${gid}" min="0" step="1000" placeholder="0"></div>
-    </div>
-    <div class="sec-div"><div class="sec-div-line"></div><div class="sec-div-txt">Xong việc</div><div class="sec-div-line"></div></div>
-    <div class="btn-row">
-      <button class="btn btn-dark btn-sm" style="flex:1" onclick="finishGroup('${gid}',1)">1 turn / thợ</button>
-      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="finishGroup('${gid}',0.5)">½ turn / thợ</button>
-      <button class="btn btn-ghost btn-sm" style="flex:1;color:var(--t3)" onclick="finishGroup('${gid}',0)">0 turn</button>
-    </div>`;
-
-  // update timer in popup
-  const popupTimer = setInterval(() => {
-    const e = document.getElementById('pt-g-' + gid);
-    if (!e) { clearInterval(popupTimer); return; }
-    e.textContent = fmtT(Date.now() - members[0].startTime);
-  }, 1000);
-
-  document.getElementById('popup-overlay').style.display = 'flex';
+function exportCSV() {
+  const sel = document.getElementById('report-date');
+  const date = sel ? sel.value : new Date().toISOString().slice(0, 10);
+  const log = dailyLogs.find(l => l.date === date);
+  const workers = (log && date !== new Date().toISOString().slice(0,10)) ? log.workers : W;
+  const rows = [['Tên','Turn','Doanh thu','Tip','Tổng']];
+  workers.forEach(w => rows.push([w.name, w.turns, w.totalRevenue, w.totalTip, w.totalRevenue+w.totalTip]));
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'nail-turn-'+date+'.csv';
+  a.click();
 }
 
-function saveGroupSvc(gid, val) {
-  W.filter(w => w.groupId === gid).forEach(w => w.service = val);
-  renderGrid();
-}
-
-function finishGroup(gid, tw) {
-  const members = W.filter(w => w.groupId === gid && w.status === 'busy');
-  const reEl = document.getElementById('grv-' + gid);
-  const tpEl = document.getElementById('gtp-' + gid);
-  const totalRev = reEl ? parseFloat(reEl.value) || 0 : 0;
-  const totalTip = tpEl ? parseFloat(tpEl.value) || 0 : 0;
-  const perRev = members.length ? Math.round(totalRev / members.length) : 0;
-  const perTip = members.length ? Math.round(totalTip / members.length) : 0;
-
-  members.forEach(w => {
-    w.totalRevenue = (w.totalRevenue || 0) + perRev;
-    w.totalTip = (w.totalTip || 0) + perTip;
-    w.turns = Math.round((w.turns - 1 + tw) * 10) / 10;
-    const dur = w.startTime ? Date.now() - w.startTime : 0;
-    const ti = w.startTime ? new Date(w.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '-';
-    if (!w.history) w.history = [];
-    w.history.push({ ti, dur: fmtT(dur), svc: w.service, rev: perRev, tip: perTip, note: '👥 Nhóm', tw });
-    exHist.add(w.id);
-  });
-  totalTurns = Math.round((totalTurns - members.length + members.length * tw) * 10) / 10;
-
-  members.forEach(w => {
-    W = W.filter(x => x.id !== w.id);
-    w.status = 'ready'; w.note = ''; w.startTime = null; w.service = ''; w.revenue = 0; w.tip = 0; w.groupId = null;
-    W.push(w);
-  });
-  toast('Nhóm ' + members.length + ' thợ xong việc ✓');
-  closePopup();
-}
 
 // ── INIT ──
 const mc = document.getElementById('main-content');
 mc.innerHTML = getShiftHTML();
 renderStats();
+renderGrid();
 renderGrid();
