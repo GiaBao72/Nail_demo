@@ -133,83 +133,21 @@ function renderStats() {
 // ── RENDER STAFF GRID ──
 function renderGrid() {
   const rd = readyW();
-
-  // Group busy workers by groupId
-  const groups = {};
-  W.filter(w => w.status === 'busy' && w.groupId).forEach(w => {
-    if (!groups[w.groupId]) groups[w.groupId] = [];
-    groups[w.groupId].push(w);
+  const groupMembers = {};
+  W.filter(w => w.groupId).forEach(w => {
+    if (!groupMembers[w.groupId]) groupMembers[w.groupId] = [];
+    groupMembers[w.groupId].push(w.name);
   });
-  const groupedIds = new Set(W.filter(w => w.groupId).map(w => w.id));
-
-  const singles = [
+  const order = [
     ...rd,
-    ...W.filter(w => w.status === 'busy' && !w.groupId),
+    ...W.filter(w => w.status === 'busy'),
     ...W.filter(w => w.status === 'off'),
     ...W.filter(w => w.status === 'penalized'),
   ];
-
-  let html = '';
-
-  // Render singles first (ready workers at top), then group cards, then off/penalized
-  // Order: ready → busy solo → busy groups → off → penalized
-  const readyItems = rd;
-  const busySolo = W.filter(w => w.status === 'busy' && !w.groupId);
-  const offItems = W.filter(w => w.status === 'off');
-  const penItems = W.filter(w => w.status === 'penalized');
-
-  // Render ready workers
-  readyItems.forEach(w => { html += renderSingleCard(w, rd); });
-
-  // Render busy solo workers
-  busySolo.forEach(w => { html += renderSingleCard(w, rd); });
-
-  // Render group cards (busy groups) — after solo busy workers
-  Object.entries(groups).forEach(([gid, members]) => {
-    const elapsed = members[0].startTime ? Date.now() - members[0].startTime : 0;
-    const pct = Math.min(100, (elapsed / MAX_BUSY_MS) * 100);
-    const svc = members[0].service;
-    const avatars = members.map(m =>
-      `<div class="sc-avatar av-busy" style="width:34px;height:34px;font-size:10px;border:2px solid #fff;margin-right:-8px">${m.ini}</div>`
-    ).join('');
-    const names = members.map(m => m.name).join(', ');
-    const timerTag = `<span class="sc-tag t-timer">⏱ <span id="ct-g-${gid}">${fmtT(elapsed)}</span></span>`;
-    const svcTag = svc ? `<span class="sc-tag t-svc">${svcL(svc)}</span>` : '';
-
-    html += `<div>
-      <div class="staff-card sc-busy" onclick="openGroupPopup('${gid}')">
-        <div class="sc-strip strip-busy"></div>
-        <div class="sc-body">
-          <div class="sc-top">
-            <div style="display:flex;align-items:center;padding-right:12px">${avatars}</div>
-            <div class="sc-info">
-              <div class="sc-name"><span style="font-size:10px;color:var(--t4);font-weight:700;margin-right:4px">👥 NHÓM</span>${names}</div>
-              <div class="sc-turns">${members.length} thợ · cùng 1 khách</div>
-              <div class="sc-progress" style="margin-top:6px"><div class="sc-progress-fill" id="pb-g-${gid}" style="width:${pct}%"></div></div>
-              <div class="sc-tags">${svcTag}${timerTag}</div>
-            </div>
-            <span class="sc-badge sb-busy">Đang làm</span>
-          </div>
-          <div class="sc-actions">
-            <button class="qa-btn qa-green" onclick="event.stopPropagation();finishGroup('${gid}',1)">✓ Xong nhóm</button>
-            <button class="qa-btn" onclick="event.stopPropagation();openGroupPopup('${gid}')">Chi tiết</button>
-          </div>
-        </div>
-      </div>
-    </div>`;
-  });
-
-  // Render off workers
-  offItems.forEach(w => { html += renderSingleCard(w, rd); });
-
-  // Render penalized workers
-  penItems.forEach(w => { html += renderSingleCard(w, rd); });
-
-  document.getElementById('staff-grid').innerHTML = html;
+  document.getElementById('staff-grid').innerHTML = order.map(w => renderSingleCard(w, rd, groupMembers)).join('');
 }
 
-function renderSingleCard(w, rd) {
-  if (w.groupId) return ''; // skip grouped workers
+function renderSingleCard(w, rd, groupMembers) {
   const isNext = w === rd[0];
   const isSel = w.id === selId;
   const isChk = multiSel.has(w.id);
@@ -225,8 +163,8 @@ function renderSingleCard(w, rd) {
   if (isPen) cc += ' sc-pen';
   if (isSel) cc += ' sc-selected';
 
-  let stripCls = 'sc-strip strip-' + (isNext ? 'next' : w.status === 'penalized' ? 'pen' : w.status);
-  let avCls = 'sc-avatar av-' + (isNext ? 'next' : w.status === 'penalized' ? 'pen' : w.status === 'busy' ? 'busy' : w.status === 'off' ? 'off' : 'ready');
+  const stripCls = 'sc-strip strip-' + (isNext ? 'next' : isPen ? 'pen' : w.status);
+  const avCls = 'sc-avatar av-' + (isNext ? 'next' : isPen ? 'pen' : w.status === 'busy' ? 'busy' : w.status === 'off' ? 'off' : 'ready');
 
   let badge = '';
   if (isPen) badge = '<span class="sc-badge sb-pen">Bị phạt</span>';
@@ -247,6 +185,10 @@ function renderSingleCard(w, rd) {
   if (w.service) tags += `<span class="sc-tag t-svc">${svcL(w.service)}</span>`;
   if (w.status === 'busy' && w.startTime) tags += `<span class="sc-tag t-timer">⏱ <span id="ct-${w.id}">${fmtT(Date.now() - w.startTime)}</span></span>`;
   if (isPen && pt) tags += `<span class="sc-tag t-pen" id="cpen-${w.id}">${fmtP(pt.ut)}</span>`;
+  if (w.groupId && groupMembers && groupMembers[w.groupId]) {
+    const others = groupMembers[w.groupId].filter(n => n !== w.name);
+    if (others.length) tags += `<span class="sc-tag t-group">👥 cùng ${others.join(', ')}</span>`;
+  }
   const tagsHtml = tags ? `<div class="sc-tags">${tags}</div>` : '';
   const revHtml = w.totalRevenue ? `<div class="sc-rev">${fmtM(w.totalRevenue)}${w.totalTip ? ' · tip ' + fmtM(w.totalTip) : ''}</div>` : '';
 
