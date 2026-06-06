@@ -226,7 +226,7 @@ function renderKanban() {
     if (isPen && pt) sub = `<div style="margin-top:6px"><span class="sc-tag t-pen" style="font-size:9px;padding:1px 6px" id="kcpen-${w.id}">${fmtP(pt.ut)}</span></div>`;
     let actionBtn = '';
     if (w.status==='busy') actionBtn = `<button onclick="event.stopPropagation();finishW(${w.id},1)" style="width:26px;height:26px;border-radius:6px;border:none;background:var(--c-ready);color:#fff;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">✓</button>`;
-    else if (w.status==='ready') actionBtn = `<button onclick="event.stopPropagation();assignW(${w.id})" style="width:26px;height:26px;border-radius:6px;border:none;background:var(--rose);color:#fff;font-size:13px;font-weight:900;cursor:pointer;flex-shrink:0;line-height:1;font-family:sans-serif">+</button>`;
+    else if (w.status==='ready') actionBtn = `<button onclick="event.stopPropagation();assignW(${w.id})" style="padding:0 8px;height:26px;border-radius:6px;border:none;background:var(--rose);color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;line-height:1;font-family:inherit;white-space:nowrap">Vào turn</button>`;
     else if (w.status==='off') actionBtn = `<button onclick="event.stopPropagation();setSt(${w.id},'ready')" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--br2);background:var(--surface-2);color:var(--t2);font-size:11px;cursor:pointer;flex-shrink:0" title="Vào làm lại">↩</button>`;
     else if (isPen) actionBtn = `<button onclick="event.stopPropagation();remPen(${w.id})" style="width:26px;height:26px;border-radius:6px;border:none;background:var(--c-ready);color:#fff;font-size:11px;cursor:pointer;flex-shrink:0" title="Gỡ phạt">✓</button>`;
     return `<div class="kc" style="background:var(--surface);border:1px solid var(--br);border-radius:10px;padding:10px;cursor:pointer;margin-bottom:0" onclick="openPopup(${w.id})">
@@ -302,7 +302,7 @@ function getShiftHTML() {
         <div style="margin-left:auto;display:flex;gap:8px;flex-shrink:0">
           <button class="btn btn-rose btn-sm" onclick="assignNext()" style="width:auto;padding:9px 18px">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-            Giao turn
+            Vào turn
           </button>
           <button class="btn btn-ghost btn-sm" id="btn-multi" onclick="toggleMulti()" style="width:auto;padding:9px 14px;color:#3B82F6;border-color:rgba(59,130,246,.25)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -638,7 +638,7 @@ function openDetail(id) {
   } else if (w.status === 'ready') {
     body = `<button class="btn btn-rose" onclick="assignW(${w.id})">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-        Giao turn ngay
+        Vào turn ngay
       </button>
       <button class="btn btn-ghost" onclick="setSt(${w.id},'off')">😴 Cho nghỉ</button>
       <div><div class="f-label" style="margin-bottom:8px">🔒 Phạt / Khóa ca</div>
@@ -688,12 +688,12 @@ function assignNext() {
 function confirmAssignNext(id) {
   const w = W.find(x=>x.id===id); if (!w||w.status!=='ready') return;
   w.status='busy'; w.turns++; totalTurns++; w.note=''; w.startTime=Date.now(); w.service='';
-  toast('Giao turn cho ' + w.name + ' 💅'); closePopup();
+  toast('Vào turn cho ' + w.name + ' 💅'); closePopup();
 }
 function assignW(id) {
   const w = W.find(x=>x.id===id); if (!w||w.status!=='ready') return;
   w.status='busy'; w.turns++; totalTurns++; w.note=''; w.startTime=Date.now(); w.service='';
-  toast('Giao turn cho ' + w.name + ' 💅'); closePopup();
+  toast('Vào turn cho ' + w.name + ' 💅'); closePopup();
 }
 function finishW(id, tw) {
   const w = W.find(x=>x.id===id); if (!w) return;
@@ -832,7 +832,7 @@ function renderCard(w, rd) {
   if (multiMode && w.status==='ready') {
     qa = `<button class="qa-btn ${isChk?'qa-primary':''}" onclick="event.stopPropagation();toggleChk(${w.id})">${isChk?'✓ Đã chọn':'Chọn'}</button>`;
   } else if (w.status==='ready') {
-    qa = `<button class="qa-btn qa-primary" onclick="event.stopPropagation();assignW(${w.id})">Giao turn</button>
+    qa = `<button class="qa-btn qa-primary" onclick="event.stopPropagation();assignW(${w.id})">Vào turn</button>
       <button class="qa-btn" onclick="event.stopPropagation();openDetail(${w.id})">Chi tiết</button>`;
   } else if (w.status==='busy') {
     qa = `<button class="qa-btn qa-green" onclick="event.stopPropagation();finishW(${w.id},1)">✓ Xong</button>
