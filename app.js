@@ -30,7 +30,7 @@ let W = [
 let totalTurns = 0, nextId = 11, selId = null;
 let exHist = new Set(), multiMode = false, multiSel = new Set(), penT = {};
 let searchQ = '', filterStatus = 'all', dragSrcId = null;
-let currentTab = 'shift';
+let currentTab = 'shift', shiftView = 1; // 1 = list, 2 = kanban
 let dailyLogs = [];
 try { dailyLogs = JSON.parse(localStorage.getItem('nt_dailyLogs') || '[]'); } catch(e) {}
 
@@ -65,7 +65,7 @@ function tick() {
   if (st) st.textContent = n.getHours() < 12 ? 'Ca sáng' : n.getHours() < 17 ? 'Ca chiều' : 'Ca tối';
   W.filter(w => w.status === 'busy' && w.startTime).forEach(w => {
     const t = fmtT(Date.now() - w.startTime);
-    ['ct-','pt-'].forEach(p => { const e = document.getElementById(p+w.id); if(e) e.textContent = t; });
+    ['ct-','pt-','kct-'].forEach(p => { const e = document.getElementById(p+w.id); if(e) e.textContent = t; });
     const pb = document.getElementById('pb-'+w.id);
     if (pb) pb.style.width = Math.min(100, (Date.now()-w.startTime)/MAX_BUSY_MS*100) + '%';
   });
@@ -132,7 +132,13 @@ function renderGrid() {
   });
   if (!html) html = '<div style="text-align:center;padding:40px;color:var(--t4);font-size:13px">Không tìm thấy thợ nào</div>';
   const el = document.getElementById('staff-grid');
-  if (el) { el.innerHTML = html; initDrag(); }
+  if (el) {
+    el.classList.remove('kanban-mode');
+    el.style.display = '';
+    el.style.flexDirection = '';
+    el.innerHTML = html;
+    if (shiftView === 1) initDrag();
+  }
 }
 
 // ── DRAG & DROP ──
@@ -182,12 +188,86 @@ function setFilter(f) {
 // ── RENDER FUNCTION ──
 function render() {
   if (currentTab !== 'shift') return;
-  renderStats(); renderGrid();
+  renderStats();
+  if (shiftView === 2) renderKanban(); else renderGrid();
   const mb = document.getElementById('multi-bar');
   if (mb) mb.style.display = multiMode ? 'flex' : 'none';
   const mc = document.getElementById('multi-cnt'); if (mc) mc.textContent = multiSel.size;
   const bm = document.getElementById('btn-multi');
   if (bm) { bm.style.background = multiMode ? '#1D4ED8' : ''; bm.style.color = multiMode ? '#fff' : '#3B82F6'; }
+  // update view toggle btn
+  const vb = document.getElementById('btn-view');
+  if (vb) vb.textContent = shiftView === 1 ? 'Xem dạng cột' : 'Xem dạng danh sách';
+}
+
+function toggleView() {
+  shiftView = shiftView === 1 ? 2 : 1;
+  const vb = document.getElementById('btn-view');
+  if (vb) vb.textContent = shiftView === 1 ? 'Xem dạng cột' : 'Xem dạng danh sách';
+  // show/hide search-filter bar (not useful in kanban)
+  const sfb = document.querySelector('.search-filter-bar');
+  if (sfb) sfb.style.display = shiftView === 2 ? 'none' : '';
+  if (shiftView === 2) renderKanban(); else renderGrid();
+}
+
+// ── KANBAN VIEW ──
+function renderKanban() {
+  const rd = readyW();
+  const busy = W.filter(w => w.status === 'busy');
+  const off = W.filter(w => w.status === 'off');
+  const pen = W.filter(w => w.status === 'penalized');
+
+  function miniCard(w) {
+    const isPen = w.status === 'penalized', pt = penT[w.id];
+    const elapsed = w.startTime ? Date.now() - w.startTime : 0;
+    const avCls = w.status==='busy'?'av-busy':isPen?'av-pen':w.status==='off'?'av-off':'av-ready';
+    let sub = '';
+    if (w.status==='busy') sub = `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px"><span class="sc-tag t-timer" style="font-size:9px;padding:1px 6px">⏱ <span id="kct-${w.id}">${fmtT(elapsed)}</span></span>${w.service?`<span class="sc-tag t-svc" style="font-size:9px;padding:1px 6px">${svcL(w.service)}</span>`:''}</div>`;
+    if (isPen && pt) sub = `<div style="margin-top:6px"><span class="sc-tag t-pen" style="font-size:9px;padding:1px 6px" id="kcpen-${w.id}">${fmtP(pt.ut)}</span></div>`;
+    let actionBtn = '';
+    if (w.status==='busy') actionBtn = `<button onclick="event.stopPropagation();finishW(${w.id},1)" style="width:26px;height:26px;border-radius:6px;border:none;background:var(--c-ready);color:#fff;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">✓</button>`;
+    else if (w.status==='ready') actionBtn = `<button onclick="event.stopPropagation();assignW(${w.id})" style="width:26px;height:26px;border-radius:6px;border:none;background:var(--rose);color:#fff;font-size:13px;font-weight:900;cursor:pointer;flex-shrink:0;line-height:1;font-family:sans-serif">+</button>`;
+    else if (w.status==='off') actionBtn = `<button onclick="event.stopPropagation();setSt(${w.id},'ready')" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--br2);background:var(--surface-2);color:var(--t2);font-size:11px;cursor:pointer;flex-shrink:0" title="Vào làm lại">↩</button>`;
+    else if (isPen) actionBtn = `<button onclick="event.stopPropagation();remPen(${w.id})" style="width:26px;height:26px;border-radius:6px;border:none;background:var(--c-ready);color:#fff;font-size:11px;cursor:pointer;flex-shrink:0" title="Gỡ phạt">✓</button>`;
+    return `<div class="kc" style="background:var(--surface);border:1px solid var(--br);border-radius:10px;padding:10px;cursor:pointer;margin-bottom:0" onclick="openPopup(${w.id})">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="sc-avatar ${avCls}" style="width:32px;height:32px;font-size:11px;flex-shrink:0">${w.ini}</div>
+        <div style="flex:1;min-width:0;overflow:hidden">
+          <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${w.name}</div>
+          <div style="font-size:10px;color:var(--t3);margin-top:1px">${w.turns} turn${w.totalRevenue?' · '+fmtM(w.totalRevenue):''}</div>
+        </div>
+        ${actionBtn}
+      </div>
+      ${sub}
+    </div>`;
+  }
+
+  const cols = [
+    { key:'ready',     label:'Rảnh',      count:rd.length,  color:'#16A34A', bg:'#F0FDF4', items:rd   },
+    { key:'busy',      label:'Đang làm',  count:busy.length, color:'#D97706', bg:'#FFFBEB', items:busy },
+    { key:'off',       label:'Nghỉ',      count:off.length,  color:'#6B7280', bg:'#F9FAFB', items:off  },
+    { key:'penalized', label:'Bị phạt',   count:pen.length,  color:'#DC2626', bg:'#FEF2F2', items:pen  },
+  ];
+
+  const colsHtml = cols.map(col => `
+    <div style="background:var(--surface-2);border-radius:12px;border:1px solid var(--br);overflow:hidden;min-width:0">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface);border-bottom:2px solid ${col.color}">
+        <span style="font-size:12px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:${col.color}">${col.label}</span>
+        <span style="font-size:11px;font-weight:800;padding:2px 9px;border-radius:20px;background:${col.bg};color:${col.color}">${col.count}</span>
+      </div>
+      <div style="padding:8px;display:flex;flex-direction:column;gap:6px;min-height:80px">
+        ${col.items.length ? col.items.map(w => miniCard(w)).join('') : '<div style="text-align:center;padding:20px 0;color:var(--t4);font-size:12px">Trống</div>'}
+      </div>
+    </div>`).join('');
+
+  const html = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:start;width:100%">${colsHtml}</div>`;
+
+  const sg = document.getElementById('staff-grid');
+  if (sg) {
+    sg.classList.add('kanban-mode');
+    sg.style.cssText = 'display:block;flex-direction:unset;gap:0';
+    sg.innerHTML = html;
+  }
 }
 
 // ── TABS ──
@@ -227,6 +307,9 @@ function getShiftHTML() {
           <button class="btn btn-ghost btn-sm" id="btn-multi" onclick="toggleMulti()" style="width:auto;padding:9px 14px;color:#3B82F6;border-color:rgba(59,130,246,.25)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
             Chọn nhóm
+          </button>
+          <button id="btn-view" class="btn btn-ghost btn-sm" onclick="toggleView()" style="width:auto;padding:9px 14px;color:var(--t2);border-color:var(--br2)">
+            ${shiftView === 1 ? 'Xem dạng cột' : 'Xem dạng danh sách'}
           </button>
         </div>
       </div>

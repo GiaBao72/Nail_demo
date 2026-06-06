@@ -631,6 +631,66 @@ input, select, textarea { font-family: inherit; }
   padding-bottom: 0;
 }
 
+/* ── KANBAN VIEW ── */
+.staff-grid.kanban-mode {
+  display: block;
+}
+.kanban-wrap {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+.kanban-col {
+  background: var(--surface-2);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--br);
+  overflow: hidden;
+}
+.kanban-col-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 2px solid;
+  background: var(--surface);
+}
+.kanban-col-title { font-size: 12px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; }
+.kanban-col-count {
+  font-size: 11px; font-weight: 800;
+  padding: 2px 8px; border-radius: 20px;
+}
+.kanban-col-body { padding: 8px; display: flex; flex-direction: column; gap: 6px; min-height: 80px; }
+.kanban-empty { text-align: center; padding: 20px 0; color: var(--t4); font-size: 12px; }
+
+/* Mini card in kanban */
+.kc {
+  background: var(--surface);
+  border: 1px solid var(--br);
+  border-radius: var(--r);
+  padding: 10px;
+  cursor: pointer;
+  transition: box-shadow .15s, transform .1s;
+}
+.kc:hover { box-shadow: var(--s-sm); transform: translateY(-1px); }
+.kc-top { display: flex; align-items: center; gap: 8px; }
+.kc-name { font-size: 13px; font-weight: 700; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kc-turns { font-size: 10px; color: var(--t3); margin-top: 1px; }
+.kc-sub { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.kc-btn {
+  width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--br2);
+  background: var(--surface-2); color: var(--t2); font-size: 12px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all .12s; font-family: inherit;
+}
+.kc-btn:hover { background: var(--surface-3); }
+.kc-btn-green { background: var(--c-ready); color: #fff; border-color: var(--c-ready); }
+.kc-btn-green:hover { background: #15803D; }
+.kc-btn-rose { background: var(--rose); color: #fff; border-color: var(--rose); }
+.kc-btn-rose:hover { background: var(--rose-dark); }
+
+@media (max-width: 900px) {
+  .kanban-wrap { grid-template-columns: repeat(2, 1fr); }
+}
+
 /* ── SEARCH & FILTER BAR ── */
 .search-filter-bar {
   display: flex;
