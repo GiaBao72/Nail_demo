@@ -266,7 +266,8 @@ function renderKanban() {
     const clickFn = (multiMode && isReady) ? `toggleChk(${w.id})` : `openDetail(${w.id})`;
     const cardBorder = isChk ? '2px solid #1D4ED8' : '1px solid var(--br)';
     const cardBg = isChk ? '#EFF6FF' : 'var(--surface)';
-    return `<div class="kc" style="background:${cardBg};border:${cardBorder};border-radius:10px;padding:10px;cursor:pointer;margin-bottom:0;transition:all .15s" onclick="${clickFn}">
+    const draggable = (!multiMode && isReady) ? 'draggable="true"' : '';
+    return `<div class="kc" ${draggable} data-id="${w.id}" style="background:${cardBg};border:${cardBorder};border-radius:10px;padding:10px;cursor:${(!multiMode && isReady) ? 'grab' : 'pointer'};margin-bottom:0;transition:all .15s" onclick="${clickFn}">
       <div style="display:flex;align-items:center;gap:8px">
         <div class="sc-avatar ${avCls}" style="width:32px;height:32px;font-size:11px;flex-shrink:0">${w.ini}</div>
         <div style="flex:1;min-width:0;overflow:hidden">
@@ -342,7 +343,7 @@ function renderKanban() {
 
   const isMobile = window.innerWidth <= 480;
   const colsHtml = cols.map(col => `
-    <div style="background:var(--surface-2);border-radius:12px;border:1px solid var(--br);overflow:hidden;${isMobile ? 'min-width:80vw' : 'min-width:0'}">
+    <div ${col.key==='ready' ? 'id="kanban-ready-col"' : ''} style="background:var(--surface-2);border-radius:12px;border:1px solid var(--br);overflow:hidden;${isMobile ? 'min-width:80vw' : 'min-width:0'}">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface);border-bottom:2px solid ${col.color}">
         <span style="font-size:12px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:${col.color}">${col.label}</span>
         <span style="font-size:11px;font-weight:800;padding:2px 9px;border-radius:20px;background:${col.bg};color:${col.color}">${col.count}</span>
@@ -365,7 +366,45 @@ function renderKanban() {
     sg.classList.add('kanban-mode');
     sg.style.cssText = 'display:block;flex-direction:unset;gap:0';
     sg.innerHTML = html;
+    initKanbanDrag();
   }
+}
+
+function initKanbanDrag() {
+  const col = document.getElementById('kanban-ready-col');
+  if (!col) return;
+  let dragId = null;
+
+  col.addEventListener('dragstart', e => {
+    const card = e.target.closest('.kc[draggable]');
+    if (!card) return;
+    dragId = parseInt(card.dataset.id);
+    card.style.opacity = '0.45';
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  col.addEventListener('dragend', e => {
+    col.querySelectorAll('.kc').forEach(c => { c.style.opacity = ''; c.classList.remove('kc-drag-over'); });
+    dragId = null;
+  });
+  col.addEventListener('dragover', e => {
+    e.preventDefault();
+    col.querySelectorAll('.kc').forEach(c => c.classList.remove('kc-drag-over'));
+    const card = e.target.closest('.kc[draggable]');
+    if (card && parseInt(card.dataset.id) !== dragId) card.classList.add('kc-drag-over');
+  });
+  col.addEventListener('drop', e => {
+    e.preventDefault();
+    const card = e.target.closest('.kc[draggable]');
+    if (!card || !dragId) return;
+    const tId = parseInt(card.dataset.id);
+    if (dragId === tId) return;
+    const src = W.find(x => x.id === dragId), tgt = W.find(x => x.id === tId);
+    if (!src || !tgt || src.status !== 'ready' || tgt.status !== 'ready') return;
+    const si = W.indexOf(src), ti = W.indexOf(tgt);
+    W.splice(si, 1); W.splice(ti, 0, src);
+    renderKanban(); renderStats(); saveState();
+    initKanbanDrag();
+  });
 }
 
 // ── TABS ──
