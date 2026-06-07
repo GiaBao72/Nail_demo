@@ -830,10 +830,7 @@ function openDetail(id) {
     const startStr = w.startTime ? new Date(w.startTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}) : '--:--';
     body = `<div class="popup-timer"><div class="pt-val" id="pt-${w.id}">${fmtT(elapsed)}</div><div class="pt-sub">Bắt đầu lúc ${startStr}</div></div>
       <div><div class="f-label" style="margin-bottom:6px">Dịch vụ</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">${svcCheckboxes(w.service,'svc-'+w.id)}</div></div>
-      <div class="f-row">
-        <div class="f-group"><div class="f-label">Tiền dịch vụ</div><input class="f-input" type="number" id="rv-${w.id}" min="0" step="1000" placeholder="0" value="${w.revenue||''}"></div>
-        <div class="f-group"><div class="f-label">Tip</div><input class="f-input" type="number" id="tp-${w.id}" min="0" step="1000" placeholder="0" value="${w.tip||''}"></div>
-      </div>
+      
       <div><div class="f-label">Ghi chú</div><textarea class="f-textarea" id="nt-${w.id}" rows="2" placeholder="Khách VIP, hẹn lại...">${w.note||''}</textarea></div>
       <button class="btn btn-dark" onclick="saveInfo(${w.id})" style="margin-top:2px">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
@@ -882,10 +879,8 @@ function togHist(e, id) { e.stopPropagation(); exHist.has(id)?exHist.delete(id):
 function toggleChk(id) { multiSel.has(id)?multiSel.delete(id):multiSel.add(id); render(); }
 function saveInfo(id) {
   const w = W.find(x=>x.id===id); if (!w) return;
-  const rv=document.getElementById('rv-'+id), tp=document.getElementById('tp-'+id), nt=document.getElementById('nt-'+id);
+  const nt=document.getElementById('nt-'+id);
   w.service = getCheckedSvc('svc-'+id);
-  if(rv) w.revenue=parseFloat(rv.value)||0;
-  if(tp) w.tip=parseFloat(tp.value)||0;
   if(nt) w.note=nt.value.trim();
   toast('Đã lưu thông tin ' + w.name + ' ✓'); renderGrid();
 }
@@ -935,13 +930,11 @@ function doAssignW(id) {
 }
 function finishW(id, tw) {
   const w = W.find(x=>x.id===id); if (!w) return;
-  // Nếu đang trong popup chi tiết (có input trên màn hình) thì dùng luôn giá trị đó
-  const ne=document.getElementById('nt-'+id), re=document.getElementById('rv-'+id), te=document.getElementById('tp-'+id);
-  if (re !== null) {
-    // Gọi từ popup chi tiết — có sẵn input, thực thi luôn
+  const ne=document.getElementById('nt-'+id);
+  if (ne !== null) {
+    // Gọi từ popup chi tiết — có sẵn note textarea, thực thi luôn
     if(ne) w.note=ne.value.trim();
-    const rev=re?parseFloat(re.value)||0:0, tip=te?parseFloat(te.value)||0:0;
-    _doFinishW(w, tw, rev, tip);
+    _doFinishW(w, tw, 0, 0);
   } else {
     // Gọi từ nút quick — mở popup nhập thông tin trước
     const elapsed = w.startTime ? Date.now()-w.startTime : 0;
@@ -953,10 +946,7 @@ function finishW(id, tw) {
     document.getElementById('popup-body').innerHTML = `
       <div class="popup-timer" style="padding:10px 14px"><div class="pt-val" style="font-size:32px">${fmtT(elapsed)}</div><div class="pt-sub">Bắt đầu lúc ${startStr}</div></div>
       <div><div class="f-label" style="margin-bottom:6px">Dịch vụ</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">${svcCheckboxes(w.service,'rv-svc-'+id)}</div></div>
-      <div class="f-row">
-        <div class="f-group"><div class="f-label">Tiền dịch vụ</div><input class="f-input" type="number" id="rv-${id}" min="0" step="1000" placeholder="0" value="${w.revenue||''}"></div>
-        <div class="f-group"><div class="f-label">Tip</div><input class="f-input" type="number" id="tp-${id}" min="0" step="1000" placeholder="0" value="${w.tip||''}"></div>
-      </div>
+      
       <div><div class="f-label">Ghi chú</div><textarea class="f-textarea" id="nt-${id}" rows="2" placeholder="Khách VIP, hẹn lại...">${w.note||''}</textarea></div>
       <div class="sec-div"><div class="sec-div-line"></div><div class="sec-div-txt">Xong việc — tính turn</div><div class="sec-div-line"></div></div>
       <div class="btn-row">
@@ -970,14 +960,13 @@ function finishW(id, tw) {
   }
 }
 function _doFinishW(w, tw, rev, tip) {
-  w.totalRevenue=(w.totalRevenue||0)+rev; w.totalTip=(w.totalTip||0)+tip;
-  // đọc dịch vụ từ cả 2 loại popup
+  // đọc dịch vụ từ popup đang mở
   const svcVal = getCheckedSvc('svc-'+w.id) || getCheckedSvc('rv-svc-'+w.id);
-  if (svcVal !== undefined) w.service = svcVal;
+  if (svcVal) w.service = svcVal;
   w.turns=Math.round((w.turns-1+tw)*10)/10; totalTurns=Math.round((totalTurns-1+tw)*10)/10;
   const dur=w.startTime?Date.now()-w.startTime:0, ti=w.startTime?new Date(w.startTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):'-';
   if (!w.history) w.history=[];
-  w.history.push({ti, dur:fmtT(dur), svc:w.service, rev, tip, note:w.note, tw});
+  w.history.push({ti, dur:fmtT(dur), svc:w.service, note:w.note, tw});
   exHist.add(w.id);
   W=W.filter(x=>x.id!==w.id);
   w.status='ready'; w.note=''; w.startTime=null; w.service=''; w.revenue=0; w.tip=0; w.groupId=null;
@@ -1067,10 +1056,7 @@ function openGroupPopup(gid) {
   document.getElementById('popup-body').innerHTML = `
     <div class="popup-timer"><div class="pt-val" id="pt-g-${gid}">${fmtT(elapsed)}</div><div class="pt-sub">Bắt đầu lúc ${startStr}</div></div>
     <div><div class="f-label" style="margin-bottom:6px">Dịch vụ (áp dụng cả nhóm)</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">${svcCheckboxes(members[0].service,'gsvc-'+gid)}</div></div>
-    <div class="f-row">
-      <div class="f-group"><div class="f-label">Tiền dịch vụ (chia đều)</div><input class="f-input" type="number" id="grv-${gid}" min="0" step="1000" placeholder="0"></div>
-      <div class="f-group"><div class="f-label">Tip (chia đều)</div><input class="f-input" type="number" id="gtp-${gid}" min="0" step="1000" placeholder="0"></div>
-    </div>
+    
     <div class="sec-div"><div class="sec-div-line"></div><div class="sec-div-txt">Xong việc</div><div class="sec-div-line"></div></div>
     <div class="btn-row">
       <button class="btn btn-dark btn-sm" style="flex:1" onclick="finishGroup('${gid}',1)">1 turn / thợ</button>
@@ -1082,16 +1068,12 @@ function openGroupPopup(gid) {
 function saveGroupSvc(gid, val) { W.filter(w=>w.groupId===gid).forEach(w=>w.service=val); }
 function finishGroup(gid, tw) {
   const members = W.filter(w=>w.groupId===gid&&w.status==='busy');
-  const reEl=document.getElementById('grv-'+gid), tpEl=document.getElementById('gtp-'+gid);
-  const totalRev=reEl?parseFloat(reEl.value)||0:0, totalTip=tpEl?parseFloat(tpEl.value)||0:0;
   const groupSvc = getCheckedSvc('gsvc-'+gid);
-  const perRev=members.length?Math.round(totalRev/members.length):0, perTip=members.length?Math.round(totalTip/members.length):0;
   members.forEach(w => {
-    w.totalRevenue=(w.totalRevenue||0)+perRev; w.totalTip=(w.totalTip||0)+perTip;
     w.turns=Math.round((w.turns-1+tw)*10)/10;
     const dur=w.startTime?Date.now()-w.startTime:0, ti=w.startTime?new Date(w.startTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):'-';
     if (!w.history) w.history=[];
-    w.history.push({ti, dur:fmtT(dur), svc:groupSvc||w.service, rev:perRev, tip:perTip, note:'👥 Nhóm', tw});
+    w.history.push({ti, dur:fmtT(dur), svc:groupSvc||w.service, note:'👥 Nhóm', tw});
     exHist.add(w.id);
   });
   totalTurns=Math.round((totalTurns-members.length+members.length*tw)*10)/10;
