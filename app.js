@@ -653,15 +653,6 @@ function getReportHTML() {
     </div>
   </div>
   <div id="report-wrap"></div>`;
-        ${dateOpts||'<option value="">Chưa có dữ liệu</option>'}
-      </select>
-      <button class="btn btn-ghost btn-sm" onclick="exportCSV()" style="width:auto;padding:8px 14px">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Xuất CSV
-      </button>
-    </div>
-  </div>
-  <div id="report-wrap"></div>`;
 }
 
 function renderReport() {
@@ -746,6 +737,8 @@ function doResetCa() {
   closePopup();
   setTab('shift');
 }
+
+function exportCSV() {
   const sel = document.getElementById('report-date');
   const date = sel ? sel.value : new Date().toISOString().slice(0,10);
   const today = new Date().toISOString().slice(0,10);
