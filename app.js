@@ -1138,14 +1138,27 @@ function openGroupPopup(gid) {
   const members = W.filter(w=>w.groupId===gid&&w.status==='busy'); if (!members.length) return;
   const elapsed = members[0].startTime ? Date.now()-members[0].startTime : 0;
   const startStr = members[0].startTime ? new Date(members[0].startTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}) : '--:--';
+
+  const memberRows = members.map(m => `
+    <div style="border:1px solid var(--br);border-radius:10px;padding:10px;background:var(--surface-2)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div class="sc-avatar av-busy" style="width:28px;height:28px;font-size:9px;flex-shrink:0">${m.ini}</div>
+        <div style="font-size:13px;font-weight:700">${m.name}</div>
+      </div>
+      <div style="font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px">Dịch vụ</div>
+      ${svcCheckboxes(m.service, 'gsvc-'+gid+'-'+m.id)}
+      <div style="margin-top:6px"><div class="f-label" style="font-size:10px">Ghi chú</div>
+        <textarea class="f-textarea" id="gnote-${gid}-${m.id}" rows="1" placeholder="Ghi chú riêng..." style="font-size:11px;padding:5px 8px;margin-top:3px">${m.note||''}</textarea>
+      </div>
+    </div>`).join('');
+
   document.getElementById('popup-head').innerHTML = `
     <div style="display:flex;gap:4px">${members.map(m=>`<div class="sc-avatar av-busy" style="width:32px;height:32px;font-size:10px">${m.ini}</div>`).join('')}</div>
     <div><div class="popup-name">Nhóm ${members.length} thợ</div><div class="popup-meta">${members.map(m=>m.name).join(', ')}</div></div>
     <button class="popup-close" onclick="closePopup()">✕</button>`;
   document.getElementById('popup-body').innerHTML = `
     <div class="popup-timer"><div class="pt-val" id="pt-g-${gid}">${fmtT(elapsed)}</div><div class="pt-sub">Bắt đầu lúc ${startStr}</div></div>
-    <div><div class="f-label" style="margin-bottom:6px">Dịch vụ (áp dụng cả nhóm)</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">${svcCheckboxes(members[0].service,'gsvc-'+gid)}</div></div>
-    
+    <div style="display:flex;flex-direction:column;gap:8px;max-height:55dvh;overflow-y:auto">${memberRows}</div>
     <div class="sec-div"><div class="sec-div-line"></div><div class="sec-div-txt">Xong việc</div><div class="sec-div-line"></div></div>
     <div class="btn-row">
       <button class="btn btn-dark btn-sm" style="flex:1" onclick="finishGroup('${gid}',1)">1 turn / thợ</button>
@@ -1157,12 +1170,16 @@ function openGroupPopup(gid) {
 function saveGroupSvc(gid, val) { W.filter(w=>w.groupId===gid).forEach(w=>w.service=val); }
 function finishGroup(gid, tw) {
   const members = W.filter(w=>w.groupId===gid&&w.status==='busy');
-  const groupSvc = getCheckedSvc('gsvc-'+gid);
   members.forEach(w => {
+    // đọc dịch vụ riêng từng thợ
+    const svc = getCheckedSvc('gsvc-'+gid+'-'+w.id);
+    if (svc !== undefined) w.service = svc || w.service;
+    const noteEl = document.getElementById('gnote-'+gid+'-'+w.id);
+    if (noteEl) w.note = noteEl.value.trim();
     w.turns=Math.round((w.turns-1+tw)*10)/10;
     const dur=w.startTime?Date.now()-w.startTime:0, ti=w.startTime?new Date(w.startTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):'-';
     if (!w.history) w.history=[];
-    w.history.push({ti, dur:fmtT(dur), svc:groupSvc||w.service, note:'👥 Nhóm', tw});
+    w.history.push({ti, dur:fmtT(dur), svc:w.service, note:w.note, tw});
     exHist.add(w.id);
   });
   totalTurns=Math.round((totalTurns-members.length+members.length*tw)*10)/10;
