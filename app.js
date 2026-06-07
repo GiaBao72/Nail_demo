@@ -976,15 +976,8 @@ function saveInfo(id) {
 
 function assignNext() {
   const rd = readyW(); if (!rd.length) { toast('Không có thợ rảnh!'); return; }
-  const w = rd[0];
-  document.getElementById('popup-head').innerHTML = `<div class="popup-av av-ready">${w.ini}</div>
-    <div><div class="popup-name">${w.name}</div><div class="popup-meta">Lượt #${rd.indexOf(w)+1} trong hàng chờ</div></div>
-    <button class="popup-close" onclick="closePopup()">✕</button>`;
-  document.getElementById('popup-body').innerHTML = `
-    <div style="text-align:center;padding:8px 0 4px;font-size:13px;color:var(--t2);line-height:1.7">Giao ca cho <strong>${w.name}</strong>?<br><span style="font-size:12px;color:var(--t3)">${rd.length} thợ đang chờ turn</span></div>
-    <button class="btn btn-rose" onclick="confirmAssignNext(${w.id})">Xác nhận giao ca</button>
-    <button class="btn btn-ghost" onclick="closePopup()">Hủy</button>`;
-  document.getElementById('popup-overlay').style.display = 'flex';
+  // Dùng chung flow với assignW — mở popup đầy đủ cho thợ đầu hàng
+  assignW(rd[0].id);
 }
 function confirmAssignNext(id) {
   const w = W.find(x=>x.id===id); if (!w||w.status!=='ready') return;
