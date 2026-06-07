@@ -686,3 +686,136 @@ input, select, textarea { font-family: inherit; }
 .kc-btn-green:hover { background: #15803D; }
 .kc-btn-rose { background: var(--rose); color: #fff; border-color: var(--rose); }
 .kc-btn-rose:hover { background: var(--rose-dark); }
+
+@media (max-width: 900px) {
+  .kanban-wrap { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── SEARCH & FILTER BAR ── */
+.search-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--br2);
+  border-radius: var(--r);
+  padding: 7px 12px;
+  flex: 1;
+  max-width: 260px;
+  color: var(--t3);
+}
+.search-input {
+  border: none; outline: none;
+  background: transparent;
+  font-size: 13px; color: var(--t1);
+  width: 100%;
+}
+.search-input::placeholder { color: var(--t4); }
+.filter-tabs { display: flex; gap: 4px; }
+.filter-btn {
+  padding: 6px 12px; font-size: 11px; font-weight: 600;
+  border-radius: var(--r-sm); border: 1px solid var(--br2);
+  background: var(--surface); color: var(--t3);
+  cursor: pointer; font-family: inherit; transition: all .12s;
+}
+.filter-btn:hover { background: var(--surface-2); color: var(--t2); }
+.filter-btn.active { background: var(--t1); color: #fff; border-color: var(--t1); }
+
+/* ── DRAG & DROP ── */
+.staff-card[draggable="true"] { cursor: grab; }
+.staff-card[draggable="true"]:active { cursor: grabbing; }
+.staff-card.drag-over {
+  border-color: var(--rose) !important;
+  box-shadow: 0 0 0 3px var(--rose-b) !important;
+  transform: scale(1.01);
+}
+
+/* ── BAR CHART ── */
+.chart-wrap {
+  background: var(--surface);
+  border: 1px solid var(--br);
+  border-radius: var(--r-lg);
+  padding: 18px;
+  box-shadow: var(--s-sm);
+  margin-bottom: 12px;
+}
+.chart-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.chart-row:last-child { margin-bottom: 0; }
+.chart-name {
+  font-size: 12px; font-weight: 700;
+  color: var(--t2); width: 52px; flex-shrink: 0;
+  padding-top: 3px;
+}
+.chart-bars { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.chart-bar-wrap {
+  display: flex; align-items: center; gap: 8px;
+}
+.chart-bar {
+  height: 20px; border-radius: 4px;
+  min-width: 4px;
+  transition: width .4s var(--ease);
+}
+.cb-rev { background: linear-gradient(90deg, var(--rose-2), var(--rose-dark)); }
+.cb-tip { background: linear-gradient(90deg, #60A5FA, #2563EB); }
+.chart-val {
+  font-size: 11px; font-weight: 700;
+  color: var(--t2); white-space: nowrap;
+}
+
+/* ── TAB PAGES ── */
+.tab-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.tab-title { font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
+.tab-sub { font-size: 12px; color: var(--t3); margin-top: 2px; }
+
+/* DATA TABLE */
+.data-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--br);
+  box-shadow: var(--s-sm);
+  background: var(--surface);
+}
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th {
+  font-size: 9.5px; font-weight: 700; color: var(--t4);
+  letter-spacing: .08em; text-transform: uppercase;
+  padding: 11px 16px; text-align: left;
+  border-bottom: 1px solid var(--br2);
+  background: var(--surface-2); white-space: nowrap;
+}
+.data-table td { padding: 6px 16px; border-bottom: 1px solid var(--br); vertical-align: middle; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tbody tr:hover { background: var(--surface-2); }
+
+/* MINI STATS (in popup) */
+.mini-stat {
+  background: var(--surface-2); border: 1px solid var(--br);
+  border-radius: var(--r); padding: 10px 12px; text-align: center;
+}
+.ms-val { font-size: 16px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.ms-lbl { font-size: 10px; color: var(--t3); margin-top: 2px; }
+
+/* REPORT STAT CARDS */
+.report-stat-card {
+  background: var(--surface); border: 1px solid var(--br);
+  border-radius: var(--r-lg); padding: 16px 18px;
+  box-shadow: var(--s-sm);
+}
+.rsc-val { font-size: 22px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; line-height: 1; }
+.rsc-lbl { font-size: 11px; color: var(--t3); margin-top: 4px; }
+
+/* Responsive */
