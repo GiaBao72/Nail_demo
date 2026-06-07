@@ -343,7 +343,7 @@ function renderKanban() {
     } else if (isReady) {
       actionBtn = `<button onclick="event.stopPropagation();assignW(${w.id})" style="padding:0 8px;height:26px;border-radius:6px;border:none;background:var(--rose);color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;line-height:1;font-family:inherit;white-space:nowrap">Vào turn</button>`;
     } else if (w.status==='off') {
-      actionBtn = `<button onclick="event.stopPropagation();setSt(${w.id},'ready')" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--br2);background:var(--surface-2);color:var(--t2);font-size:11px;cursor:pointer;flex-shrink:0" title="Vào làm lại">↩</button>`;
+      actionBtn = ``;
     } else if (isPen) {
       actionBtn = `<button onclick="event.stopPropagation();remPen(${w.id})" style="width:26px;height:26px;border-radius:6px;border:none;background:var(--c-ready);color:#fff;font-size:11px;cursor:pointer;flex-shrink:0" title="Gỡ phạt">✓</button>`;
     }
@@ -950,7 +950,7 @@ function openDetail(id) {
         </div>
       </div>`;
   } else {
-    body = `<button class="btn btn-dark" onclick="setSt(${w.id},'ready')">✅ Vào làm lại</button>
+    body = `<div style="text-align:center;padding:12px 0;color:var(--t3);font-size:13px">Chưa check-in hôm nay.<br>Vào tab <strong>Thợ</strong> để check-in.</div>
       <button class="btn btn-ghost" style="color:var(--c-pen);border-color:var(--c-pen-b)" onclick="removeW(${w.id})">Xóa khỏi ca</button>`;
   }
   document.getElementById('popup-body').innerHTML = body;
@@ -1224,7 +1224,7 @@ function renderCard(w, rd) {
     qa = `<button class="qa-btn qa-green" onclick="event.stopPropagation();remPen(${w.id})">Gỡ phạt</button>
       <button class="qa-btn" onclick="event.stopPropagation();openDetail(${w.id})">Chi tiết</button>`;
   } else {
-    qa = `<button class="qa-btn qa-primary" onclick="event.stopPropagation();openDetail(${w.id})">Chi tiết</button>`;
+    qa = `<span style="font-size:11px;color:var(--t4)">Chưa check-in</span>`;
   }
   const click = multiMode && w.status==='ready' ? `toggleChk(${w.id})` : `openDetail(${w.id})`;
   let hist = '';
