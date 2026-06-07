@@ -600,8 +600,20 @@ function getReportHTML() {
   const dateOpts = dates.map(d=>`<option value="${d}"${d===today?' selected':''}>${d}</option>`).join('');
   return `<div class="tab-header">
     <div><div class="tab-title">Báo cáo</div><div class="tab-sub">Tổng kết doanh thu và hiệu suất</div></div>
-    <div style="display:flex;gap:8px;align-items:center">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <select class="f-select" id="report-date" onchange="renderReport()" style="width:160px;font-size:13px">
+        ${dateOpts||'<option value="">Chưa có dữ liệu</option>'}
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()" style="width:auto;padding:8px 14px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Xuất CSV
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="confirmResetCa()" style="width:auto;padding:8px 14px;color:var(--c-pen);border-color:var(--c-pen-b)">
+        🔄 Reset ca
+      </button>
+    </div>
+  </div>
+  <div id="report-wrap"></div>`;
         ${dateOpts||'<option value="">Chưa có dữ liệu</option>'}
       </select>
       <button class="btn btn-ghost btn-sm" onclick="exportCSV()" style="width:auto;padding:8px 14px">
@@ -669,7 +681,32 @@ function renderReport() {
     </table></div>`;
 }
 
-function exportCSV() {
+function confirmResetCa() {
+  document.getElementById('popup-head').innerHTML = `<div class="popup-av" style="background:var(--c-pen-bg);color:var(--c-pen)">🔄</div>
+    <div><div class="popup-name">Reset ca hôm nay</div><div class="popup-meta">Xóa toàn bộ dữ liệu ca hiện tại</div></div>
+    <button class="popup-close" onclick="closePopup()">✕</button>`;
+  document.getElementById('popup-body').innerHTML = `
+    <div style="text-align:center;padding:8px 0;color:var(--t2);font-size:13px;line-height:1.8">
+      Tất cả turn, doanh thu, tip hôm nay sẽ về 0.<br>
+      <span style="color:var(--t3);font-size:12px">Danh sách thợ vẫn giữ nguyên.<br>Dữ liệu báo cáo các ngày trước không bị ảnh hưởng.</span>
+    </div>
+    <button class="btn btn-ghost" style="color:var(--c-pen);border-color:var(--c-pen-b)" onclick="doResetCa()">Xác nhận Reset</button>
+    <button class="btn btn-ghost" onclick="closePopup()">Hủy</button>`;
+  document.getElementById('popup-overlay').style.display = 'flex';
+}
+function doResetCa() {
+  W.forEach(w => {
+    w.turns = 0; w.status = 'ready'; w.note = ''; w.startTime = null;
+    w.service = ''; w.revenue = 0; w.tip = 0; w.totalRevenue = 0;
+    w.totalTip = 0; w.history = []; w.groupId = null;
+  });
+  totalTurns = 0;
+  Object.keys(penT).forEach(k => delete penT[k]);
+  localStorage.removeItem('nt_state');
+  toast('Đã reset ca mới ✅');
+  closePopup();
+  setTab('shift');
+}
   const sel = document.getElementById('report-date');
   const date = sel ? sel.value : new Date().toISOString().slice(0,10);
   const today = new Date().toISOString().slice(0,10);
