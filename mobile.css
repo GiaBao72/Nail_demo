@@ -1,158 +1,171 @@
 /* ═══════════════════════════════════════════════
-   NAIL TURN — mobile.css
-   Responsive / Mobile-first overrides
-   Import sau style.css trong index.html
+   NAIL TURN — mobile.css  v2
    ═══════════════════════════════════════════════ */
 
-/* ── TABLET (≤ 1024px) ── */
+/* ── TABLET ≤ 1024px ── */
 @media (max-width: 1024px) {
   .stat-pills { gap: 4px; }
-  .stat-pill { padding: 5px 10px; gap: 6px; }
-  .sp-val { font-size: 16px; }
+  .stat-pill  { padding: 5px 10px; gap: 6px; }
+  .sp-val     { font-size: 15px; }
   .sp-rev .sp-val, .sp-tip .sp-val { font-size: 13px; }
 }
 
-/* ── SMALL TABLET / LARGE PHONE (≤ 768px) ── */
+/* ── MOBILE ≤ 768px ── */
 @media (max-width: 768px) {
 
-  /* Topbar: 2 dòng */
+  /* ---------- TOPBAR ---------- */
   .topbar-inner {
     flex-wrap: wrap;
     height: auto;
-    padding: 8px 14px;
-    gap: 8px;
+    min-height: 48px;
+    padding: 8px 12px 4px;
+    gap: 6px;
   }
-  .brand { margin-right: 0; }
+  .brand { margin-right: 0; flex-shrink: 0; }
+  .topbar-right { margin-left: auto; flex-shrink: 0; }
   .stat-pills {
     order: 3;
     width: 100%;
-    overflow-x: auto;
     flex-wrap: nowrap;
-    padding-bottom: 2px;
+    overflow-x: auto;
+    padding: 2px 0 4px;
+    gap: 5px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
   .stat-pills::-webkit-scrollbar { display: none; }
   .stat-pill { flex-shrink: 0; }
-  .topbar-right { margin-left: auto; }
 
-  /* Topbar height thay đổi → app-body adjust */
+  /* ---------- LAYOUT ---------- */
+  .sidebar { display: none !important; }
+
   .app-body {
-    height: calc(100dvh - 96px);
+    /* dùng dvh + padding-bottom thay vì trừ topbar height */
+    height: auto;
+    min-height: calc(100dvh - 48px);
+    overflow: visible;
   }
 
-  /* Ẩn sidebar — dùng bottom nav thay thế */
-  .sidebar { display: none; }
+  .main-content {
+    padding: 10px 12px;
+    padding-bottom: 72px; /* chỗ cho bottom nav */
+    overflow-y: auto;
+    height: calc(100dvh - 48px);
+    box-sizing: border-box;
+  }
 
-  /* Bottom navigation */
+  /* ---------- BOTTOM NAV ---------- */
   .bottom-nav {
     display: flex !important;
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    height: 60px;
+    height: 56px;
     background: var(--surface);
-    border-top: 1px solid var(--br);
-    box-shadow: 0 -2px 12px rgba(0,0,0,.07);
-    z-index: 300;
-    padding: 0 8px;
-    padding-bottom: env(safe-area-inset-bottom);
+    border-top: 1px solid var(--br2);
+    box-shadow: 0 -4px 16px rgba(0,0,0,.08);
+    z-index: 400;
+    align-items: stretch;
+    padding: 0 4px;
   }
   .bottom-nav .nav-btn {
     flex: 1;
     height: 100%;
     width: auto;
-    border-radius: var(--r);
+    border-radius: 8px;
     font-size: 10px;
+    font-weight: 600;
     gap: 2px;
-  }
-  .bottom-nav .nav-divider { display: none; }
-
-  /* Main content — nhường chỗ bottom nav */
-  .main-content {
-    padding: 12px;
-    padding-bottom: 72px;
+    padding: 4px 0;
   }
 
-  /* Action bar — stack dọc */
-  .action-bar { flex-direction: column; align-items: stretch; }
-  .next-worker-card { padding: 10px 12px; }
-  .nwc-name { font-size: 16px; }
-
-  /* Các nút trong next-worker-card wrap xuống */
-  .next-worker-card > div:last-child {
+  /* ---------- ACTION BAR ---------- */
+  .action-bar { flex-direction: column; gap: 8px; }
+  .next-worker-card {
+    padding: 10px 12px;
     flex-wrap: wrap;
+    gap: 8px;
+  }
+  .nwc-name { font-size: 15px; }
+  /* buttons bên phải next-worker-card */
+  .nwc-actions {
+    display: flex;
     gap: 6px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
   }
 
-  /* Staff card — compact hơn */
-  .sc-body { padding: 8px 10px 8px 14px; }
-  .sc-name { font-size: 13px; }
-  .sc-avatar { width: 36px; height: 36px; font-size: 11px; }
+  /* ---------- MULTI BAR ---------- */
+  .multi-bar { flex-direction: column; gap: 6px; align-items: flex-start; }
 
-  /* Popup full screen từ dưới */
+  /* ---------- SEARCH BAR ---------- */
+  .search-filter-bar { flex-wrap: wrap; gap: 6px; }
+  .search-wrap { max-width: 100%; flex: 1; min-width: 0; }
+  .filter-tabs { flex-wrap: wrap; gap: 3px; }
+
+  /* ---------- STAFF CARD ---------- */
+  .sc-body { padding: 8px 10px 8px 14px; gap: 8px; }
+  .sc-name { font-size: 13px; }
+  .sc-avatar { width: 34px; height: 34px; font-size: 10px; }
+  .sc-actions { gap: 4px; }
+  .qa-btn { padding: 5px 9px; font-size: 11px; }
+
+  /* ---------- POPUP ---------- */
   .popup-overlay {
     padding: 0;
     align-items: flex-end;
-    justify-content: center;
   }
   .popup {
     width: 100%;
     max-width: 100%;
-    border-radius: var(--r-xl) var(--r-xl) 0 0;
-    max-height: 92dvh;
+    max-height: 90dvh;
+    border-radius: 20px 20px 0 0;
   }
+  .popup-body { gap: 10px; }
+  .pt-val { font-size: 36px; }
 
-  /* Report grid — 2 cột */
-  .report-stat-card { padding: 12px 14px; }
+  /* ---------- DATA TABLE ---------- */
+  .data-table-wrap { overflow-x: auto; }
+  .data-table { min-width: 480px; }
+
+  /* ---------- REPORT ---------- */
+  .report-grid-4 { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
   .rsc-val { font-size: 18px; }
+
+  /* ---------- TAB HEADER ---------- */
+  .tab-header { flex-wrap: wrap; gap: 8px; }
 }
 
-/* ── PHONE (≤ 480px) ── */
+/* ── SMALL PHONE ≤ 480px ── */
 @media (max-width: 480px) {
   .sp-label { display: none; }
-  .sp-val { font-size: 15px; }
+  .brand-name { font-size: 13px; }
 
-  /* Topbar brand nhỏ lại */
-  .brand-name { font-size: 14px; }
-  .brand-icon { width: 28px; height: 28px; }
-
-  /* Kanban: scroll ngang thay vì 2 cột */
-  .kanban-scroll-wrap {
+  /* Kanban: scroll ngang, mỗi cột ~80vw */
+  .kanban-mobile-wrap {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     margin: 0 -12px;
     padding: 0 12px 8px;
     scrollbar-width: none;
   }
-  .kanban-scroll-wrap::-webkit-scrollbar { display: none; }
-  .kanban-grid-mobile {
-    display: grid !important;
-    grid-template-columns: repeat(4, 72vw) !important;
-    gap: 10px;
-    min-width: max-content;
-  }
+  .kanban-mobile-wrap::-webkit-scrollbar { display: none; }
 
-  /* Search bar full width */
-  .search-filter-bar { flex-wrap: wrap; }
-  .search-wrap { max-width: 100%; }
+  /* f-row stack dọc */
+  .f-row { flex-direction: column; }
 
-  /* Report 2x2 */
-  .report-4col { grid-template-columns: 1fr 1fr !important; }
-
-  /* Multi bar stack */
-  .multi-bar { flex-direction: column; gap: 8px; align-items: flex-start; }
-
-  /* Popup timer nhỏ hơn */
-  .pt-val { font-size: 36px; }
+  /* btn-row nhỏ hơn */
+  .btn-sm { padding: 8px 10px; font-size: 11px; }
 }
 
-/* ── SAFE AREA (iPhone notch/home bar) ── */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .bottom-nav {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 4px);
-    height: calc(60px + env(safe-area-inset-bottom));
-  }
-  .main-content {
-    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+/* ── SAFE AREA — chỉ áp dụng trên mobile ── */
+@media (max-width: 768px) {
+  @supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .bottom-nav {
+      height: calc(56px + env(safe-area-inset-bottom));
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .main-content {
+      padding-bottom: calc(68px + env(safe-area-inset-bottom));
+    }
   }
 }

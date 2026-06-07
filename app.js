@@ -320,7 +320,7 @@ function renderKanban() {
 
   const isMobile = window.innerWidth <= 480;
   const colsHtml = cols.map(col => `
-    <div style="background:var(--surface-2);border-radius:12px;border:1px solid var(--br);overflow:hidden;min-width:0${isMobile ? ';min-width:72vw' : ''}">
+    <div style="background:var(--surface-2);border-radius:12px;border:1px solid var(--br);overflow:hidden;${isMobile ? 'min-width:80vw' : 'min-width:0'}">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface);border-bottom:2px solid ${col.color}">
         <span style="font-size:12px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:${col.color}">${col.label}</span>
         <span style="font-size:11px;font-weight:800;padding:2px 9px;border-radius:20px;background:${col.bg};color:${col.color}">${col.count}</span>
@@ -331,11 +331,11 @@ function renderKanban() {
     </div>`).join('');
 
   const gridStyle = isMobile
-    ? 'display:grid;grid-template-columns:repeat(4,72vw);gap:10px;min-width:max-content'
+    ? 'display:grid;grid-template-columns:repeat(4,80vw);gap:10px;width:max-content'
     : 'display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:start;width:100%';
 
   const html = isMobile
-    ? `<div style="overflow-x:auto;margin:0 -8px;padding:0 8px 8px;-webkit-overflow-scrolling:touch"><div style="${gridStyle}">${colsHtml}</div></div>`
+    ? `<div class="kanban-mobile-wrap"><div style="${gridStyle}">${colsHtml}</div></div>`
     : `<div style="${gridStyle}">${colsHtml}</div>`;
 
   const sg = document.getElementById('staff-grid');
@@ -376,7 +376,7 @@ function getShiftHTML() {
           <div class="nwc-name" id="nwc-name">—</div>
           <div class="nwc-sub" id="nwc-sub">Không có thợ rảnh</div>
         </div>
-        <div style="margin-left:auto;display:flex;gap:8px;flex-shrink:0">
+        <div class="nwc-actions" style="margin-left:auto;display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap">
           <button class="btn btn-rose btn-sm" onclick="assignNext()" style="width:auto;padding:9px 18px">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
             Vào turn
@@ -625,7 +625,7 @@ function renderReport() {
     </tr>`;
   }).join('');
   wrap.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+    <div class="report-grid-4" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
       <div class="report-stat-card"><div class="rsc-val">${tTurns}</div><div class="rsc-lbl">Tổng turn</div></div>
       <div class="report-stat-card"><div class="rsc-val" style="color:var(--c-ready)">${fmtM(totalRev)}</div><div class="rsc-lbl">Doanh thu</div></div>
       <div class="report-stat-card"><div class="rsc-val" style="color:#3B82F6">${fmtM(totalTip)}</div><div class="rsc-lbl">Tổng tip</div></div>
