@@ -68,12 +68,12 @@ function svcCheckboxes(selected, idPrefix) {
     const on = vals.includes(s.v);
     return `<button type="button" data-val="${s.v}" data-active="${on?'1':'0'}" id="${idPrefix}-${s.v}"
       onclick="toggleSvcPill('${idPrefix}','${s.v}',this)"
-      style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap;line-height:1.5;
+      style="padding:6px 10px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap;line-height:1.5;width:100%;text-align:center;
         background:${on?'var(--rose)':'var(--surface-2)'};
         color:${on?'#fff':'var(--t2)'};
         border:1.5px solid ${on?'var(--rose)':'var(--br2)'}">${s.l}</button>`;
   }).join('');
-  return `<div id="${idPrefix}-wrap" style="display:flex;flex-wrap:wrap;gap:6px">${pills}</div>`;
+  return `<div id="${idPrefix}-wrap" style="display:grid;grid-template-columns:1fr 1fr;gap:6px">${pills}</div>`;
 }
 
 function toggleSvcPill(idPrefix, val, btn) {
