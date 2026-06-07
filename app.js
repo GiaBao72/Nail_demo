@@ -190,6 +190,9 @@ function render() {
   if (currentTab !== 'shift') return;
   renderStats();
   if (shiftView === 2) renderKanban(); else renderGrid();
+  // ẩn/hiện search bar theo view
+  const sfb = document.querySelector('.search-filter-bar');
+  if (sfb) sfb.style.display = shiftView === 2 ? 'none' : '';
   const mb = document.getElementById('multi-bar');
   if (mb) mb.style.display = multiMode ? 'flex' : 'none';
   const mc = document.getElementById('multi-cnt'); if (mc) mc.textContent = multiSel.size;
@@ -357,7 +360,16 @@ function setTab(tab) {
   const mc = document.getElementById('main-content');
   if (tab === 'shift') {
     mc.innerHTML = getShiftHTML();
-    renderStats(); renderGrid();
+    renderStats();
+    if (shiftView === 2) {
+      renderKanban();
+      const sfb = document.querySelector('.search-filter-bar');
+      if (sfb) sfb.style.display = 'none';
+      const vb = document.getElementById('btn-view');
+      if (vb) vb.textContent = 'Xem dạng danh sách';
+    } else {
+      renderGrid();
+    }
   } else if (tab === 'staff') {
     mc.innerHTML = getStaffHTML();
     renderStaffTab();
