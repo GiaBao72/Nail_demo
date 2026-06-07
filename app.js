@@ -318,8 +318,9 @@ function renderKanban() {
     { key:'penalized', label:'Bị phạt', count:pen.length,  color:'#DC2626', bg:'#FEF2F2', items:pen  },
   ];
 
+  const isMobile = window.innerWidth <= 480;
   const colsHtml = cols.map(col => `
-    <div style="background:var(--surface-2);border-radius:12px;border:1px solid var(--br);overflow:hidden;min-width:0">
+    <div style="background:var(--surface-2);border-radius:12px;border:1px solid var(--br);overflow:hidden;min-width:0${isMobile ? ';min-width:72vw' : ''}">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface);border-bottom:2px solid ${col.color}">
         <span style="font-size:12px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:${col.color}">${col.label}</span>
         <span style="font-size:11px;font-weight:800;padding:2px 9px;border-radius:20px;background:${col.bg};color:${col.color}">${col.count}</span>
@@ -329,7 +330,13 @@ function renderKanban() {
       </div>
     </div>`).join('');
 
-  const html = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:start;width:100%">${colsHtml}</div>`;
+  const gridStyle = isMobile
+    ? 'display:grid;grid-template-columns:repeat(4,72vw);gap:10px;min-width:max-content'
+    : 'display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:start;width:100%';
+
+  const html = isMobile
+    ? `<div style="overflow-x:auto;margin:0 -8px;padding:0 8px 8px;-webkit-overflow-scrolling:touch"><div style="${gridStyle}">${colsHtml}</div></div>`
+    : `<div style="${gridStyle}">${colsHtml}</div>`;
 
   const sg = document.getElementById('staff-grid');
   if (sg) {
@@ -342,6 +349,7 @@ function renderKanban() {
 // ── TABS ──
 function setTab(tab) {
   currentTab = tab;
+  // sync cả sidebar và bottom nav
   document.querySelectorAll('.nav-btn').forEach(b => {
     const t = b.getAttribute('onclick') || '';
     b.className = 'nav-btn' + (t.includes("'"+tab+"'") ? ' active' : '');

@@ -1,0 +1,158 @@
+/* ═══════════════════════════════════════════════
+   NAIL TURN — mobile.css
+   Responsive / Mobile-first overrides
+   Import sau style.css trong index.html
+   ═══════════════════════════════════════════════ */
+
+/* ── TABLET (≤ 1024px) ── */
+@media (max-width: 1024px) {
+  .stat-pills { gap: 4px; }
+  .stat-pill { padding: 5px 10px; gap: 6px; }
+  .sp-val { font-size: 16px; }
+  .sp-rev .sp-val, .sp-tip .sp-val { font-size: 13px; }
+}
+
+/* ── SMALL TABLET / LARGE PHONE (≤ 768px) ── */
+@media (max-width: 768px) {
+
+  /* Topbar: 2 dòng */
+  .topbar-inner {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 8px 14px;
+    gap: 8px;
+  }
+  .brand { margin-right: 0; }
+  .stat-pills {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .stat-pills::-webkit-scrollbar { display: none; }
+  .stat-pill { flex-shrink: 0; }
+  .topbar-right { margin-left: auto; }
+
+  /* Topbar height thay đổi → app-body adjust */
+  .app-body {
+    height: calc(100dvh - 96px);
+  }
+
+  /* Ẩn sidebar — dùng bottom nav thay thế */
+  .sidebar { display: none; }
+
+  /* Bottom navigation */
+  .bottom-nav {
+    display: flex !important;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: var(--surface);
+    border-top: 1px solid var(--br);
+    box-shadow: 0 -2px 12px rgba(0,0,0,.07);
+    z-index: 300;
+    padding: 0 8px;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .bottom-nav .nav-btn {
+    flex: 1;
+    height: 100%;
+    width: auto;
+    border-radius: var(--r);
+    font-size: 10px;
+    gap: 2px;
+  }
+  .bottom-nav .nav-divider { display: none; }
+
+  /* Main content — nhường chỗ bottom nav */
+  .main-content {
+    padding: 12px;
+    padding-bottom: 72px;
+  }
+
+  /* Action bar — stack dọc */
+  .action-bar { flex-direction: column; align-items: stretch; }
+  .next-worker-card { padding: 10px 12px; }
+  .nwc-name { font-size: 16px; }
+
+  /* Các nút trong next-worker-card wrap xuống */
+  .next-worker-card > div:last-child {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* Staff card — compact hơn */
+  .sc-body { padding: 8px 10px 8px 14px; }
+  .sc-name { font-size: 13px; }
+  .sc-avatar { width: 36px; height: 36px; font-size: 11px; }
+
+  /* Popup full screen từ dưới */
+  .popup-overlay {
+    padding: 0;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .popup {
+    width: 100%;
+    max-width: 100%;
+    border-radius: var(--r-xl) var(--r-xl) 0 0;
+    max-height: 92dvh;
+  }
+
+  /* Report grid — 2 cột */
+  .report-stat-card { padding: 12px 14px; }
+  .rsc-val { font-size: 18px; }
+}
+
+/* ── PHONE (≤ 480px) ── */
+@media (max-width: 480px) {
+  .sp-label { display: none; }
+  .sp-val { font-size: 15px; }
+
+  /* Topbar brand nhỏ lại */
+  .brand-name { font-size: 14px; }
+  .brand-icon { width: 28px; height: 28px; }
+
+  /* Kanban: scroll ngang thay vì 2 cột */
+  .kanban-scroll-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -12px;
+    padding: 0 12px 8px;
+    scrollbar-width: none;
+  }
+  .kanban-scroll-wrap::-webkit-scrollbar { display: none; }
+  .kanban-grid-mobile {
+    display: grid !important;
+    grid-template-columns: repeat(4, 72vw) !important;
+    gap: 10px;
+    min-width: max-content;
+  }
+
+  /* Search bar full width */
+  .search-filter-bar { flex-wrap: wrap; }
+  .search-wrap { max-width: 100%; }
+
+  /* Report 2x2 */
+  .report-4col { grid-template-columns: 1fr 1fr !important; }
+
+  /* Multi bar stack */
+  .multi-bar { flex-direction: column; gap: 8px; align-items: flex-start; }
+
+  /* Popup timer nhỏ hơn */
+  .pt-val { font-size: 36px; }
+}
+
+/* ── SAFE AREA (iPhone notch/home bar) ── */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .bottom-nav {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 4px);
+    height: calc(60px + env(safe-area-inset-bottom));
+  }
+  .main-content {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+}
