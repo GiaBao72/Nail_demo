@@ -64,31 +64,36 @@ function svcL(v) {
 
 function svcCheckboxes(selected, idPrefix) {
   const vals = selected ? selected.split('|') : [];
-  return SVCS.filter(s => s.v).map(s =>
-    `<label style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:8px;cursor:pointer;font-size:12px;background:${vals.includes(s.v)?'var(--rose-bg)':'transparent'};border:1px solid ${vals.includes(s.v)?'var(--rose-b)':'var(--br)'};transition:all .12s">
-      <input type="checkbox" value="${s.v}" ${vals.includes(s.v)?'checked':''} id="${idPrefix}-${s.v}"
-        onchange="updateSvcCheckbox('${idPrefix}')"
-        style="accent-color:var(--rose);width:14px;height:14px;flex-shrink:0">
-      <span>${s.l}</span>
-    </label>`
-  ).join('');
+  const pills = SVCS.filter(s => s.v).map(s => {
+    const on = vals.includes(s.v);
+    return `<button type="button" data-val="${s.v}" data-active="${on?'1':'0'}" id="${idPrefix}-${s.v}"
+      onclick="toggleSvcPill('${idPrefix}','${s.v}',this)"
+      style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap;line-height:1.5;
+        background:${on?'var(--rose)':'var(--surface-2)'};
+        color:${on?'#fff':'var(--t2)'};
+        border:1.5px solid ${on?'var(--rose)':'var(--br2)'}">${s.l}</button>`;
+  }).join('');
+  return `<div id="${idPrefix}-wrap" style="display:flex;flex-wrap:wrap;gap:6px">${pills}</div>`;
+}
+
+function toggleSvcPill(idPrefix, val, btn) {
+  if (!btn) btn = document.getElementById(idPrefix+'-'+val);
+  if (!btn) return;
+  const on = btn.dataset.active === '1';
+  btn.dataset.active = on ? '0' : '1';
+  btn.style.background = on ? 'var(--surface-2)' : 'var(--rose)';
+  btn.style.color = on ? 'var(--t2)' : '#fff';
+  btn.style.border = '1.5px solid ' + (on ? 'var(--br2)' : 'var(--rose)');
 }
 
 function getCheckedSvc(idPrefix) {
-  const boxes = document.querySelectorAll(`[id^="${idPrefix}-"]`);
-  return Array.from(boxes).filter(b => b.checked).map(b => b.value).join('|');
+  const wrap = document.getElementById(idPrefix+'-wrap');
+  if (!wrap) return '';
+  return Array.from(wrap.querySelectorAll('button[data-val]'))
+    .filter(b => b.dataset.active === '1').map(b => b.dataset.val).join('|');
 }
 
-function updateSvcCheckbox(idPrefix) {
-  // re-style labels on change
-  const boxes = document.querySelectorAll(`[id^="${idPrefix}-"]`);
-  boxes.forEach(b => {
-    const lbl = b.closest('label');
-    if (!lbl) return;
-    lbl.style.background = b.checked ? 'var(--rose-bg)' : 'transparent';
-    lbl.style.border = '1px solid ' + (b.checked ? 'var(--rose-b)' : 'var(--br)');
-  });
-}
+function updateSvcCheckbox(idPrefix) {}
 function fmtM(n) { if (!n) return '0đ'; return n.toLocaleString('vi-VN') + 'đ'; }
 function fmtT(ms) {
   const s = Math.floor(ms/1000), m = Math.floor(s/60), h = Math.floor(m/60);
