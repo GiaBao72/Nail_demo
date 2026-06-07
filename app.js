@@ -34,6 +34,25 @@ let currentTab = 'shift', shiftView = 2; // 1 = list, 2 = kanban
 let dailyLogs = [];
 try { dailyLogs = JSON.parse(localStorage.getItem('nt_dailyLogs') || '[]'); } catch(e) {}
 
+// ── PERSIST STATE ──
+function saveState() {
+  try {
+    localStorage.setItem('nt_state', JSON.stringify({ W, totalTurns, nextId, penT }));
+  } catch(e) {}
+}
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem('nt_state'));
+    if (!s || !s.W) return;
+    W = s.W;
+    totalTurns = s.totalTurns || 0;
+    nextId = s.nextId || W.length + 1;
+    penT = s.penT || {};
+    // restore startTime bị mất do JSON serialize (số vẫn giữ được)
+  } catch(e) {}
+}
+loadState();
+
 const MAX_BUSY_MS = 60 * 60 * 1000;
 
 // ── UTILS ──
@@ -89,7 +108,7 @@ function tick() {
       ['cpen-','popen-','kcpen-'].forEach(p => { const e = document.getElementById(p+id); if(e) e.textContent = fmtP(pt.ut); });
     }
   });
-  if (rerender) render();
+  if (rerender) { render(); saveState(); }
 }
 tick(); setInterval(tick, 1000);
 
@@ -749,7 +768,7 @@ function openDetail(id) {
 
 function closePopup() {
   document.getElementById('popup-overlay').style.display = 'none';
-  selId = null; render();
+  selId = null; render(); saveState();
 }
 function closePopupOnOverlay(e) { if (e.target===document.getElementById('popup-overlay')) closePopup(); }
 
