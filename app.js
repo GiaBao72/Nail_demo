@@ -17,8 +17,8 @@ const SVCS = [
 
 // ── STATE ──
 function mkW(id, name, ini) {
-  return { id, name, ini, turns: 0, status: 'ready', note: '', startTime: null,
-    service: '', revenue: 0, tip: 0, totalRevenue: 0, totalTip: 0, history: [], groupId: null };
+  return { id, name, ini, turns: 0, status: 'off', note: '', startTime: null,
+    service: '', revenue: 0, tip: 0, totalRevenue: 0, totalTip: 0, history: [], groupId: null, checkinTime: null };
 }
 
 let W = [
@@ -536,26 +536,37 @@ function getStaffHTML() {
 }
 
 function renderStaffTab() {
-  const sorted = [...W].sort((a,b) => b.totalRevenue - a.totalRevenue);
+  const sorted = [...W].sort((a,b) => {
+    // checked-in trước, chưa checkin sau
+    const aIn = a.checkinTime ? 1 : 0, bIn = b.checkinTime ? 1 : 0;
+    if (bIn !== aIn) return bIn - aIn;
+    return (a.checkinTime||0) - (b.checkinTime||0);
+  });
   const rows = sorted.map(w => {
     const avCls = w.status==='busy'?'av-busy':w.status==='off'?'av-off':w.status==='penalized'?'av-pen':'av-ready';
     const stB = w.status==='busy'?'<span class="sc-badge sb-busy">Đang làm</span>'
       :w.status==='off'?'<span class="sc-badge sb-off">Nghỉ</span>'
       :w.status==='penalized'?'<span class="sc-badge sb-pen">Bị phạt</span>'
       :'<span class="sc-badge sb-ready">Rảnh</span>';
+    const ciTime = w.checkinTime ? new Date(w.checkinTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}) : '—';
+    const isCheckedIn = !!w.checkinTime;
     const avg = w.history.length ? Math.round(w.totalRevenue/w.history.length) : 0;
-    return `<tr onclick="openStaffDetail(${w.id})" style="cursor:pointer">
+    const ciBtn = isCheckedIn
+      ? `<button class="qa-btn" onclick="event.stopPropagation();checkoutStaff(${w.id})" style="flex:none;padding:6px 10px;font-size:11px;color:var(--c-pen);border-color:var(--c-pen-b)">Check-out</button>`
+      : `<button class="qa-btn qa-primary" onclick="event.stopPropagation();checkinStaff(${w.id})" style="flex:none;padding:6px 12px;font-size:11px">Check-in</button>`;
+    return `<tr onclick="openStaffDetail(${w.id})" style="cursor:pointer;${!isCheckedIn?'opacity:.55':''}">
       <td style="padding:14px 16px"><div style="display:flex;align-items:center;gap:10px">
         <div class="sc-avatar ${avCls}" style="width:38px;height:38px;font-size:11px">${w.ini}</div>
-        <div><div style="font-size:14px;font-weight:700">${w.name}</div><div style="font-size:11px;color:var(--t3)">ID #${w.id}</div></div>
+        <div>
+          <div style="font-size:14px;font-weight:700">${w.name}</div>
+          <div style="font-size:11px;color:var(--t3)">${isCheckedIn ? '✅ Check-in lúc '+ciTime : '⏸ Chưa check-in'}</div>
+        </div>
       </div></td>
       <td>${stB}</td>
       <td style="font-weight:700;text-align:center">${w.turns}</td>
-      <td style="font-weight:700;color:var(--c-ready)">${fmtM(w.totalRevenue)}</td>
-      <td style="font-weight:700;color:#3B82F6">${fmtM(w.totalTip)}</td>
-      <td style="font-size:12px;color:var(--t3)">${fmtM(avg)}/turn</td>
       <td style="font-size:12px;color:var(--t3)">${w.history.length} ca</td>
-      <td><div style="display:flex;gap:5px">
+      <td><div style="display:flex;gap:5px;flex-wrap:wrap">
+        ${ciBtn}
         <button class="qa-btn" onclick="event.stopPropagation();openEditStaff(${w.id})" style="flex:none;padding:6px 10px;font-size:11px">Sửa</button>
         <button class="qa-btn" onclick="event.stopPropagation();confirmRemoveStaff(${w.id})" style="flex:none;padding:6px 10px;font-size:11px;color:var(--c-pen);border-color:var(--c-pen-b)">Xóa</button>
       </div></td>
@@ -563,7 +574,7 @@ function renderStaffTab() {
   }).join('');
   document.getElementById('staff-table-wrap').innerHTML = `<div class="data-table-wrap">
     <table class="data-table">
-      <thead><tr><th>Nhân viên</th><th>Trạng thái</th><th style="text-align:center">Turn</th><th>Doanh thu</th><th>Tip</th><th>TB/turn</th><th>Lịch sử</th><th></th></tr></thead>
+      <thead><tr><th>Nhân viên</th><th>Trạng thái</th><th style="text-align:center">Turn</th><th>Lịch sử</th><th>Hành động</th></tr></thead>
       <tbody>${rows}</tbody>
     </table></div>`;
 }
@@ -639,6 +650,21 @@ function saveEditStaff(id) {
   if (currentTab==='staff') renderStaffTab();
 }
 
+function checkinStaff(id) {
+  const w = W.find(x=>x.id===id); if (!w) return;
+  w.checkinTime = Date.now();
+  if (w.status === 'off') w.status = 'ready';
+  toast(w.name + ' đã check-in ✅');
+  saveState(); renderStaffTab();
+}
+function checkoutStaff(id) {
+  const w = W.find(x=>x.id===id); if (!w) return;
+  if (w.status === 'busy') { toast(w.name + ' đang phục vụ khách, chưa thể check-out!'); return; }
+  w.checkinTime = null;
+  w.status = 'off';
+  toast(w.name + ' đã check-out 👋');
+  saveState(); renderStaffTab();
+}
 function confirmRemoveStaff(id) {
   const w = W.find(x=>x.id===id); if (!w) return;
   document.getElementById('popup-head').innerHTML = `<div class="popup-av" style="background:var(--c-pen-bg);color:var(--c-pen)">!</div>
@@ -763,9 +789,9 @@ function confirmResetCa() {
 }
 function doResetCa() {
   W.forEach(w => {
-    w.turns = 0; w.status = 'ready'; w.note = ''; w.startTime = null;
+    w.turns = 0; w.status = 'off'; w.note = ''; w.startTime = null;
     w.service = ''; w.revenue = 0; w.tip = 0; w.totalRevenue = 0;
-    w.totalTip = 0; w.history = []; w.groupId = null;
+    w.totalTip = 0; w.history = []; w.groupId = null; w.checkinTime = null;
   });
   totalTurns = 0;
   Object.keys(penT).forEach(k => delete penT[k]);
