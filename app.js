@@ -30,7 +30,7 @@ let W = [
 let totalTurns = 0, nextId = 11, selId = null;
 let exHist = new Set(), multiMode = false, multiSel = new Set(), penT = {};
 let searchQ = '', filterStatus = 'all', dragSrcId = null;
-let currentTab = 'shift', shiftView = 1; // 1 = list, 2 = kanban
+let currentTab = 'shift', shiftView = 2; // 1 = list, 2 = kanban
 let dailyLogs = [];
 try { dailyLogs = JSON.parse(localStorage.getItem('nt_dailyLogs') || '[]'); } catch(e) {}
 
@@ -86,7 +86,7 @@ function tick() {
       if (w) { W = W.filter(x => x.id!==id); w.status='ready'; delete penT[id]; W.push(w); }
       rerender = true;
     } else {
-      ['cpen-','popen-'].forEach(p => { const e = document.getElementById(p+id); if(e) e.textContent = fmtP(pt.ut); });
+      ['cpen-','popen-','kcpen-'].forEach(p => { const e = document.getElementById(p+id); if(e) e.textContent = fmtP(pt.ut); });
     }
   });
   if (rerender) render();
@@ -220,16 +220,31 @@ function renderKanban() {
   function miniCard(w) {
     const isPen = w.status === 'penalized', pt = penT[w.id];
     const elapsed = w.startTime ? Date.now() - w.startTime : 0;
+    const isChk = multiSel.has(w.id);
+    const isReady = w.status === 'ready';
     const avCls = w.status==='busy'?'av-busy':isPen?'av-pen':w.status==='off'?'av-off':'av-ready';
     let sub = '';
     if (w.status==='busy') sub = `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px"><span class="sc-tag t-timer" style="font-size:9px;padding:1px 6px">⏱ <span id="kct-${w.id}">${fmtT(elapsed)}</span></span>${w.service?`<span class="sc-tag t-svc" style="font-size:9px;padding:1px 6px">${svcL(w.service)}</span>`:''}</div>`;
     if (isPen && pt) sub = `<div style="margin-top:6px"><span class="sc-tag t-pen" style="font-size:9px;padding:1px 6px" id="kcpen-${w.id}">${fmtP(pt.ut)}</span></div>`;
     let actionBtn = '';
-    if (w.status==='busy') actionBtn = `<button onclick="event.stopPropagation();finishW(${w.id},1)" style="width:26px;height:26px;border-radius:6px;border:none;background:var(--c-ready);color:#fff;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">✓</button>`;
-    else if (w.status==='ready') actionBtn = `<button onclick="event.stopPropagation();assignW(${w.id})" style="padding:0 8px;height:26px;border-radius:6px;border:none;background:var(--rose);color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;line-height:1;font-family:inherit;white-space:nowrap">Vào turn</button>`;
-    else if (w.status==='off') actionBtn = `<button onclick="event.stopPropagation();setSt(${w.id},'ready')" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--br2);background:var(--surface-2);color:var(--t2);font-size:11px;cursor:pointer;flex-shrink:0" title="Vào làm lại">↩</button>`;
-    else if (isPen) actionBtn = `<button onclick="event.stopPropagation();remPen(${w.id})" style="width:26px;height:26px;border-radius:6px;border:none;background:var(--c-ready);color:#fff;font-size:11px;cursor:pointer;flex-shrink:0" title="Gỡ phạt">✓</button>`;
-    return `<div class="kc" style="background:var(--surface);border:1px solid var(--br);border-radius:10px;padding:10px;cursor:pointer;margin-bottom:0" onclick="openPopup(${w.id})">
+    if (multiMode && isReady) {
+      actionBtn = `<button onclick="event.stopPropagation();toggleChk(${w.id})" style="padding:0 8px;height:26px;border-radius:6px;border:none;background:${isChk?'#1D4ED8':'var(--surface-3)'};color:${isChk?'#fff':'var(--t2)'};font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;line-height:1;font-family:inherit;white-space:nowrap">${isChk?'✓ Đã chọn':'Chọn'}</button>`;
+    } else if (w.status==='busy') {
+      actionBtn = `<div style="display:flex;gap:4px;flex-shrink:0">
+        <button onclick="event.stopPropagation();finishW(${w.id},1)" style="width:26px;height:26px;border-radius:6px;border:none;background:var(--c-ready);color:#fff;font-size:12px;font-weight:700;cursor:pointer">✓</button>
+        <button onclick="event.stopPropagation();openPopup(${w.id})" style="padding:0 8px;height:26px;border-radius:6px;border:1px solid var(--br2);background:var(--surface-2);color:var(--t2);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Lịch sử</button>
+      </div>`;
+    } else if (isReady) {
+      actionBtn = `<button onclick="event.stopPropagation();assignW(${w.id})" style="padding:0 8px;height:26px;border-radius:6px;border:none;background:var(--rose);color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;line-height:1;font-family:inherit;white-space:nowrap">Vào turn</button>`;
+    } else if (w.status==='off') {
+      actionBtn = `<button onclick="event.stopPropagation();setSt(${w.id},'ready')" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--br2);background:var(--surface-2);color:var(--t2);font-size:11px;cursor:pointer;flex-shrink:0" title="Vào làm lại">↩</button>`;
+    } else if (isPen) {
+      actionBtn = `<button onclick="event.stopPropagation();remPen(${w.id})" style="width:26px;height:26px;border-radius:6px;border:none;background:var(--c-ready);color:#fff;font-size:11px;cursor:pointer;flex-shrink:0" title="Gỡ phạt">✓</button>`;
+    }
+    const clickFn = (multiMode && isReady) ? `toggleChk(${w.id})` : `openDetail(${w.id})`;
+    const cardBorder = isChk ? '2px solid #1D4ED8' : '1px solid var(--br)';
+    const cardBg = isChk ? '#EFF6FF' : 'var(--surface)';
+    return `<div class="kc" style="background:${cardBg};border:${cardBorder};border-radius:10px;padding:10px;cursor:pointer;margin-bottom:0;transition:all .15s" onclick="${clickFn}">
       <div style="display:flex;align-items:center;gap:8px">
         <div class="sc-avatar ${avCls}" style="width:32px;height:32px;font-size:11px;flex-shrink:0">${w.ini}</div>
         <div style="flex:1;min-width:0;overflow:hidden">
@@ -242,11 +257,65 @@ function renderKanban() {
     </div>`;
   }
 
+  // ── group busy workers by groupId ──
+  const kGroups = {};
+  busy.filter(w => w.groupId).forEach(w => {
+    if (!kGroups[w.groupId]) kGroups[w.groupId] = [];
+    kGroups[w.groupId].push(w);
+  });
+  const kGroupedIds = new Set(Object.values(kGroups).flat().map(w => w.id));
+  const busySolo = busy.filter(w => !w.groupId);
+
+  function miniGroupCard(gid, members) {
+    const elapsed = members[0].startTime ? Date.now() - members[0].startTime : 0;
+    const pct = Math.min(100, elapsed / MAX_BUSY_MS * 100);
+    const memberRows = members.map(m => {
+      const me = m.startTime ? Date.now() - m.startTime : 0;
+      const svcTag = m.service ? `<span class="sc-tag t-svc" style="font-size:9px;padding:1px 6px">${svcL(m.service)}</span>` : '';
+      const timerTag = `<span class="sc-tag t-timer" style="font-size:9px;padding:1px 6px">⏱ <span id="kct-${m.id}">${fmtT(me)}</span></span>`;
+      return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--c-busy-b)" onclick="event.stopPropagation()">
+        <div class="sc-avatar av-busy" style="width:28px;height:28px;font-size:9px;flex-shrink:0">${m.ini}</div>
+        <div style="flex:1;min-width:0;cursor:default">
+          <div style="font-size:12px;font-weight:700">${m.name}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:3px">${svcTag}${timerTag}</div>
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button onclick="event.stopPropagation();finishW(${m.id},1)" style="width:26px;height:26px;border-radius:6px;border:none;background:var(--c-ready);color:#fff;font-size:11px;font-weight:700;cursor:pointer" title="Xong 1 turn">✓</button>
+          <button onclick="event.stopPropagation();openDetail(${m.id})" style="padding:0 8px;height:26px;border-radius:6px;border:1px solid var(--br2);background:var(--surface-2);color:var(--t2);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Chi tiết</button>
+        </div>
+      </div>`;
+    }).join('');
+    return `<div style="background:var(--c-busy-bg);border:1.5px solid var(--c-busy-b);border-radius:10px;overflow:hidden;cursor:pointer" onclick="openGroupPopup('${gid}')">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px 6px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:13px">👥</span>
+          <div>
+            <div style="font-size:11px;font-weight:800;color:var(--c-busy)">Nhóm ${members.length} thợ</div>
+            <div style="font-size:10px;color:var(--t3);margin-top:1px">⏱ <span id="ct-g-${gid}">${fmtT(elapsed)}</span></div>
+          </div>
+        </div>
+        <span class="sc-badge sb-busy" style="font-size:9px">Đang làm</span>
+      </div>
+      <div style="height:2px;background:var(--surface-3);margin:0 10px"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--c-busy),#F97316);border-radius:99px" id="pb-g-${gid}"></div></div>
+      <div style="padding:0 10px 8px" onclick="event.stopPropagation()">${memberRows}</div>
+    </div>`;
+  }
+
+  function renderBusyCol() {
+    if (!busySolo.length && !Object.keys(kGroups).length) return '<div style="text-align:center;padding:20px 0;color:var(--t4);font-size:12px">Trống</div>';
+    return [
+      ...Object.entries(kGroups).map(([gid, members]) => miniGroupCard(gid, members)),
+      ...busySolo.map(w => miniCard(w))
+    ].join('');
+  }
+
+  const busyCount = busySolo.length + Object.keys(kGroups).length;
+
   const cols = [
-    { key:'ready',     label:'Rảnh',      count:rd.length,  color:'#16A34A', bg:'#F0FDF4', items:rd   },
-    { key:'busy',      label:'Đang làm',  count:busy.length, color:'#D97706', bg:'#FFFBEB', items:busy },
-    { key:'off',       label:'Nghỉ',      count:off.length,  color:'#6B7280', bg:'#F9FAFB', items:off  },
-    { key:'penalized', label:'Bị phạt',   count:pen.length,  color:'#DC2626', bg:'#FEF2F2', items:pen  },
+    { key:'ready',     label:'Rảnh',    count:rd.length,   color:'#16A34A', bg:'#F0FDF4', items:rd  },
+    { key:'busy',      label:'Đang làm', count:busyCount,  color:'#D97706', bg:'#FFFBEB', items:null },
+    { key:'off',       label:'Nghỉ',    count:off.length,  color:'#6B7280', bg:'#F9FAFB', items:off  },
+    { key:'penalized', label:'Bị phạt', count:pen.length,  color:'#DC2626', bg:'#FEF2F2', items:pen  },
   ];
 
   const colsHtml = cols.map(col => `
@@ -256,7 +325,7 @@ function renderKanban() {
         <span style="font-size:11px;font-weight:800;padding:2px 9px;border-radius:20px;background:${col.bg};color:${col.color}">${col.count}</span>
       </div>
       <div style="padding:8px;display:flex;flex-direction:column;gap:6px;min-height:80px">
-        ${col.items.length ? col.items.map(w => miniCard(w)).join('') : '<div style="text-align:center;padding:20px 0;color:var(--t4);font-size:12px">Trống</div>'}
+        ${col.key === 'busy' ? renderBusyCol() : (col.items.length ? col.items.map(w => miniCard(w)).join('') : '<div style="text-align:center;padding:20px 0;color:var(--t4);font-size:12px">Trống</div>')}
       </div>
     </div>`).join('');
 
@@ -596,6 +665,7 @@ function openPopup(id) {
     </div>
     <div><div class="f-label" style="margin-bottom:8px">Lịch sử ca hôm nay</div>
     <div style="max-height:280px;overflow-y:auto">${histRows}</div></div>
+    ${w.status==='ready'?`<button class="btn btn-ghost" onclick="closePopup();openPopup(${w.id})">📋 Xem lịch sử ca</button>`:''}
     <button class="btn btn-ghost" onclick="closePopup()">Đóng</button>`;
   document.getElementById('popup-overlay').style.display = 'flex';
 }
@@ -687,26 +757,84 @@ function assignNext() {
 }
 function confirmAssignNext(id) {
   const w = W.find(x=>x.id===id); if (!w||w.status!=='ready') return;
-  w.status='busy'; w.turns++; totalTurns++; w.note=''; w.startTime=Date.now(); w.service='';
+  w.status='busy'; w.turns++; totalTurns++; w.note=''; w.startTime=Date.now(); w.service=''; w.revenue=0; w.tip=0;
   toast('Vào turn cho ' + w.name + ' 💅'); closePopup();
 }
 function assignW(id) {
   const w = W.find(x=>x.id===id); if (!w||w.status!=='ready') return;
-  w.status='busy'; w.turns++; totalTurns++; w.note=''; w.startTime=Date.now(); w.service='';
+  const rd = readyW();
+  const opts = SVCS.map(s=>`<option value="${s.v}">${s.l}</option>`).join('');
+  document.getElementById('popup-head').innerHTML = `<div class="popup-av av-ready">${w.ini}</div>
+    <div><div class="popup-name">${w.name}</div><div class="popup-meta">Hàng chờ #${rd.indexOf(w)+1} · ${rd.length} thợ rảnh</div></div>
+    <button class="popup-close" onclick="closePopup()">✕</button>`;
+  document.getElementById('popup-body').innerHTML = `
+    <div><div class="f-label">Dịch vụ</div><select class="f-select" id="asn-svc-${id}">${opts}</select></div>
+    <div><div class="f-label">Ghi chú khách</div><textarea class="f-textarea" id="asn-note-${id}" rows="2" placeholder="Khách VIP, yêu cầu đặc biệt..."></textarea></div>
+    <button class="btn btn-rose" onclick="doAssignW(${id})">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Xác nhận vào turn
+    </button>
+    <button class="btn btn-ghost" onclick="closePopup()">Hủy</button>`;
+  document.getElementById('popup-overlay').style.display = 'flex';
+  setTimeout(() => { const el=document.getElementById('asn-svc-'+id); if(el) el.focus(); }, 100);
+}
+function doAssignW(id) {
+  const w = W.find(x=>x.id===id); if (!w||w.status!=='ready') return;
+  const sv=document.getElementById('asn-svc-'+id), nt=document.getElementById('asn-note-'+id);
+  w.status='busy'; w.turns++; totalTurns++; w.startTime=Date.now();
+  w.service = sv ? sv.value : '';
+  w.note = nt ? nt.value.trim() : '';
+  w.revenue=0; w.tip=0;
   toast('Vào turn cho ' + w.name + ' 💅'); closePopup();
 }
 function finishW(id, tw) {
   const w = W.find(x=>x.id===id); if (!w) return;
+  // Nếu đang trong popup chi tiết (có input trên màn hình) thì dùng luôn giá trị đó
   const ne=document.getElementById('nt-'+id), re=document.getElementById('rv-'+id), te=document.getElementById('tp-'+id);
-  if(ne) w.note=ne.value.trim();
-  const rev=re?parseFloat(re.value)||0:0, tip=te?parseFloat(te.value)||0:0;
+  if (re !== null) {
+    // Gọi từ popup chi tiết — có sẵn input, thực thi luôn
+    if(ne) w.note=ne.value.trim();
+    const rev=re?parseFloat(re.value)||0:0, tip=te?parseFloat(te.value)||0:0;
+    _doFinishW(w, tw, rev, tip);
+  } else {
+    // Gọi từ nút quick — mở popup nhập thông tin trước
+    const elapsed = w.startTime ? Date.now()-w.startTime : 0;
+    const startStr = w.startTime ? new Date(w.startTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}) : '--:--';
+    const opts = SVCS.map(s=>`<option value="${s.v}"${w.service===s.v?' selected':''}>${s.l}</option>`).join('');
+    const avCls = 'av-busy';
+    document.getElementById('popup-head').innerHTML = `<div class="popup-av ${avCls}">${w.ini}</div>
+      <div><div class="popup-name">${w.name}</div><div class="popup-meta">Đang làm · ${fmtT(elapsed)}</div></div>
+      <button class="popup-close" onclick="closePopup()">✕</button>`;
+    document.getElementById('popup-body').innerHTML = `
+      <div class="popup-timer" style="padding:10px 14px"><div class="pt-val" style="font-size:32px">${fmtT(elapsed)}</div><div class="pt-sub">Bắt đầu lúc ${startStr}</div></div>
+      <div><div class="f-label">Dịch vụ</div><select class="f-select" id="rv-svc-${id}">${opts}</select></div>
+      <div class="f-row">
+        <div class="f-group"><div class="f-label">Tiền dịch vụ</div><input class="f-input" type="number" id="rv-${id}" min="0" step="1000" placeholder="0" value="${w.revenue||''}"></div>
+        <div class="f-group"><div class="f-label">Tip</div><input class="f-input" type="number" id="tp-${id}" min="0" step="1000" placeholder="0" value="${w.tip||''}"></div>
+      </div>
+      <div><div class="f-label">Ghi chú</div><textarea class="f-textarea" id="nt-${id}" rows="2" placeholder="Khách VIP, hẹn lại...">${w.note||''}</textarea></div>
+      <div class="sec-div"><div class="sec-div-line"></div><div class="sec-div-txt">Xong việc — tính turn</div><div class="sec-div-line"></div></div>
+      <div class="btn-row">
+        <button class="btn btn-dark btn-sm" style="flex:1" onclick="finishW(${id},1)">1 turn</button>
+        <button class="btn btn-ghost btn-sm" style="flex:1" onclick="finishW(${id},0.5)">½ turn</button>
+        <button class="btn btn-ghost btn-sm" style="flex:1;color:var(--t3)" onclick="finishW(${id},0)">0 turn</button>
+      </div>
+      <button class="btn btn-ghost" onclick="closePopup()">Hủy</button>`;
+    document.getElementById('popup-overlay').style.display = 'flex';
+    setTimeout(() => { const el=document.getElementById('rv-svc-'+id); if(el) el.focus(); }, 100);
+  }
+}
+function _doFinishW(w, tw, rev, tip) {
   w.totalRevenue=(w.totalRevenue||0)+rev; w.totalTip=(w.totalTip||0)+tip;
+  // đọc dịch vụ từ cả 2 loại popup (openDetail dùng sv-id, quick popup dùng rv-svc-id)
+  const svcEl = document.getElementById('rv-svc-'+w.id) || document.getElementById('sv-'+w.id);
+  if (svcEl) w.service = svcEl.value;
   w.turns=Math.round((w.turns-1+tw)*10)/10; totalTurns=Math.round((totalTurns-1+tw)*10)/10;
   const dur=w.startTime?Date.now()-w.startTime:0, ti=w.startTime?new Date(w.startTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):'-';
   if (!w.history) w.history=[];
   w.history.push({ti, dur:fmtT(dur), svc:w.service, rev, tip, note:w.note, tw});
   exHist.add(w.id);
-  W=W.filter(x=>x.id!==id);
+  W=W.filter(x=>x.id!==w.id);
   w.status='ready'; w.note=''; w.startTime=null; w.service=''; w.revenue=0; w.tip=0; w.groupId=null;
   W.push(w); selId=null;
   toast(w.name + ' xong việc — về cuối hàng ✓'); closePopup();
@@ -800,7 +928,12 @@ function finishGroup(gid, tw) {
 const mc = document.getElementById('main-content');
 mc.innerHTML = getShiftHTML();
 renderStats();
-renderGrid();
+renderKanban();
+// ẩn search-filter bar vì mặc định là kanban
+const _sfb = document.querySelector('.search-filter-bar');
+if (_sfb) _sfb.style.display = 'none';
+const _vb = document.getElementById('btn-view');
+if (_vb) _vb.textContent = 'Xem dạng danh sách';
 
 function renderCard(w, rd) {
   const isNext = w===rd[0], isSel = w.id===selId, isChk = multiSel.has(w.id), isPen = w.status==='penalized';
@@ -833,7 +966,7 @@ function renderCard(w, rd) {
     qa = `<button class="qa-btn ${isChk?'qa-primary':''}" onclick="event.stopPropagation();toggleChk(${w.id})">${isChk?'✓ Đã chọn':'Chọn'}</button>`;
   } else if (w.status==='ready') {
     qa = `<button class="qa-btn qa-primary" onclick="event.stopPropagation();assignW(${w.id})">Vào turn</button>
-      <button class="qa-btn" onclick="event.stopPropagation();openDetail(${w.id})">Chi tiết</button>`;
+      <button class="qa-btn" onclick="event.stopPropagation();openPopup(${w.id})">Lịch sử</button>`;
   } else if (w.status==='busy') {
     qa = `<button class="qa-btn qa-green" onclick="event.stopPropagation();finishW(${w.id},1)">✓ Xong</button>
       <button class="qa-btn" onclick="event.stopPropagation();openDetail(${w.id})">Chi tiết</button>`;
@@ -843,7 +976,7 @@ function renderCard(w, rd) {
   } else {
     qa = `<button class="qa-btn qa-primary" onclick="event.stopPropagation();openDetail(${w.id})">Chi tiết</button>`;
   }
-  const click = multiMode && w.status==='ready' ? `toggleChk(${w.id})` : `openPopup(${w.id})`;
+  const click = multiMode && w.status==='ready' ? `toggleChk(${w.id})` : `openDetail(${w.id})`;
   let hist = '';
   if (hasH) {
     hist = `<div class="hist-wrap">
