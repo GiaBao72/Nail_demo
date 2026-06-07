@@ -56,7 +56,39 @@ loadState();
 const MAX_BUSY_MS = 60 * 60 * 1000;
 
 // ── UTILS ──
-function svcL(v) { const s = SVCS.find(x => x.v === v); return s ? s.l : v; }
+function svcL(v) {
+  if (!v) return v;
+  // support multi: "Manicure|Gel" -> "💅 Manicure · ✨ Gel Nails"
+  return v.split('|').map(s => { const x = SVCS.find(i => i.v === s); return x ? x.l : s; }).join(' · ');
+}
+
+function svcCheckboxes(selected, idPrefix) {
+  const vals = selected ? selected.split('|') : [];
+  return SVCS.filter(s => s.v).map(s =>
+    `<label style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:8px;cursor:pointer;font-size:12px;background:${vals.includes(s.v)?'var(--rose-bg)':'transparent'};border:1px solid ${vals.includes(s.v)?'var(--rose-b)':'var(--br)'};transition:all .12s">
+      <input type="checkbox" value="${s.v}" ${vals.includes(s.v)?'checked':''} id="${idPrefix}-${s.v}"
+        onchange="updateSvcCheckbox('${idPrefix}')"
+        style="accent-color:var(--rose);width:14px;height:14px;flex-shrink:0">
+      <span>${s.l}</span>
+    </label>`
+  ).join('');
+}
+
+function getCheckedSvc(idPrefix) {
+  const boxes = document.querySelectorAll(`[id^="${idPrefix}-"]`);
+  return Array.from(boxes).filter(b => b.checked).map(b => b.value).join('|');
+}
+
+function updateSvcCheckbox(idPrefix) {
+  // re-style labels on change
+  const boxes = document.querySelectorAll(`[id^="${idPrefix}-"]`);
+  boxes.forEach(b => {
+    const lbl = b.closest('label');
+    if (!lbl) return;
+    lbl.style.background = b.checked ? 'var(--rose-bg)' : 'transparent';
+    lbl.style.border = '1px solid ' + (b.checked ? 'var(--rose-b)' : 'var(--br)');
+  });
+}
 function fmtM(n) { if (!n) return '0đ'; return n.toLocaleString('vi-VN') + 'đ'; }
 function fmtT(ms) {
   const s = Math.floor(ms/1000), m = Math.floor(s/60), h = Math.floor(m/60);
@@ -791,9 +823,8 @@ function openDetail(id) {
   if (w.status === 'busy') {
     const elapsed = w.startTime ? Date.now()-w.startTime : 0;
     const startStr = w.startTime ? new Date(w.startTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}) : '--:--';
-    const opts = SVCS.map(s=>`<option value="${s.v}"${w.service===s.v?' selected':''}>${s.l}</option>`).join('');
     body = `<div class="popup-timer"><div class="pt-val" id="pt-${w.id}">${fmtT(elapsed)}</div><div class="pt-sub">Bắt đầu lúc ${startStr}</div></div>
-      <div><div class="f-label">Dịch vụ</div><select class="f-select" id="sv-${w.id}">${opts}</select></div>
+      <div><div class="f-label" style="margin-bottom:6px">Dịch vụ</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">${svcCheckboxes(w.service,'svc-'+w.id)}</div></div>
       <div class="f-row">
         <div class="f-group"><div class="f-label">Tiền dịch vụ</div><input class="f-input" type="number" id="rv-${w.id}" min="0" step="1000" placeholder="0" value="${w.revenue||''}"></div>
         <div class="f-group"><div class="f-label">Tip</div><input class="f-input" type="number" id="tp-${w.id}" min="0" step="1000" placeholder="0" value="${w.tip||''}"></div>
@@ -846,8 +877,11 @@ function togHist(e, id) { e.stopPropagation(); exHist.has(id)?exHist.delete(id):
 function toggleChk(id) { multiSel.has(id)?multiSel.delete(id):multiSel.add(id); render(); }
 function saveInfo(id) {
   const w = W.find(x=>x.id===id); if (!w) return;
-  const sv=document.getElementById('sv-'+id), rv=document.getElementById('rv-'+id), tp=document.getElementById('tp-'+id), nt=document.getElementById('nt-'+id);
-  if(sv) w.service=sv.value; if(rv) w.revenue=parseFloat(rv.value)||0; if(tp) w.tip=parseFloat(tp.value)||0; if(nt) w.note=nt.value.trim();
+  const rv=document.getElementById('rv-'+id), tp=document.getElementById('tp-'+id), nt=document.getElementById('nt-'+id);
+  w.service = getCheckedSvc('svc-'+id);
+  if(rv) w.revenue=parseFloat(rv.value)||0;
+  if(tp) w.tip=parseFloat(tp.value)||0;
+  if(nt) w.note=nt.value.trim();
   toast('Đã lưu thông tin ' + w.name + ' ✓'); renderGrid();
 }
 
@@ -871,12 +905,11 @@ function confirmAssignNext(id) {
 function assignW(id) {
   const w = W.find(x=>x.id===id); if (!w||w.status!=='ready') return;
   const rd = readyW();
-  const opts = SVCS.map(s=>`<option value="${s.v}">${s.l}</option>`).join('');
   document.getElementById('popup-head').innerHTML = `<div class="popup-av av-ready">${w.ini}</div>
     <div><div class="popup-name">${w.name}</div><div class="popup-meta">Hàng chờ #${rd.indexOf(w)+1} · ${rd.length} thợ rảnh</div></div>
     <button class="popup-close" onclick="closePopup()">✕</button>`;
   document.getElementById('popup-body').innerHTML = `
-    <div><div class="f-label">Dịch vụ</div><select class="f-select" id="asn-svc-${id}">${opts}</select></div>
+    <div><div class="f-label" style="margin-bottom:6px">Dịch vụ</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">${svcCheckboxes('','asn-svc-'+id)}</div></div>
     <div><div class="f-label">Ghi chú khách</div><textarea class="f-textarea" id="asn-note-${id}" rows="2" placeholder="Khách VIP, yêu cầu đặc biệt..."></textarea></div>
     <button class="btn btn-rose" onclick="doAssignW(${id})">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
@@ -890,7 +923,7 @@ function doAssignW(id) {
   const w = W.find(x=>x.id===id); if (!w||w.status!=='ready') return;
   const sv=document.getElementById('asn-svc-'+id), nt=document.getElementById('asn-note-'+id);
   w.status='busy'; w.turns++; totalTurns++; w.startTime=Date.now();
-  w.service = sv ? sv.value : '';
+  w.service = getCheckedSvc('asn-svc-'+id);
   w.note = nt ? nt.value.trim() : '';
   w.revenue=0; w.tip=0;
   toast('Vào turn cho ' + w.name + ' 💅'); closePopup();
@@ -908,14 +941,13 @@ function finishW(id, tw) {
     // Gọi từ nút quick — mở popup nhập thông tin trước
     const elapsed = w.startTime ? Date.now()-w.startTime : 0;
     const startStr = w.startTime ? new Date(w.startTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}) : '--:--';
-    const opts = SVCS.map(s=>`<option value="${s.v}"${w.service===s.v?' selected':''}>${s.l}</option>`).join('');
     const avCls = 'av-busy';
     document.getElementById('popup-head').innerHTML = `<div class="popup-av ${avCls}">${w.ini}</div>
       <div><div class="popup-name">${w.name}</div><div class="popup-meta">Đang làm · ${fmtT(elapsed)}</div></div>
       <button class="popup-close" onclick="closePopup()">✕</button>`;
     document.getElementById('popup-body').innerHTML = `
       <div class="popup-timer" style="padding:10px 14px"><div class="pt-val" style="font-size:32px">${fmtT(elapsed)}</div><div class="pt-sub">Bắt đầu lúc ${startStr}</div></div>
-      <div><div class="f-label">Dịch vụ</div><select class="f-select" id="rv-svc-${id}">${opts}</select></div>
+      <div><div class="f-label" style="margin-bottom:6px">Dịch vụ</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">${svcCheckboxes(w.service,'rv-svc-'+id)}</div></div>
       <div class="f-row">
         <div class="f-group"><div class="f-label">Tiền dịch vụ</div><input class="f-input" type="number" id="rv-${id}" min="0" step="1000" placeholder="0" value="${w.revenue||''}"></div>
         <div class="f-group"><div class="f-label">Tip</div><input class="f-input" type="number" id="tp-${id}" min="0" step="1000" placeholder="0" value="${w.tip||''}"></div>
@@ -934,9 +966,9 @@ function finishW(id, tw) {
 }
 function _doFinishW(w, tw, rev, tip) {
   w.totalRevenue=(w.totalRevenue||0)+rev; w.totalTip=(w.totalTip||0)+tip;
-  // đọc dịch vụ từ cả 2 loại popup (openDetail dùng sv-id, quick popup dùng rv-svc-id)
-  const svcEl = document.getElementById('rv-svc-'+w.id) || document.getElementById('sv-'+w.id);
-  if (svcEl) w.service = svcEl.value;
+  // đọc dịch vụ từ cả 2 loại popup
+  const svcVal = getCheckedSvc('svc-'+w.id) || getCheckedSvc('rv-svc-'+w.id);
+  if (svcVal !== undefined) w.service = svcVal;
   w.turns=Math.round((w.turns-1+tw)*10)/10; totalTurns=Math.round((totalTurns-1+tw)*10)/10;
   const dur=w.startTime?Date.now()-w.startTime:0, ti=w.startTime?new Date(w.startTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):'-';
   if (!w.history) w.history=[];
@@ -989,14 +1021,13 @@ function openGroupPopup(gid) {
   const members = W.filter(w=>w.groupId===gid&&w.status==='busy'); if (!members.length) return;
   const elapsed = members[0].startTime ? Date.now()-members[0].startTime : 0;
   const startStr = members[0].startTime ? new Date(members[0].startTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}) : '--:--';
-  const opts = SVCS.map(s=>`<option value="${s.v}"${members[0].service===s.v?' selected':''}>${s.l}</option>`).join('');
   document.getElementById('popup-head').innerHTML = `
     <div style="display:flex;gap:4px">${members.map(m=>`<div class="sc-avatar av-busy" style="width:32px;height:32px;font-size:10px">${m.ini}</div>`).join('')}</div>
     <div><div class="popup-name">Nhóm ${members.length} thợ</div><div class="popup-meta">${members.map(m=>m.name).join(', ')}</div></div>
     <button class="popup-close" onclick="closePopup()">✕</button>`;
   document.getElementById('popup-body').innerHTML = `
     <div class="popup-timer"><div class="pt-val" id="pt-g-${gid}">${fmtT(elapsed)}</div><div class="pt-sub">Bắt đầu lúc ${startStr}</div></div>
-    <div><div class="f-label">Dịch vụ (áp dụng cả nhóm)</div><select class="f-select" onchange="saveGroupSvc('${gid}',this.value)">${opts}</select></div>
+    <div><div class="f-label" style="margin-bottom:6px">Dịch vụ (áp dụng cả nhóm)</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">${svcCheckboxes(members[0].service,'gsvc-'+gid)}</div></div>
     <div class="f-row">
       <div class="f-group"><div class="f-label">Tiền dịch vụ (chia đều)</div><input class="f-input" type="number" id="grv-${gid}" min="0" step="1000" placeholder="0"></div>
       <div class="f-group"><div class="f-label">Tip (chia đều)</div><input class="f-input" type="number" id="gtp-${gid}" min="0" step="1000" placeholder="0"></div>
@@ -1009,18 +1040,19 @@ function openGroupPopup(gid) {
     </div>`;
   document.getElementById('popup-overlay').style.display = 'flex';
 }
-function saveGroupSvc(gid, val) { W.filter(w=>w.groupId===gid).forEach(w=>w.service=val); renderGrid(); }
+function saveGroupSvc(gid, val) { W.filter(w=>w.groupId===gid).forEach(w=>w.service=val); }
 function finishGroup(gid, tw) {
   const members = W.filter(w=>w.groupId===gid&&w.status==='busy');
   const reEl=document.getElementById('grv-'+gid), tpEl=document.getElementById('gtp-'+gid);
   const totalRev=reEl?parseFloat(reEl.value)||0:0, totalTip=tpEl?parseFloat(tpEl.value)||0:0;
+  const groupSvc = getCheckedSvc('gsvc-'+gid);
   const perRev=members.length?Math.round(totalRev/members.length):0, perTip=members.length?Math.round(totalTip/members.length):0;
   members.forEach(w => {
     w.totalRevenue=(w.totalRevenue||0)+perRev; w.totalTip=(w.totalTip||0)+perTip;
     w.turns=Math.round((w.turns-1+tw)*10)/10;
     const dur=w.startTime?Date.now()-w.startTime:0, ti=w.startTime?new Date(w.startTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):'-';
     if (!w.history) w.history=[];
-    w.history.push({ti, dur:fmtT(dur), svc:w.service, rev:perRev, tip:perTip, note:'👥 Nhóm', tw});
+    w.history.push({ti, dur:fmtT(dur), svc:groupSvc||w.service, rev:perRev, tip:perTip, note:'👥 Nhóm', tw});
     exHist.add(w.id);
   });
   totalTurns=Math.round((totalTurns-members.length+members.length*tw)*10)/10;
