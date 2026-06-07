@@ -1003,13 +1003,47 @@ function toggleMulti() { multiMode=!multiMode; multiSel.clear(); selId=null; ren
 function cancelMulti() { multiMode=false; multiSel.clear(); render(); }
 function assignMulti() {
   if (multiSel.size < 2) { toast('Chọn ít nhất 2 thợ!'); return; }
+  const members = [...multiSel].map(id => W.find(x=>x.id===id)).filter(w=>w&&w.status==='ready');
+  if (members.length < 2) { toast('Cần ít nhất 2 thợ rảnh!'); return; }
+
+  const memberRows = members.map(w => `
+    <div style="border:1px solid var(--br);border-radius:10px;padding:10px;background:var(--surface-2)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div class="sc-avatar av-ready" style="width:30px;height:30px;font-size:10px;flex-shrink:0">${w.ini}</div>
+        <div style="font-size:13px;font-weight:700">${w.name}</div>
+      </div>
+      <div style="font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px">Dịch vụ</div>
+      ${svcCheckboxes('', 'mgrp-'+w.id)}
+    </div>`).join('');
+
+  document.getElementById('popup-head').innerHTML = `
+    <div style="display:flex;gap:4px">${members.map(m=>`<div class="sc-avatar av-ready" style="width:32px;height:32px;font-size:10px">${m.ini}</div>`).join('')}</div>
+    <div><div class="popup-name">Giao ca nhóm</div><div class="popup-meta">${members.length} thợ · chọn dịch vụ cho từng người</div></div>
+    <button class="popup-close" onclick="closePopup()">✕</button>`;
+  document.getElementById('popup-body').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:8px;max-height:60dvh;overflow-y:auto">${memberRows}</div>
+    <div><div class="f-label">Ghi chú chung</div><textarea class="f-textarea" id="mgrp-note" rows="2" placeholder="Khách VIP, yêu cầu đặc biệt..."></textarea></div>
+    <button class="btn btn-rose" onclick="doAssignMulti()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+      Xác nhận giao ca nhóm
+    </button>
+    <button class="btn btn-ghost" onclick="closePopup()">Hủy</button>`;
+  document.getElementById('popup-overlay').style.display = 'flex';
+}
+
+function doAssignMulti() {
+  const members = [...multiSel].map(id => W.find(x=>x.id===id)).filter(w=>w&&w.status==='ready');
+  if (members.length < 2) { toast('Cần ít nhất 2 thợ rảnh!'); return; }
   const gid = 'G'+Date.now();
-  [...multiSel].forEach(id => {
-    const w=W.find(x=>x.id===id); if (!w||w.status!=='ready') return;
-    w.status='busy'; w.turns++; w.note=''; w.startTime=Date.now(); w.service=''; w.groupId=gid;
+  const note = (document.getElementById('mgrp-note')||{}).value || '';
+  members.forEach(w => {
+    w.status='busy'; w.turns++; w.startTime=Date.now(); w.groupId=gid;
+    w.service = getCheckedSvc('mgrp-'+w.id);
+    w.note = note; w.revenue=0; w.tip=0;
   });
-  totalTurns+=multiSel.size; toast('Đã giao ca cho '+multiSel.size+' thợ 👥');
-  multiMode=false; multiSel.clear(); render();
+  totalTurns += members.length;
+  toast('Đã giao ca cho '+members.length+' thợ 👥');
+  multiMode=false; multiSel.clear(); closePopup();
 }
 function penW(id, hours) {
   const w=W.find(x=>x.id===id); if (!w) return;
