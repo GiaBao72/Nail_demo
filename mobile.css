@@ -1,0 +1,77 @@
+/* ════════════════════════════════
+   NAIL TURN — Mobile Responsive v2
+════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .topbar-inner { padding: 0 14px 0 0; }
+
+  .stat-pills { gap: 4px; padding: 0 10px; }
+  .stat-pill { padding: 6px 10px; gap: 7px; }
+  .sp-val { font-size: 15px; }
+  .sp-rev .sp-val, .sp-tip .sp-val { font-size: 12px; }
+  .sp-label { font-size: 9.5px; }
+
+  .shift-tag { display: none; }
+  .clock-time { font-size: 15px; }
+
+  .sidebar { display: none; }
+
+  .app-body { height: calc(100vh - 58px); }
+
+  .main-content { padding: 12px 12px 80px; gap: 10px; }
+
+  .bottom-nav { display: flex !important; }
+
+  .bottom-nav .nav-btn {
+    color: rgba(255,255,255,.40);
+    width: auto; flex: 1; height: 44px;
+    border-radius: 10px;
+    font-size: 9px;
+  }
+  .bottom-nav .nav-btn.active {
+    background: linear-gradient(140deg, rgba(200,73,107,.25), rgba(200,73,107,.12));
+    color: #F9A8C0;
+  }
+
+  .next-worker-card { flex-wrap: wrap; gap: 10px; padding: 12px 14px; }
+  .nwc-name { font-size: 16px; }
+  .nwc-actions { width: 100%; }
+  .nwc-actions .btn { font-size: 12px; padding: 8px 14px; }
+
+  .staff-grid { gap: 6px; }
+  .sc-body { padding: 10px 10px 10px 16px; gap: 8px; }
+  .sc-name { font-size: 13.5px; }
+
+  .sc-actions .qa-btn { padding: 5px 10px; font-size: 10.5px; }
+
+  .search-filter-bar { flex-wrap: wrap; gap: 7px; }
+  .search-wrap { max-width: 100%; width: 100%; }
+  .filter-tabs { flex-wrap: wrap; }
+
+  .popup { max-width: 100%; border-radius: var(--r-xl) var(--r-xl) 0 0; }
+  .popup-overlay { align-items: flex-end; padding: 0; }
+  @keyframes popupIn {
+    from { opacity: 0; transform: translateY(40px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .popup-body { max-height: 75dvh; }
+  .btn-row { flex-wrap: wrap; }
+
+  .report-grid-4 { grid-template-columns: repeat(2,1fr) !important; }
+
+  .toast { bottom: 90px; font-size: 12px; padding: 9px 16px; }
+}
+
+@media (max-width: 480px) {
+  .stat-pill:nth-child(n+4) { display: none; }
+  .topbar-inner { height: 52px; }
+  .app-body { height: calc(100vh - 52px); }
+
+  .sc-badge { display: none; }
+  .sc-body { padding: 9px 8px 9px 14px; }
+  .sc-avatar { width: 36px; height: 36px; font-size: 10.5px; border-radius: 10px; }
+
+  .report-grid-4 { grid-template-columns: repeat(2,1fr) !important; }
+  .rsc-val { font-size: 18px; }
+}

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nail Turn — Quản lý lượt thợ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="mobile.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#E11D48">
+  <link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+
+<!-- TOP STATS BAR -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand" style="width:220px;padding:0 18px;gap:10px">
+      <div class="brand-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+      </div>
+      <span class="brand-name">Nail Turn</span>
+    </div>
+    <div class="stat-pills">
+      <div class="stat-pill sp-ready">
+        <div class="sp-dot" style="background:var(--c-ready)"></div>
+        <span class="sp-label">Rảnh</span>
+        <span class="sp-val" id="stat-ready">0</span>
+      </div>
+      <div class="stat-pill sp-busy">
+        <div class="sp-dot" style="background:var(--c-busy)"></div>
+        <span class="sp-label">Đang làm</span>
+        <span class="sp-val" id="stat-busy">0</span>
+      </div>
+      <div class="stat-pill sp-turns">
+        <div class="sp-dot" style="background:#7C6EBA"></div>
+        <span class="sp-label">Tổng turn</span>
+        <span class="sp-val" id="stat-turns">0</span>
+      </div>
+      <div class="stat-pill sp-rev">
+        <div class="sp-dot" style="background:var(--c-ready)"></div>
+        <span class="sp-label">Doanh thu</span>
+        <span class="sp-val" id="stat-rev">0đ</span>
+      </div>
+      <div class="stat-pill sp-tip">
+        <div class="sp-dot" style="background:#3B82F6"></div>
+        <span class="sp-label">Tip</span>
+        <span class="sp-val" id="stat-tip">0đ</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span class="shift-tag" id="shift-tag">Ca sáng</span>
+      <div class="clock-display">
+        <div class="clock-time" id="clock">--:--</div>
+        <div class="clock-day" id="clock-day">--/--</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- APP BODY -->
+<div class="app-body">
+  <!-- SIDEBAR (desktop) -->
+  <nav class="sidebar">
+    <span class="nav-group-label">Quản lý ca</span>
+    <button class="nav-btn active" data-tab="shift" onclick="setTab('shift')" title="Ca làm việc">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      Ca làm việc
+    </button>
+    <button class="nav-btn" data-tab="report" onclick="setTab('report')" title="Báo cáo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="20" x2="18" y2="10"/>
+        <line x1="12" y1="20" x2="12" y2="4"/>
+        <line x1="6" y1="20" x2="6" y2="14"/>
+      </svg>
+      Báo cáo lịch sử
+    </button>
+    <div class="nav-divider"></div>
+    <span class="nav-group-label">Quản lý</span>
+    <button class="nav-btn" data-tab="settings" data-pane="staff" onclick="setTab('settings');switchSettingsPane('staff')" title="Nhân viên">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      Nhân viên
+    </button>
+    <button class="nav-btn" data-tab="settings" data-pane="services" onclick="setTab('settings');switchSettingsPane('services')" title="Dịch vụ">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+      </svg>
+      Dịch vụ
+    </button>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content" id="main-content">
+    <!-- JS renders tab content here -->
+  </main>
+</div>
+
+<!-- ACTION POPUP -->
+<div class="popup-overlay" id="popup-overlay" style="display:none" onclick="closePopupOnOverlay(event)">
+  <div class="popup" id="popup">
+    <div class="popup-head" id="popup-head"></div>
+    <div class="popup-body" id="popup-body"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-dot"></div>
+  <span id="toast-txt"></span>
+</div>
+
+<!-- BOTTOM NAV (mobile only) -->
+<nav class="bottom-nav" style="display:none">
+  <button class="nav-btn active" onclick="setTab('shift')">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2"/>
+      <line x1="16" y1="2" x2="16" y2="6"/>
+      <line x1="8" y1="2" x2="8" y2="6"/>
+      <line x1="3" y1="10" x2="21" y2="10"/>
+    </svg>
+    Ca
+  </button>
+  <button class="nav-btn" onclick="setTab('report')">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="20" x2="18" y2="10"/>
+      <line x1="12" y1="20" x2="12" y2="4"/>
+      <line x1="6" y1="20" x2="6" y2="14"/>
+    </svg>
+    Báo cáo
+  </button>
+  <button class="nav-btn" onclick="setTab('settings')">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+    Cài đặt
+  </button>
+</nav>
+
+<script src="app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  }
+</script>
+</body>
+</html>
