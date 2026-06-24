@@ -379,7 +379,7 @@ function renderKanban() {
     if (multiMode && isReady) {
       actionBtn = `<button onclick="event.stopPropagation();toggleChk(${w.id})" style="padding:0 8px;height:26px;border-radius:6px;border:none;background:${isChk?'#1D4ED8':'var(--surface-3)'};color:${isChk?'#fff':'var(--t2)'};font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;line-height:1;font-family:inherit;white-space:nowrap">${isChk?'✓ Đã chọn':'Chọn'}</button>`;
     } else if (w.status==='busy') {
-      actionBtn = ``;
+      actionBtn = `<button onclick="event.stopPropagation();openPopup(${w.id})" style="padding:0 8px;height:26px;border-radius:6px;border:1px solid var(--br2);background:var(--surface-2);color:var(--t2);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Lịch sử</button>`;
     } else if (isReady) {
       actionBtn = `<button onclick="event.stopPropagation();assignW(${w.id})" style="padding:0 8px;height:26px;border-radius:6px;border:none;background:var(--rose);color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;line-height:1;font-family:inherit;white-space:nowrap">Vào turn</button>`;
     } else if (w.status==='off') {
@@ -425,6 +425,10 @@ function renderKanban() {
         <div style="flex:1;min-width:0;cursor:default">
           <div style="font-size:12px;font-weight:700">${m.name}</div>
           <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:3px">${svcTag}${timerTag}</div>
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button onclick="event.stopPropagation();finishW(${m.id},1)" style="width:26px;height:26px;border-radius:6px;border:none;background:var(--c-ready);color:#fff;font-size:11px;font-weight:700;cursor:pointer" title="Xong 1 turn">✓</button>
+          <button onclick="event.stopPropagation();openDetail(${m.id})" style="padding:0 8px;height:26px;border-radius:6px;border:1px solid var(--br2);background:var(--surface-2);color:var(--t2);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Chi tiết</button>
         </div>
       </div>`;
     }).join('');
@@ -1885,7 +1889,8 @@ function renderCard(w, rd) {
     qa = `<button class="qa-btn qa-primary" onclick="event.stopPropagation();assignW(${w.id})">Vào turn</button>
 <button class="qa-btn" onclick="event.stopPropagation();openPopup(${w.id})">Lịch sử</button>`;
   } else if (w.status==='busy') {
-    qa = `<button class="qa-btn" onclick="event.stopPropagation();openDetail(${w.id})">Chi tiết</button>`;
+    qa = `<button class="qa-btn qa-green" onclick="event.stopPropagation();finishW(${w.id},1)">✓ Xong</button>
+      <button class="qa-btn" onclick="event.stopPropagation();openDetail(${w.id})">Chi tiết</button>`;
   } else if (isPen) {
     qa = `<button class="qa-btn qa-green" onclick="event.stopPropagation();remPen(${w.id})">Gỡ phạt</button>
       <button class="qa-btn" onclick="event.stopPropagation();openDetail(${w.id})">Chi tiết</button>`;
@@ -1944,6 +1949,7 @@ function renderGroupCard(gid, members) {
         <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${svcTag}${timerTag}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+        <button class="qa-btn qa-green" style="padding:5px 10px;font-size:11px" onclick="event.stopPropagation();finishW(${m.id},1)">✓ Xong</button>
         <button class="qa-btn" style="padding:5px 10px;font-size:11px" onclick="event.stopPropagation();openDetail(${m.id})">Chi tiết</button>
       </div>
     </div>`;
