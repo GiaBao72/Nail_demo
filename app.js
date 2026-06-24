@@ -1145,27 +1145,29 @@ function finishW(id, tw) {
       <button class="btn btn-ghost" onclick="openDetail(${id})">← Quay lại</button>`;
     return;
   } else {
-    // Gọi từ nút quick — mở popup nhập thông tin trước
+    // Gọi từ nút quick — nhảy thẳng vào màn xác nhận
     const elapsed = w.startTime ? Date.now()-w.startTime : 0;
     const startStr = w.startTime ? new Date(w.startTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}) : '--:--';
-    const avCls = 'av-busy';
-    document.getElementById('popup-head').innerHTML = `<div class="popup-av ${avCls}">${w.ini}</div>
-      <div><div class="popup-name">${w.name}</div><div class="popup-meta">Đang làm · ${fmtT(elapsed)}</div></div>
+    const twLabel = tw===1 ? '1 turn' : tw===0.5 ? '½ turn' : '0 turn';
+    const twColor = tw===0 ? 'var(--t3)' : 'var(--c-ready)';
+    document.getElementById('popup-head').innerHTML = `<div class="popup-av av-busy">${w.ini}</div>
+      <div><div class="popup-name">${w.name}</div><div class="popup-meta">Xong việc · ${fmtT(elapsed)}</div></div>
       <button class="popup-close" onclick="closePopup()">✕</button>`;
     document.getElementById('popup-body').innerHTML = `
-      <div class="popup-timer" style="padding:10px 14px"><div class="pt-val" style="font-size:32px">${fmtT(elapsed)}</div><div class="pt-sub">Bắt đầu lúc ${startStr}</div></div>
-      <div><div class="f-label" style="margin-bottom:6px">Dịch vụ</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">${svcCheckboxes(w.service,'rv-svc-'+id)}</div></div>
-      
-      <div><div class="f-label">Ghi chú</div><textarea class="f-textarea" id="nt-${id}" rows="2" placeholder="Khách VIP, hẹn lại...">${w.note||''}</textarea></div>
-      <div class="sec-div"><div class="sec-div-line"></div><div class="sec-div-txt">Xong việc — tính turn</div><div class="sec-div-line"></div></div>
-      <div class="btn-row">
-        <button class="btn btn-dark btn-sm" style="flex:1" onclick="finishW(${id},1)">1 turn</button>
-        <button class="btn btn-ghost btn-sm" style="flex:1" onclick="finishW(${id},0.5)">½ turn</button>
-        <button class="btn btn-ghost btn-sm" style="flex:1;color:var(--t3)" onclick="finishW(${id},0)">0 turn</button>
+      <div style="text-align:center;padding:12px 0 8px">
+        <div style="font-size:13px;color:var(--t3);margin-bottom:4px">Thời gian làm việc</div>
+        <div class="pt-val" style="font-size:34px;color:var(--c-busy)">${fmtT(elapsed)}</div>
+        <div style="font-size:11.5px;color:var(--t4);margin-top:4px">Bắt đầu lúc ${startStr}</div>
       </div>
-      <button class="btn btn-ghost" onclick="closePopup()">Hủy</button>`;
+      <div style="background:var(--surface-2);border:1px solid var(--br2);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:13px;color:var(--t3)">Tính turn</span>
+        <span style="font-size:16px;font-weight:800;color:${twColor}">${twLabel}</span>
+      </div>
+      <button class="btn btn-green" onclick="_doFinishW(W.find(x=>x.id===${id}), ${tw}, 0, 0); closePopup();">
+        ✅ Xác nhận hoàn thành
+      </button>
+      <button class="btn btn-ghost" onclick="openDetail(${id})">📝 Thêm ghi chú / đổi turn</button>`;
     document.getElementById('popup-overlay').style.display = 'flex';
-    setTimeout(() => { const el=document.getElementById('rv-svc-'+id); if(el) el.focus(); }, 100);
   }
 }
 function _doFinishW(w, tw, rev, tip) {
