@@ -196,10 +196,9 @@ tick(); setInterval(tick, 1000);
 // ── RENDER STATS ──
 function renderStats() {
   const rd = smartQueue(), busy = W.filter(w => w.status==='busy');
-  const rv = W.reduce((s,w)=>s+w.totalRevenue,0), tp = W.reduce((s,w)=>s+w.totalTip,0);
   const set = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
   set('stat-ready', rd.length); set('stat-busy', busy.length);
-  set('stat-turns', totalTurns); set('stat-rev', fmtM(rv)); set('stat-tip', fmtM(tp));
+  set('stat-turns', totalTurns);
   const nxt = rd[0];
   set('nwc-name', nxt ? nxt.name : '—');
   set('nwc-sub', nxt ? rd.length + ' thợ đang chờ' : 'Không có thợ rảnh');
@@ -400,7 +399,7 @@ function renderKanban() {
         <div class="sc-avatar ${avCls}" style="width:32px;height:32px;font-size:11px;flex-shrink:0">${w.ini}</div>
         <div style="flex:1;min-width:0;overflow:hidden">
           <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${w.name}</div>
-          <div style="font-size:10px;color:var(--t3);margin-top:1px">${w.turns} turn${w.totalRevenue?' · '+fmtM(w.totalRevenue):''}</div>
+          <div style="font-size:10px;color:var(--t3);margin-top:1px">${w.turns} turn</div>
         </div>
         ${actionBtn}
       </div>
@@ -657,7 +656,6 @@ function renderStaffTab() {
       :'<span class="sc-badge sb-ready">Rảnh</span>';
     const ciTime = w.checkinTime ? new Date(w.checkinTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}) : '—';
     const isCheckedIn = !!w.checkinTime;
-    const avg = w.history.length ? Math.round(w.totalRevenue/w.history.length) : 0;
     const ciBtn = isCheckedIn
       ? `<button class="qa-btn" onclick="event.stopPropagation();checkoutStaff(${w.id})" style="flex:none;padding:6px 10px;font-size:11px;color:var(--c-pen);border-color:var(--c-pen-b)">Check-out</button>`
       : `<button class="qa-btn qa-primary" onclick="event.stopPropagation();checkinStaff(${w.id})" style="flex:none;padding:6px 12px;font-size:11px">Check-in</button>`;
@@ -692,16 +690,13 @@ function openStaffDetail(id) {
   const histRows = w.history.length ? w.history.map(h=>`<div class="hr">
     <div><div class="hr-t">${h.ti}</div><div class="hr-d">${h.dur}</div></div>
     <div><div class="hr-s">${h.svc?svcL(h.svc):'—'}</div>${h.note?'<div class="hr-n">'+h.note+'</div>':''}</div>
-    <div><div class="hr-r">${h.rev?fmtM(h.rev):'—'}</div>${h.tip?'<div class="hr-tp">tip '+fmtM(h.tip)+'</div>':''}</div>
   </div>`).join('') : '<div style="text-align:center;padding:20px;color:var(--t4)">Chưa có lịch sử</div>';
   document.getElementById('popup-head').innerHTML = `<div class="popup-av ${avCls}">${w.ini}</div>
-    <div><div class="popup-name">${w.name}</div><div class="popup-meta">${w.turns} turn · ${fmtM(w.totalRevenue)}</div></div>
+    <div><div class="popup-name">${w.name}</div><div class="popup-meta">${w.turns} turn</div></div>
     <button class="popup-close" onclick="closePopup()">✕</button>`;
   document.getElementById('popup-body').innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+    <div style="display:grid;grid-template-columns:1fr;gap:8px">
       <div class="mini-stat"><div class="ms-val">${w.turns}</div><div class="ms-lbl">Turn hôm nay</div></div>
-      <div class="mini-stat"><div class="ms-val" style="color:var(--c-ready)">${fmtM(w.totalRevenue)}</div><div class="ms-lbl">Doanh thu</div></div>
-      <div class="mini-stat"><div class="ms-val" style="color:#3B82F6">${fmtM(w.totalTip)}</div><div class="ms-lbl">Tip</div></div>
     </div>
     <div><div class="f-label" style="margin-bottom:8px">Lịch sử ca hôm nay</div>
     <div style="max-height:260px;overflow-y:auto">${histRows}</div></div>
@@ -978,8 +973,8 @@ function exportCSV() {
   const today = new Date().toISOString().slice(0,10);
   const log = dailyLogs.find(l=>l.date===date);
   const workers = (log && date!==today) ? log.workers : W;
-  const rows = [['Tên','Turn','Doanh thu','Tip','Tổng']];
-  workers.forEach(w => rows.push([w.name, w.turns, w.totalRevenue, w.totalTip, w.totalRevenue+w.totalTip]));
+  const rows = [['Tên','Turn']];
+  workers.forEach(w => rows.push([w.name, w.turns]));
   const csv = rows.map(r=>r.join(',')).join('\n');
   const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
@@ -992,18 +987,15 @@ function openPopup(id) {
   const w = W.find(x=>x.id===id); if (!w) return;
   const avCls = w.status==='busy'?'av-busy':w.status==='penalized'?'av-pen':w.status==='off'?'av-off':'av-ready';
   document.getElementById('popup-head').innerHTML = `<div class="popup-av ${avCls}">${w.ini}</div>
-    <div><div class="popup-name">${w.name}</div><div class="popup-meta">${w.turns} turn · ${fmtM(w.totalRevenue)}${w.totalTip?' · tip '+fmtM(w.totalTip):''}</div></div>
+    <div><div class="popup-name">${w.name}</div><div class="popup-meta">${w.turns} turn</div></div>
     <button class="popup-close" onclick="closePopup()">✕</button>`;
   const histRows = w.history.length ? w.history.map(h=>`<div class="hr">
     <div><div class="hr-t">${h.ti}</div><div class="hr-d">${h.dur}</div></div>
     <div><div class="hr-s">${h.svc?svcL(h.svc):'—'}</div>${h.note?'<div class="hr-n">'+h.note+'</div>':''}</div>
-    <div><div class="hr-r">${h.rev?fmtM(h.rev):'—'}</div>${h.tip?'<div class="hr-tp">tip '+fmtM(h.tip)+'</div>':''}</div>
   </div>`).join('') : '<div style="text-align:center;padding:24px 0;color:var(--t4);font-size:13px">Chưa có lịch sử ca nào</div>';
   document.getElementById('popup-body').innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+    <div style="display:grid;grid-template-columns:1fr;gap:8px">
       <div class="mini-stat"><div class="ms-val">${w.turns}</div><div class="ms-lbl">Turn hôm nay</div></div>
-      <div class="mini-stat"><div class="ms-val" style="color:var(--c-ready)">${fmtM(w.totalRevenue)}</div><div class="ms-lbl">Doanh thu</div></div>
-      <div class="mini-stat"><div class="ms-val" style="color:#3B82F6">${fmtM(w.totalTip)}</div><div class="ms-lbl">Tip</div></div>
     </div>
     <div><div class="f-label" style="margin-bottom:8px">Lịch sử ca hôm nay</div>
     <div style="max-height:280px;overflow-y:auto">${histRows}</div></div>
@@ -1127,9 +1119,31 @@ function finishW(id, tw) {
   const w = W.find(x=>x.id===id); if (!w) return;
   const ne=document.getElementById('nt-'+id);
   if (ne !== null) {
-    // Gọi từ popup chi tiết — có sẵn note textarea, thực thi luôn
-    if(ne) w.note=ne.value.trim();
-    _doFinishW(w, tw, 0, 0);
+    // Gọi từ popup chi tiết — lưu note rồi hiển thị màn xác nhận, KHÔNG finish ngay
+    w.note = ne.value.trim();
+    // Lưu dịch vụ đang chọn
+    const svcEl = document.getElementById('svc-'+id) || document.getElementById('rv-svc-'+id);
+    if (svcEl) w.service = svcEl.value;
+    const elapsed = w.startTime ? Date.now()-w.startTime : 0;
+    const startStr = w.startTime ? new Date(w.startTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}) : '--:--';
+    const twLabel = tw===1 ? '1 turn' : tw===0.5 ? '½ turn' : '0 turn';
+    const twColor = tw===0 ? 'var(--t3)' : 'var(--c-ready)';
+    document.getElementById('popup-body').innerHTML = `
+      <div style="text-align:center;padding:12px 0 8px">
+        <div style="font-size:13px;color:var(--t3);margin-bottom:4px">Thời gian làm việc</div>
+        <div class="pt-val" style="font-size:34px;color:var(--c-busy)">${fmtT(elapsed)}</div>
+        <div style="font-size:11.5px;color:var(--t4);margin-top:4px">Bắt đầu lúc ${startStr}</div>
+      </div>
+      <div style="background:var(--surface-2);border:1px solid var(--br2);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:13px;color:var(--t3)">Tính turn</span>
+        <span style="font-size:16px;font-weight:800;color:${twColor}">${twLabel}</span>
+      </div>
+      ${w.note ? `<div style="background:var(--surface-2);border:1px solid var(--br);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--t3)"><span style="font-weight:700;color:var(--t2)">Ghi chú:</span> ${w.note}</div>` : ''}
+      <button class="btn btn-green" onclick="_doFinishW(W.find(x=>x.id===${id}), ${tw}, 0, 0); closePopup();">
+        ✅ Xác nhận hoàn thành
+      </button>
+      <button class="btn btn-ghost" onclick="openDetail(${id})">← Quay lại</button>`;
+    return;
   } else {
     // Gọi từ nút quick — mở popup nhập thông tin trước
     const elapsed = w.startTime ? Date.now()-w.startTime : 0;
@@ -1868,7 +1882,7 @@ function renderCard(w, rd) {
   if (isPen && pt) tags += `<span class="sc-tag t-pen" id="cpen-${w.id}">${fmtP(pt.ut)}</span>`;
   if (w.status==='ready' && avgSpeed(w)) tags += `<span class="sc-tag t-speed">⚡ ${speedLabel(w)}</span>`;
   const tagsHtml = tags ? `<div class="sc-tags">${tags}</div>` : '';
-  const revHtml = w.totalRevenue ? `<div class="sc-rev">${fmtM(w.totalRevenue)}${w.totalTip?' · tip '+fmtM(w.totalTip):''}</div>` : '';
+  const revHtml = '';
   let qa = '';
   if (multiMode && w.status==='ready') {
     qa = `<button class="qa-btn ${isChk?'qa-primary':''}" onclick="event.stopPropagation();toggleChk(${w.id})">${isChk?'✓ Đã chọn':'Chọn'}</button>`;
@@ -1896,7 +1910,6 @@ function renderCard(w, rd) {
         ${w.history.map(h=>`<div class="hr">
           <div><div class="hr-t">${h.ti}</div><div class="hr-d">${h.dur}</div></div>
           <div><div class="hr-s">${h.svc?svcL(h.svc):'—'}</div>${h.note?'<div class="hr-n">'+h.note+'</div>':''}</div>
-          <div><div class="hr-r">${h.rev?fmtM(h.rev):'—'}</div>${h.tip?'<div class="hr-tp">tip '+fmtM(h.tip)+'</div>':''}</div>
         </div>`).join('')}
       </div>
     </div>`;
@@ -1930,13 +1943,11 @@ function renderGroupCard(gid, members) {
     const me = m.startTime ? Date.now()-m.startTime : 0;
     const svcTag = m.service ? `<span class="sc-tag t-svc">${svcL(m.service)}</span>` : '';
     const timerTag = `<span class="sc-tag t-timer">⏱ <span id="ct-${m.id}">${fmtT(me)}</span></span>`;
-    const revTxt = m.totalRevenue ? `<span style="font-size:11px;color:var(--c-ready);font-weight:700">${fmtM(m.totalRevenue)}${m.totalTip?' · tip '+fmtM(m.totalTip):''}</span>` : '';
     return `<div class="gm-row">
       <div class="sc-avatar av-busy" style="width:34px;height:34px;font-size:11px;flex-shrink:0">${m.ini}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:700">${m.name}</div>
         <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${svcTag}${timerTag}</div>
-        ${revTxt?`<div style="margin-top:3px">${revTxt}</div>`:''}
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
         <button class="qa-btn qa-green" style="padding:5px 10px;font-size:11px" onclick="event.stopPropagation();finishW(${m.id},1)">✓ Xong</button>
@@ -1959,3 +1970,4 @@ function renderGroupCard(gid, members) {
     <div class="group-members">${memberRows}</div>
   </div>`;
 }
+   
