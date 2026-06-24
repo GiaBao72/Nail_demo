@@ -1970,4 +1970,3 @@ function renderGroupCard(gid, members) {
     <div class="group-members">${memberRows}</div>
   </div>`;
 }
-   
