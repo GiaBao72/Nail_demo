@@ -1992,7 +1992,4 @@ function renderGroupCard(gid, members) {
       </div>
       <span class="sc-badge sb-busy">Đang làm</span>
     </div>
-    <div class="sc-progress" style="margin:0 14px 10px"><div class="sc-progress-fill" id="pb-g-${gid}" style="width:${pct}%"></div></div>
-    <div class="group-members">${memberRows}</div>
-  </div>`;
-}
+    <div class="sc-progress" style="margin:0 14px 10px"><div class="sc-progress-fill"
