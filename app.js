@@ -1983,4 +1983,32 @@ function renderGroupCard(gid, members) {
   const svc = members[0].service;
   const avatars = members.map(m=>`<div class="sc-avatar av-busy" style="width:34px;height:34px;font-size:11px;border:2px solid #fff;margin-right:-8px">${m.ini}</div>`).join('');
   const memberRows = members.map(m => {
-    const me = m.startTime ? Date.now
+    const me = m.startTime ? Date.now()-m.startTime : 0;
+    const svcTag = m.service ? `<span class="sc-tag t-svc">${svcL(m.service)}</span>` : '';
+    const timerTag = `<span class="sc-tag t-timer">⏱ <span id="ct-${m.id}">${fmtT(me)}</span></span>`;
+    return `<div class="gm-row">
+      <div class="sc-avatar av-busy" style="width:34px;height:34px;font-size:11px;flex-shrink:0">${m.ini}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700">${m.name}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${svcTag}${timerTag}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+        <button class="qa-btn" style="padding:5px 10px;font-size:11px" onclick="event.stopPropagation();openDetail(${m.id})">Chi tiết</button>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="group-card">
+    <div class="group-card-header">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:16px">👥</span>
+        <div>
+          <div style="font-size:12px;font-weight:800;color:var(--c-busy)">Nhóm ${members.length} thợ</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:1px">Cùng 1 khách · <span id="ct-g-${gid}">${fmtT(elapsed)}</span></div>
+        </div>
+      </div>
+      <span class="sc-badge sb-busy">Đang làm</span>
+    </div>
+    <div class="sc-progress" style="margin:0 14px 10px"><div class="sc-progress-fill" id="pb-g-${gid}" style="width:${pct}%"></div></div>
+    <div class="group-members">${memberRows}</div>
+  </div>`;
+}
