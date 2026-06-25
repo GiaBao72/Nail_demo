@@ -2,6 +2,19 @@
 //  NAIL TURN — app.js
 // ═══════════════════════════════════════
 
+// ── TELEGRAM CONFIG ──
+const TELEGRAM_BOT_TOKEN = '8796284072:AAF7x6OA2Lh1IwsnhBbUtS50PgoRc5MN1dg';
+const TELEGRAM_CHAT_ID   = '-5122704943';
+
+function sendTelegramMsg(text) {
+  if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.startsWith('NHAP')) return;
+  fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text, parse_mode: 'HTML' })
+  }).catch(() => {});
+}
+
 // ── SERVICES — dynamic, persisted ──
 const DEFAULT_SVCS = [
   { v: 'Manicure',    l: '💅 Manicure' },
@@ -1110,6 +1123,10 @@ function doAssignW(id) {
   w.note = nt ? nt.value.trim() : '';
   w.revenue=0; w.tip=0;
   toast('Vào turn cho ' + w.name + ' 💅'); closePopup();
+  const _svcLbl = w.service ? '\nDịch vụ: ' + svcL(w.service) : '';
+  const _noteLbl = w.note ? '\nGhi chú: ' + w.note : '';
+  const _timeStr = new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+  sendTelegramMsg(`💅 <b>${w.name}</b> bắt đầu phục vụ khách${_svcLbl}${_noteLbl}\n🕐 ${_timeStr}`);
 }
 function finishW(id, tw) {
   const w = W.find(x=>x.id===id); if (!w) return;
@@ -1175,10 +1192,13 @@ function _doFinishW(w, tw, rev, tip) {
   if (!w.history) w.history=[];
   w.history.push({ti, dur:fmtT(dur), svc:w.service, note:w.note, tw});
   exHist.add(w.id);
+  const _finSvc = w.service ? '\nDịch vụ: ' + svcL(w.service) : '';
+  const _finTw  = tw===1 ? '1 turn' : tw===0.5 ? '½ turn' : '0 turn (không tính)';
   W=W.filter(x=>x.id!==w.id);
   w.status='ready'; w.note=''; w.startTime=null; w.service=''; w.revenue=0; w.tip=0; w.groupId=null;
   W.push(w); selId=null;
   toast(w.name + ' xong việc — về cuối hàng ✓'); closePopup();
+  sendTelegramMsg(`✅ <b>${w.name}</b> xong việc${_finSvc}\n⏱ ${fmtT(dur)} · ${_finTw}`);
 }
 function setSt(id, s) {
   const w=W.find(x=>x.id===id); if (!w) return;
@@ -1288,6 +1308,9 @@ function doAssignMulti() {
   totalTurns += members.length;
   toast('Đã giao ca cho '+members.length+' thợ 👥');
   multiMode=false; multiSel.clear(); closePopup();
+  const _grpTime = new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+  const _grpLines = members.map(m => `  • ${m.name}${m.service?' — '+svcL(m.service):''}`).join('\n');
+  sendTelegramMsg(`👥 <b>Nhóm ${members.length} thợ</b> bắt đầu phục vụ cùng 1 khách\n${_grpLines}\n🕐 ${_grpTime}`);
 }
 function penW(id, hours) {
   const w=W.find(x=>x.id===id); if (!w) return;
@@ -1378,6 +1401,7 @@ function finishGroup(gid, tw) {
     w.history.push({ti, dur:fmtT(dur), svc:w.service, note:w.note, tw});
     exHist.add(w.id);
   });
+  const _grpDur = members[0].startTime ? Date.now()-members[0].startTime : 0;
   totalTurns=Math.round((totalTurns-members.length+members.length*tw)*10)/10;
   members.forEach(w => {
     W=W.filter(x=>x.id!==w.id);
@@ -1385,6 +1409,8 @@ function finishGroup(gid, tw) {
     W.push(w);
   });
   toast('Nhóm '+members.length+' thợ xong việc ✓'); closePopup();
+  const _grpTw = tw===1 ? '1 turn/thợ' : tw===0.5 ? '½ turn/thợ' : '0 turn';
+  sendTelegramMsg(`✅ <b>Nhóm ${members.length} thợ</b> xong việc\n⏱ ${fmtT(_grpDur)} · ${_grpTw}\nThợ: ${members.map(m=>m.name).join(', ')}`);
 }
 
 
