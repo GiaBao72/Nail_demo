@@ -7,15 +7,18 @@ const TELEGRAM_BOT_TOKEN  = '8796284072:AAF7x6OA2Lh1IwsnhBbUtS50PgoRc5MN1dg';
 const TELEGRAM_CHAT_GROUP = '-5122704943'; // group Nail_demo
 const TELEGRAM_CHAT_DM    = '1375328147';  // DM cá nhân Gia Bảo
 
+function sendTelegramMsgTo(chatId, text) {
+  if (!TELEGRAM_BOT_TOKEN || !chatId) return;
+  fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' })
+  }).catch(() => {});
+}
+
 function sendTelegramMsg(text) {
   if (!TELEGRAM_BOT_TOKEN) return;
-  [TELEGRAM_CHAT_GROUP, TELEGRAM_CHAT_DM].forEach(chatId => {
-    fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' })
-    }).catch(() => {});
-  });
+  [TELEGRAM_CHAT_GROUP, TELEGRAM_CHAT_DM].forEach(chatId => sendTelegramMsgTo(chatId, text));
 }
 
 // ── SERVICES — dynamic, persisted ──
@@ -43,6 +46,7 @@ function mkW(id, name, ini) {
     avgTurnMs: 0, lastFinishTime: null,
     wageBase: 0, wagePercent: 0,           // lương cơ bản (đ/ca) + % doanh thu
     workLogs: [],                           // [{date, checkin, checkout, hours}]
+    telegramId: '',                         // Telegram chat ID cá nhân của thợ
   };
 }
 
@@ -748,6 +752,11 @@ function openEditStaff(id) {
   document.getElementById('popup-body').innerHTML = `
     <div><div class="f-label">Tên nhân viên</div><input class="f-input" id="edit-name" value="${w.name}" style="font-size:13px;font-weight:500"></div>
     <div><div class="f-label">Chữ viết tắt</div><input class="f-input" id="edit-ini" value="${w.ini}" maxlength="2" style="text-transform:uppercase;font-size:13px;font-weight:700"></div>
+    <div>
+      <div class="f-label">Telegram ID <span style="color:var(--t4);font-weight:400;text-transform:none">(để bot nhắn riêng khi đến turn)</span></div>
+      <input class="f-input" id="edit-tgid" value="${w.telegramId||''}" placeholder="VD: 123456789" inputmode="numeric" style="font-size:13px">
+      <div style="font-size:11px;color:var(--t4);margin-top:4px">Nhân viên nhắn /start cho @VGB_AssistantBot rồi gửi ID tại <a href="https://t.me/userinfobot" target="_blank" style="color:var(--rose)">@userinfobot</a></div>
+    </div>
     <button class="btn btn-dark" onclick="saveEditStaff(${id})">Lưu thay đổi</button>
     <button class="btn btn-ghost" onclick="closePopup()">Hủy</button>`;
   document.getElementById('popup-overlay').style.display = 'flex';
@@ -757,8 +766,10 @@ function saveEditStaff(id) {
   const w = W.find(x=>x.id===id); if (!w) return;
   const nm = document.getElementById('edit-name').value.trim();
   const ini = document.getElementById('edit-ini').value.trim().toUpperCase();
+  const tgid = (document.getElementById('edit-tgid')?.value || '').trim();
   if (!nm) { toast('Tên không được để trống!'); return; }
   w.name = nm; if (ini) w.ini = ini;
+  w.telegramId = tgid;
   toast('Đã cập nhật ' + nm);
   closePopup();
   if (currentTab==='settings') renderSettingsPane();
@@ -1130,6 +1141,7 @@ function doAssignW(id) {
   const _noteLbl = w.note ? '\nGhi chú: ' + w.note : '';
   const _timeStr = new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
   sendTelegramMsg(`💅 <b>${w.name}</b> bắt đầu phục vụ khách${_svcLbl}${_noteLbl}\n🕐 ${_timeStr}`);
+  if (w.telegramId) sendTelegramMsgTo(w.telegramId, `💅 <b>Đến ca của bạn rồi ${w.name}!</b>\nKhách đang chờ bạn phục vụ.${_svcLbl}${_noteLbl}\n🕐 ${_timeStr}`);
 }
 function finishW(id, tw) {
   const w = W.find(x=>x.id===id); if (!w) return;
@@ -1314,6 +1326,9 @@ function doAssignMulti() {
   const _grpTime = new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
   const _grpLines = members.map(m => `  • ${m.name}${m.service?' — '+svcL(m.service):''}`).join('\n');
   sendTelegramMsg(`👥 <b>Nhóm ${members.length} thợ</b> bắt đầu phục vụ cùng 1 khách\n${_grpLines}\n🕐 ${_grpTime}`);
+  members.forEach(m => {
+    if (m.telegramId) sendTelegramMsgTo(m.telegramId, `💅 <b>Đến ca của bạn rồi ${m.name}!</b>\nKhách đang chờ (cùng nhóm ${members.length} thợ).${m.service?'\nDịch vụ: '+svcL(m.service):''}\n🕐 ${_grpTime}`);
+  });
 }
 function penW(id, hours) {
   const w=W.find(x=>x.id===id); if (!w) return;
@@ -1476,6 +1491,7 @@ function renderStaffPane(container) {
           <span style="color:${statusDot};font-weight:600">${statusLbl}</span>
           ${isIn ? `<span style="color:var(--t4)">· check-in ${ciTime}</span>` : ''}
           ${w.turns ? `<span style="color:var(--t4)">· ${w.turns} turn</span>` : ''}
+          ${w.telegramId ? `<span style="color:#2BA5F7;font-size:10px">· ✈️ TG</span>` : `<span style="color:var(--t5);font-size:10px">· chưa có TG</span>`}
         </div>
       </div>
       <div class="staff-row-actions" onclick="event.stopPropagation()">
@@ -1967,29 +1983,4 @@ function renderGroupCard(gid, members) {
   const svc = members[0].service;
   const avatars = members.map(m=>`<div class="sc-avatar av-busy" style="width:34px;height:34px;font-size:11px;border:2px solid #fff;margin-right:-8px">${m.ini}</div>`).join('');
   const memberRows = members.map(m => {
-    const me = m.startTime ? Date.now()-m.startTime : 0;
-    const svcTag = m.service ? `<span class="sc-tag t-svc">${svcL(m.service)}</span>` : '';
-    const timerTag = `<span class="sc-tag t-timer">⏱ <span id="ct-${m.id}">${fmtT(me)}</span></span>`;
-    return `<div class="gm-row">
-      <div class="sc-avatar av-busy" style="width:34px;height:34px;font-size:11px;flex-shrink:0">${m.ini}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:700">${m.name}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${svcTag}${timerTag}</div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
-        <button class="qa-btn" style="padding:5px 10px;font-size:11px" onclick="event.stopPropagation();openDetail(${m.id})">Chi tiết</button>
-      </div>
-    </div>`;
-  }).join('');
-  return `<div class="group-card">
-    <div class="group-card-header">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:16px">👥</span>
-        <div>
-          <div style="font-size:12px;font-weight:800;color:var(--c-busy)">Nhóm ${members.length} thợ</div>
-          <div style="font-size:11px;color:var(--t3);margin-top:1px">Cùng 1 khách · <span id="ct-g-${gid}">${fmtT(elapsed)}</span></div>
-        </div>
-      </div>
-      <span class="sc-badge sb-busy">Đang làm</span>
-    </div>
-    <div class="sc-progress" style="margin:0 14px 10px"><div class="sc-progress-fill"
+    const me = m.startTime ? Date.now
