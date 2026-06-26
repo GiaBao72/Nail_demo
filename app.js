@@ -21,6 +21,12 @@ function sendTelegramMsg(text) {
   [TELEGRAM_CHAT_GROUP, TELEGRAM_CHAT_DM].forEach(chatId => sendTelegramMsgTo(chatId, text));
 }
 
+function avImg(w, size) {
+  const s = size || 40;
+  if (w && w.photo) return '<img src="'+w.photo+'" style="width:'+s+'px;height:'+s+'px;border-radius:inherit;object-fit:cover;display:block">';
+  return w ? w.ini : '+';
+}
+
 // ── SERVICES — dynamic, persisted ──
 const DEFAULT_SVCS = [
   { v: 'Manicure',    l: '💅 Manicure' },
@@ -47,6 +53,7 @@ function mkW(id, name, ini) {
     wageBase: 0, wagePercent: 0,           // lương cơ bản (đ/ca) + % doanh thu
     workLogs: [],                           // [{date, checkin, checkout, hours}]
     telegramId: '',                         // Telegram chat ID cá nhân của thợ
+    photo: '',                                  // base64 ảnh đại diện
   };
 }
 
@@ -746,10 +753,23 @@ function saveAddStaff() {
 
 function openEditStaff(id) {
   const w = W.find(x=>x.id===id); if (!w) return;
-  document.getElementById('popup-head').innerHTML = `<div class="popup-av av-ready">${w.ini}</div>
+  document.getElementById('popup-head').innerHTML = `<div class="popup-av av-ready" style="overflow:hidden">${avImg(w,46)}</div>
     <div><div class="popup-name">Sửa thông tin</div><div class="popup-meta">${w.name}</div></div>
     <button class="popup-close" onclick="closePopup()">✕</button>`;
   document.getElementById('popup-body').innerHTML = `
+    <div>
+      <div class="f-label">Ảnh đại diện</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:6px">
+        <div id="photo-preview" style="width:56px;height:56px;border-radius:14px;background:var(--c-surface2);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:var(--t3);flex-shrink:0">${avImg(w,56)}</div>
+        <div style="flex:1">
+          <label class="btn btn-ghost" style="cursor:pointer;display:inline-block;padding:6px 14px;font-size:12px;margin-bottom:4px">
+            📷 Chọn ảnh
+            <input type="file" accept="image/*" style="display:none" onchange="previewEditPhoto(event,${id})">
+          </label>
+          ${w.photo ? `<button class="btn btn-ghost" style="padding:6px 14px;font-size:12px;color:var(--rose)" onclick="clearEditPhoto(${id})">Xóa ảnh</button>` : ''}
+        </div>
+      </div>
+    </div>
     <div><div class="f-label">Tên nhân viên</div><input class="f-input" id="edit-name" value="${w.name}" style="font-size:13px;font-weight:500"></div>
     <div><div class="f-label">Chữ viết tắt</div><input class="f-input" id="edit-ini" value="${w.ini}" maxlength="2" style="text-transform:uppercase;font-size:13px;font-weight:700"></div>
     <div>
@@ -767,12 +787,37 @@ function saveEditStaff(id) {
   const nm = document.getElementById('edit-name').value.trim();
   const ini = document.getElementById('edit-ini').value.trim().toUpperCase();
   const tgid = (document.getElementById('edit-tgid')?.value || '').trim();
+  const photoEl = document.getElementById('edit-photo-data');
   if (!nm) { toast('Tên không được để trống!'); return; }
   w.name = nm; if (ini) w.ini = ini;
   w.telegramId = tgid;
+  if (photoEl) { if (photoEl.value === '__clear__') w.photo = ''; else if (photoEl.value !== '') w.photo = photoEl.value; }
   toast('Đã cập nhật ' + nm);
   closePopup();
   if (currentTab==='settings') renderSettingsPane();
+}
+
+function previewEditPhoto(evt, id) {
+  const file = evt.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const data = e.target.result;
+    const prev = document.getElementById('photo-preview');
+    if (prev) prev.innerHTML = '<img src="'+data+'" style="width:56px;height:56px;border-radius:14px;object-fit:cover">';
+    let hid = document.getElementById('edit-photo-data');
+    if (!hid) { hid = document.createElement('input'); hid.type='hidden'; hid.id='edit-photo-data'; document.getElementById('popup-body').appendChild(hid); }
+    hid.value = data;
+  };
+  reader.readAsDataURL(file);
+}
+function clearEditPhoto(id) {
+  const w = W.find(x=>x.id===id); if (!w) return;
+  let hid = document.getElementById('edit-photo-data');
+  if (!hid) { hid = document.createElement('input'); hid.type='hidden'; hid.id='edit-photo-data'; document.getElementById('popup-body').appendChild(hid); }
+  hid.value = '__clear__';
+  const prev = document.getElementById('photo-preview');
+  if (prev) prev.innerHTML = w.ini;
+  toast('Đã xóa ảnh');
 }
 
 function checkinStaff(id) {
@@ -1140,8 +1185,9 @@ function doAssignW(id) {
   const _svcLbl = w.service ? '\nDịch vụ: ' + svcL(w.service) : '';
   const _noteLbl = w.note ? '\nGhi chú: ' + w.note : '';
   const _timeStr = new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
-  sendTelegramMsg(`💅 <b>${w.name}</b> bắt đầu phục vụ khách${_svcLbl}${_noteLbl}\n🕐 ${_timeStr}`);
-  if (w.telegramId) sendTelegramMsgTo(w.telegramId, `💅 <b>Đến ca của bạn rồi ${w.name}!</b>\nKhách đang chờ bạn phục vụ.${_svcLbl}${_noteLbl}\n🕐 ${_timeStr}`);
+  const _tgMsg = w.name + (w.service ? '\n' + svcL(w.service) : '');
+  sendTelegramMsg(_tgMsg);
+  if (w.telegramId) sendTelegramMsgTo(w.telegramId, _tgMsg);
 }
 function finishW(id, tw) {
   const w = W.find(x=>x.id===id); if (!w) return;
@@ -1213,7 +1259,6 @@ function _doFinishW(w, tw, rev, tip) {
   w.status='ready'; w.note=''; w.startTime=null; w.service=''; w.revenue=0; w.tip=0; w.groupId=null;
   W.push(w); selId=null;
   toast(w.name + ' xong việc — về cuối hàng ✓'); closePopup();
-  sendTelegramMsg(`✅ <b>${w.name}</b> xong việc${_finSvc}\n⏱ ${fmtT(dur)} · ${_finTw}`);
 }
 function setSt(id, s) {
   const w=W.find(x=>x.id===id); if (!w) return;
@@ -1325,9 +1370,10 @@ function doAssignMulti() {
   multiMode=false; multiSel.clear(); closePopup();
   const _grpTime = new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
   const _grpLines = members.map(m => `  • ${m.name}${m.service?' — '+svcL(m.service):''}`).join('\n');
-  sendTelegramMsg(`👥 <b>Nhóm ${members.length} thợ</b> bắt đầu phục vụ cùng 1 khách\n${_grpLines}\n🕐 ${_grpTime}`);
   members.forEach(m => {
-    if (m.telegramId) sendTelegramMsgTo(m.telegramId, `💅 <b>Đến ca của bạn rồi ${m.name}!</b>\nKhách đang chờ (cùng nhóm ${members.length} thợ).${m.service?'\nDịch vụ: '+svcL(m.service):''}\n🕐 ${_grpTime}`);
+    const _mMsg = m.name + (m.service ? '\n' + svcL(m.service) : '');
+    sendTelegramMsg(_mMsg);
+    if (m.telegramId) sendTelegramMsgTo(m.telegramId, _mMsg);
   });
 }
 function penW(id, hours) {
@@ -1428,7 +1474,6 @@ function finishGroup(gid, tw) {
   });
   toast('Nhóm '+members.length+' thợ xong việc ✓'); closePopup();
   const _grpTw = tw===1 ? '1 turn/thợ' : tw===0.5 ? '½ turn/thợ' : '0 turn';
-  sendTelegramMsg(`✅ <b>Nhóm ${members.length} thợ</b> xong việc\n⏱ ${fmtT(_grpDur)} · ${_grpTw}\nThợ: ${members.map(m=>m.name).join(', ')}`);
 }
 
 
@@ -1962,7 +2007,7 @@ function renderCard(w, rd) {
       <div class="${strip}"></div>
       <div class="sc-body">
         <div class="sc-top">
-          <div class="${av}">${w.ini}</div>
+          <div class="${av}" style="overflow:hidden">${avImg(w)}</div>
           <div class="sc-info">
             <div class="sc-name">${rank?`<span style="font-size:10px;color:var(--t4);font-weight:700;margin-right:4px">#${rank}</span>`:''} ${w.name}</div>
             <div class="sc-turns">${w.turns} turn hôm nay</div>
