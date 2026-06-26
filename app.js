@@ -684,7 +684,7 @@ function renderStaffTab() {
       : `<button class="qa-btn qa-primary" onclick="event.stopPropagation();checkinStaff(${w.id})" style="flex:none;padding:6px 12px;font-size:11px">Check-in</button>`;
     return `<tr onclick="openStaffDetail(${w.id})" style="cursor:pointer;${!isCheckedIn?'opacity:.55':''}">
       <td style="padding:14px 16px"><div style="display:flex;align-items:center;gap:10px">
-        <div class="sc-avatar ${avCls}" style="width:38px;height:38px;font-size:11px">${w.ini}</div>
+        <div class="sc-avatar ${avCls}" style="width:38px;height:38px;font-size:11px;overflow:hidden">${avImg(w,38)}</div>
         <div>
           <div style="font-size:14px;font-weight:700">${w.name}</div>
           <div style="font-size:11px;color:var(--t3)">${isCheckedIn ? '✅ Check-in lúc '+ciTime : '⏸ Chưa check-in'}</div>
@@ -1528,7 +1528,7 @@ function renderStaffPane(container) {
     const statusLbl = w.status==='busy'?'Đang làm':w.status==='penalized'?'Bị phạt':isIn?'Rảnh':'Chưa check-in';
     return `<div class="staff-row" onclick="openStaffDetail(${w.id})">
       <div class="staff-row-av" style="${!isIn?'opacity:.45':''}">
-        <div class="sc-avatar ${avCls}" style="width:40px;height:40px;font-size:12px">${w.ini}</div>
+        <div class="sc-avatar ${avCls}" style="width:40px;height:40px;font-size:12px;overflow:hidden">${avImg(w,40)}</div>
         <div class="staff-row-dot" style="background:${statusDot}"></div>
       </div>
       <div class="staff-row-info" style="${!isIn?'opacity:.5':''}">
