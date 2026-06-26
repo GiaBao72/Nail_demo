@@ -794,6 +794,7 @@ function saveEditStaff(id) {
   if (photoEl) { if (photoEl.value === '__clear__') w.photo = ''; else if (photoEl.value !== '') w.photo = photoEl.value; }
   toast('Đã cập nhật ' + nm);
   closePopup();
+  render(); saveState();
   if (currentTab==='settings') renderSettingsPane();
 }
 
@@ -2054,6 +2055,4 @@ function renderGroupCard(gid, members) {
       <span class="sc-badge sb-busy">Đang làm</span>
     </div>
     <div class="sc-progress" style="margin:0 14px 10px"><div class="sc-progress-fill" id="pb-g-${gid}" style="width:${pct}%"></div></div>
-    <div class="group-members">${memberRows}</div>
-  </div>`;
-}
+    <div class="group-members">${member
