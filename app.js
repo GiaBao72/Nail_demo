@@ -420,7 +420,7 @@ function renderKanban() {
     const draggable = (!multiMode && isReady) ? 'draggable="true"' : '';
     return `<div class="kc ${statusCls}" ${draggable} data-id="${w.id}" style="${chkStyle}cursor:${(!multiMode && isReady) ? 'grab' : 'pointer'}" onclick="${clickFn}">
       <div style="display:flex;align-items:center;gap:8px">
-        <div class="sc-avatar ${avCls}" style="width:32px;height:32px;font-size:11px;flex-shrink:0">${w.ini}</div>
+        <div class="sc-avatar ${avCls}" style="width:32px;height:32px;overflow:hidden;font-size:11px;flex-shrink:0">${avImg(w,32)}</div>
         <div style="flex:1;min-width:0;overflow:hidden">
           <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${w.name}</div>
           <div style="font-size:10px;color:var(--t3);margin-top:1px">${w.turns} turn</div>
@@ -448,7 +448,7 @@ function renderKanban() {
       const svcTag = m.service ? `<span class="sc-tag t-svc" style="font-size:9px;padding:1px 6px">${svcL(m.service)}</span>` : '';
       const timerTag = `<span class="sc-tag t-timer" style="font-size:9px;padding:1px 6px">⏱ <span id="kct-${m.id}">${fmtT(me)}</span></span>`;
       return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--c-busy-b)" onclick="event.stopPropagation()">
-        <div class="sc-avatar av-busy" style="width:28px;height:28px;font-size:9px;flex-shrink:0">${m.ini}</div>
+        <div class="sc-avatar av-busy" style="width:28px;height:28px;overflow:hidden;font-size:9px;flex-shrink:0">${avImg(m,28)}</div>
         <div style="flex:1;min-width:0;cursor:default">
           <div style="font-size:12px;font-weight:700">${m.name}</div>
           <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:3px">${svcTag}${timerTag}</div>
@@ -714,7 +714,7 @@ function openStaffDetail(id) {
     <div><div class="hr-t">${h.ti}</div><div class="hr-d">${h.dur}</div></div>
     <div><div class="hr-s">${h.svc?svcL(h.svc):'—'}</div>${h.note?'<div class="hr-n">'+h.note+'</div>':''}</div>
   </div>`).join('') : '<div style="text-align:center;padding:20px;color:var(--t4)">Chưa có lịch sử</div>';
-  document.getElementById('popup-head').innerHTML = `<div class="popup-av ${avCls}">${w.ini}</div>
+  document.getElementById('popup-head').innerHTML = `<div class="popup-av ${avCls}" style="overflow:hidden">${avImg(w,44)}</div>
     <div><div class="popup-name">${w.name}</div><div class="popup-meta">${w.turns} turn</div></div>
     <button class="popup-close" onclick="closePopup()">✕</button>`;
   document.getElementById('popup-body').innerHTML = `
@@ -825,7 +825,7 @@ function checkinStaff(id) {
   const w = W.find(x=>x.id===id); if (!w) return;
   const now = new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
   document.getElementById('popup-head').innerHTML = `
-    <div class="popup-av av-ready">${w.ini}</div>
+    <div class="popup-av av-ready" style="overflow:hidden">${avImg(w,44)}</div>
     <div><div class="popup-name">Check-in</div><div class="popup-meta">${w.name} · ${now}</div></div>
     <button class="popup-close" onclick="closePopup()">✕</button>`;
   document.getElementById('popup-body').innerHTML = `
@@ -855,7 +855,7 @@ function checkoutStaff(id) {
   const hours = w.checkinTime ? Math.round((now - w.checkinTime) / 36000) / 100 : 0;
   const ciStr = w.checkinTime ? new Date(w.checkinTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}) : '--:--';
   document.getElementById('popup-head').innerHTML = `
-    <div class="popup-av av-off">${w.ini}</div>
+    <div class="popup-av av-off" style="overflow:hidden">${avImg(w,44)}</div>
     <div><div class="popup-name">Check-out</div><div class="popup-meta">${w.name}</div></div>
     <button class="popup-close" onclick="closePopup()">✕</button>`;
   document.getElementById('popup-body').innerHTML = `
@@ -957,7 +957,7 @@ function renderReport() {
     const avMins = w.avgTurnMs ? Math.round(w.avgTurnMs/60000) : null;
     return `<div class="lb-row" style="${i===0?'background:linear-gradient(90deg,rgba(200,73,107,.06),transparent)':''}">
       <div class="lb-rank" style="${i<3?'font-size:16px':'font-size:12px;color:var(--t4);font-weight:700'}">${medals[i]||i+1}</div>
-      <div class="sc-avatar ${i===0?'av-busy':i===1?'av-next':'av-ready'}" style="width:32px;height:32px;font-size:10px;flex-shrink:0">${w.ini}</div>
+      <div class="sc-avatar ${i===0?'av-busy':i===1?'av-next':'av-ready'}" style="width:32px;height:32px;overflow:hidden;font-size:10px;flex-shrink:0">${avImg(w,32)}</div>
       <div class="lb-info">
         <div class="lb-name">${w.name}${avMins?` <span style="font-size:10px;color:var(--t4);font-weight:500">· ⚡${avMins}p/turn</span>`:''}</div>
         <div class="lb-bar-wrap"><div class="lb-bar" style="width:${barW}%"></div></div>
@@ -992,7 +992,7 @@ function renderReport() {
     .map(w=>`<tr>
       <td style="padding:8px 14px">
         <div style="display:flex;align-items:center;gap:8px">
-          <div class="sc-avatar av-ready" style="width:28px;height:28px;font-size:10px">${w.ini}</div>
+          <div class="sc-avatar av-ready" style="width:28px;height:28px;overflow:hidden;font-size:10px">${avImg(w,28)}</div>
           <span style="font-size:13px;font-weight:600">${w.name}</span>
         </div>
       </td>
@@ -1055,7 +1055,7 @@ function openPopup(id) {
   selId = id;
   const w = W.find(x=>x.id===id); if (!w) return;
   const avCls = w.status==='busy'?'av-busy':w.status==='penalized'?'av-pen':w.status==='off'?'av-off':'av-ready';
-  document.getElementById('popup-head').innerHTML = `<div class="popup-av ${avCls}">${w.ini}</div>
+  document.getElementById('popup-head').innerHTML = `<div class="popup-av ${avCls}" style="overflow:hidden">${avImg(w,44)}</div>
     <div><div class="popup-name">${w.name}</div><div class="popup-meta">${w.turns} turn</div></div>
     <button class="popup-close" onclick="closePopup()">✕</button>`;
   const histRows = w.history.length ? w.history.map(h=>`<div class="hr">
@@ -1079,7 +1079,7 @@ function openDetail(id) {
   const w = W.find(x=>x.id===id); if (!w) return;
   const avCls = w.status==='busy'?'av-busy':w.status==='penalized'?'av-pen':w.status==='off'?'av-off':'av-ready';
   const stLbl = w.status==='ready'?'Rảnh':w.status==='busy'?'Đang làm':w.status==='penalized'?'Bị phạt':'Nghỉ';
-  document.getElementById('popup-head').innerHTML = `<div class="popup-av ${avCls}">${w.ini}</div>
+  document.getElementById('popup-head').innerHTML = `<div class="popup-av ${avCls}" style="overflow:hidden">${avImg(w,44)}</div>
     <div><div class="popup-name">${w.name}</div><div class="popup-meta">${w.turns} turn · ${stLbl}</div></div>
     <button class="popup-close" onclick="closePopup()">✕</button>`;
   let body = '';
@@ -1161,7 +1161,7 @@ function confirmAssignNext(id) {
 function assignW(id) {
   const w = W.find(x=>x.id===id); if (!w||w.status!=='ready') return;
   const rd = readyW();
-  document.getElementById('popup-head').innerHTML = `<div class="popup-av av-ready">${w.ini}</div>
+  document.getElementById('popup-head').innerHTML = `<div class="popup-av av-ready" style="overflow:hidden">${avImg(w,44)}</div>
     <div><div class="popup-name">${w.name}</div><div class="popup-meta">Hàng chờ #${rd.indexOf(w)+1} · ${rd.length} thợ rảnh</div></div>
     <button class="popup-close" onclick="closePopup()">✕</button>`;
   document.getElementById('popup-body').innerHTML = `
@@ -1225,7 +1225,7 @@ function finishW(id, tw) {
     const startStr = w.startTime ? new Date(w.startTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}) : '--:--';
     const twLabel = tw===1 ? '1 turn' : tw===0.5 ? '½ turn' : '0 turn';
     const twColor = tw===0 ? 'var(--t3)' : 'var(--c-ready)';
-    document.getElementById('popup-head').innerHTML = `<div class="popup-av av-busy">${w.ini}</div>
+    document.getElementById('popup-head').innerHTML = `<div class="popup-av av-busy" style="overflow:hidden">${avImg(w,44)}</div>
       <div><div class="popup-name">${w.name}</div><div class="popup-meta">Xong việc · ${fmtT(elapsed)}</div></div>
       <button class="popup-close" onclick="closePopup()">✕</button>`;
     document.getElementById('popup-body').innerHTML = `
@@ -1273,12 +1273,12 @@ function openTransferTurn(fromId) {
     toast('Không có thợ rảnh để chuyển ca!'); return;
   }
   document.getElementById('popup-head').innerHTML = `
-    <div class="popup-av av-busy">${from.ini}</div>
+    <div class="popup-av av-busy" style="overflow:hidden">${avImg(from,44)}</div>
     <div><div class="popup-name">Chuyển ca</div><div class="popup-meta">Từ ${from.name} → chọn thợ nhận</div></div>
     <button class="popup-close" onclick="closePopup()">✕</button>`;
   const opts = available.map(w => `
     <button onclick="confirmTransfer(${fromId},${w.id})" style="display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid var(--br2);background:var(--surface-2);cursor:pointer;font-family:inherit;transition:all .15s;text-align:left" onmouseover="this.style.borderColor='var(--c-ready)';this.style.background='var(--c-ready-bg)'" onmouseout="this.style.borderColor='var(--br2)';this.style.background='var(--surface-2)'">
-      <div class="sc-avatar av-ready" style="width:36px;height:36px;font-size:11px;flex-shrink:0">${w.ini}</div>
+      <div class="sc-avatar av-ready" style="width:36px;height:36px;overflow:hidden;font-size:11px;flex-shrink:0">${avImg(w,36)}</div>
       <div style="text-align:left">
         <div style="font-size:13px;font-weight:700;color:var(--t1)">${w.name}</div>
         <div style="font-size:11px;color:var(--c-ready)">● Rảnh · ${w.turns} turn hôm nay</div>
@@ -1334,7 +1334,7 @@ function assignMulti() {
   const memberRows = members.map(w => `
     <div style="border:1px solid var(--br);border-radius:10px;padding:10px;background:var(--surface-2)">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <div class="sc-avatar av-ready" style="width:30px;height:30px;font-size:10px;flex-shrink:0">${w.ini}</div>
+        <div class="sc-avatar av-ready" style="width:30px;height:30px;overflow:hidden;font-size:10px;flex-shrink:0">${avImg(w,30)}</div>
         <div style="font-size:13px;font-weight:700">${w.name}</div>
       </div>
       <div style="font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px">Dịch vụ</div>
@@ -1342,7 +1342,7 @@ function assignMulti() {
     </div>`).join('');
 
   document.getElementById('popup-head').innerHTML = `
-    <div style="display:flex;gap:4px">${members.map(m=>`<div class="sc-avatar av-ready" style="width:32px;height:32px;font-size:10px">${m.ini}</div>`).join('')}</div>
+    <div style="display:flex;gap:4px">${members.map(m=>`<div class="sc-avatar av-ready" style="width:32px;height:32px;overflow:hidden;font-size:10px">${avImg(m,32)}</div>`).join('')}</div>
     <div><div class="popup-name">Giao ca nhóm</div><div class="popup-meta">${members.length} thợ · chọn dịch vụ cho từng người</div></div>
     <button class="popup-close" onclick="closePopup()">✕</button>`;
   document.getElementById('popup-body').innerHTML = `
@@ -1426,7 +1426,7 @@ function openGroupPopup(gid) {
   const memberRows = members.map(m => `
     <div style="border:1px solid var(--br);border-radius:10px;padding:10px;background:var(--surface-2)">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <div class="sc-avatar av-busy" style="width:28px;height:28px;font-size:9px;flex-shrink:0">${m.ini}</div>
+        <div class="sc-avatar av-busy" style="width:28px;height:28px;overflow:hidden;font-size:9px;flex-shrink:0">${avImg(m,28)}</div>
         <div style="font-size:13px;font-weight:700">${m.name}</div>
       </div>
       <div style="font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px">Dịch vụ</div>
@@ -1437,7 +1437,7 @@ function openGroupPopup(gid) {
     </div>`).join('');
 
   document.getElementById('popup-head').innerHTML = `
-    <div style="display:flex;gap:4px">${members.map(m=>`<div class="sc-avatar av-busy" style="width:32px;height:32px;font-size:10px">${m.ini}</div>`).join('')}</div>
+    <div style="display:flex;gap:4px">${members.map(m=>`<div class="sc-avatar av-busy" style="width:32px;height:32px;overflow:hidden;font-size:10px">${avImg(m,32)}</div>`).join('')}</div>
     <div><div class="popup-name">Nhóm ${members.length} thợ</div><div class="popup-meta">${members.map(m=>m.name).join(', ')}</div></div>
     <button class="popup-close" onclick="closePopup()">✕</button>`;
   document.getElementById('popup-body').innerHTML = `
@@ -1568,7 +1568,7 @@ function renderStaffPane(container) {
     const hrs = log ? log.hours + 'h' : (w.checkinTime ? '…' : '—');
     const isIn = !!w.checkinTime;
     return `<div class="attend-row">
-      <div class="sc-avatar ${isIn?'av-ready':'av-off'}" style="width:30px;height:30px;font-size:9px;flex-shrink:0">${w.ini}</div>
+      <div class="sc-avatar ${isIn?'av-ready':'av-off'}" style="width:30px;height:30px;overflow:hidden;font-size:9px;flex-shrink:0">${avImg(w,30)}</div>
       <div class="attend-name">${w.name}</div>
       <div class="attend-cell" style="color:${isIn?'var(--c-ready)':'var(--t3)'}">${ci}</div>
       <div class="attend-cell">${co}</div>
@@ -2027,13 +2027,13 @@ function renderGroupCard(gid, members) {
   const elapsed = members[0].startTime ? Date.now()-members[0].startTime : 0;
   const pct = Math.min(100, elapsed/MAX_BUSY_MS*100);
   const svc = members[0].service;
-  const avatars = members.map(m=>`<div class="sc-avatar av-busy" style="width:34px;height:34px;font-size:11px;border:2px solid #fff;margin-right:-8px">${m.ini}</div>`).join('');
+  const avatars = members.map(m=>`<div class="sc-avatar av-busy" style="width:34px;height:34px;font-size:11px;border:2px solid #fff;margin-right:-8px;overflow:hidden">${avImg(m,34)}</div>`).join('');
   const memberRows = members.map(m => {
     const me = m.startTime ? Date.now()-m.startTime : 0;
     const svcTag = m.service ? `<span class="sc-tag t-svc">${svcL(m.service)}</span>` : '';
     const timerTag = `<span class="sc-tag t-timer">⏱ <span id="ct-${m.id}">${fmtT(me)}</span></span>`;
     return `<div class="gm-row">
-      <div class="sc-avatar av-busy" style="width:34px;height:34px;font-size:11px;flex-shrink:0">${m.ini}</div>
+      <div class="sc-avatar av-busy" style="width:34px;height:34px;font-size:11px;flex-shrink:0;overflow:hidden">${avImg(m,34)}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:700">${m.name}</div>
         <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${svcTag}${timerTag}</div>
