@@ -419,11 +419,11 @@ function renderKanban() {
     const chkStyle = isChk ? 'background:#EFF6FF;border:2px solid #1D4ED8;' : '';
     const draggable = (!multiMode && isReady) ? 'draggable="true"' : '';
     return `<div class="kc ${statusCls}" ${draggable} data-id="${w.id}" style="${chkStyle}cursor:${(!multiMode && isReady) ? 'grab' : 'pointer'}" onclick="${clickFn}">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div class="sc-avatar ${avCls}" style="width:32px;height:32px;overflow:hidden;font-size:11px;flex-shrink:0">${avImg(w,32)}</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="sc-avatar ${avCls}" style="width:42px;height:42px;overflow:hidden;font-size:13px;flex-shrink:0">${avImg(w,42)}</div>
         <div style="flex:1;min-width:0;overflow:hidden">
-          <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${w.name}</div>
-          <div style="font-size:10px;color:var(--t3);margin-top:1px">${w.turns} turn</div>
+          <div style="font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${w.name}</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:2px">${w.turns} turn</div>
         </div>
         ${actionBtn}
       </div>
