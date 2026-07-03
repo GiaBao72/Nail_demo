@@ -408,7 +408,7 @@ function renderKanban() {
     } else if (w.status==='busy') {
       actionBtn = `<button onclick="event.stopPropagation();openPopup(${w.id})" style="padding:0 8px;height:26px;border-radius:6px;border:1px solid var(--br2);background:var(--surface-2);color:var(--t2);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Lịch sử</button>`;
     } else if (isReady) {
-      actionBtn = `<button onclick="event.stopPropagation();assignW(${w.id})" style="padding:0 8px;height:26px;border-radius:6px;border:none;background:var(--rose);color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;line-height:1;font-family:inherit;white-space:nowrap">Vào turn</button>`;
+      actionBtn = `<button onclick="event.stopPropagation();assignW(${w.id})" style="padding:0 12px;height:30px;border-radius:8px;border:none;background:var(--rose);color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit;white-space:nowrap;box-shadow:0 2px 6px rgba(200,73,107,.35)">Vào turn</button>`;
     } else if (w.status==='off') {
       actionBtn = ``;
     } else if (isPen) {
@@ -420,10 +420,10 @@ function renderKanban() {
     const draggable = (!multiMode && isReady) ? 'draggable="true"' : '';
     return `<div class="kc ${statusCls}" ${draggable} data-id="${w.id}" style="${chkStyle}cursor:${(!multiMode && isReady) ? 'grab' : 'pointer'}" onclick="${clickFn}">
       <div style="display:flex;align-items:center;gap:10px">
-        <div class="sc-avatar ${avCls}" style="width:42px;height:42px;overflow:hidden;font-size:13px;flex-shrink:0">${avImg(w,42)}</div>
+        <div class="sc-avatar ${avCls}" style="width:44px;height:44px;overflow:hidden;font-size:13px;flex-shrink:0;border-radius:12px">${avImg(w,44)}</div>
         <div style="flex:1;min-width:0;overflow:hidden">
-          <div style="font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${w.name}</div>
-          <div style="font-size:11px;color:var(--t3);margin-top:2px">${w.turns} turn</div>
+          <div style="font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em">${w.name}</div>
+          <div style="font-size:11px;color:var(--t4);margin-top:1px;font-weight:500">${w.turns} lượt</div>
         </div>
         ${actionBtn}
       </div>
@@ -475,7 +475,7 @@ function renderKanban() {
   }
 
   function renderBusyCol() {
-    if (!busySolo.length && !Object.keys(kGroups).length) return '<div style="text-align:center;padding:20px 0;color:var(--t4);font-size:12px">Trống</div>';
+    if (!busySolo.length && !Object.keys(kGroups).length) return '<div style="text-align:center;padding:28px 16px;color:var(--t4)"><div style="font-size:24px;margin-bottom:6px;opacity:.5">○</div><div style="font-size:11px;font-weight:500">Không có ai</div></div>';
     return [
       ...Object.entries(kGroups).map(([gid, members]) => miniGroupCard(gid, members)),
       ...busySolo.map(w => miniCard(w))
@@ -493,13 +493,16 @@ function renderKanban() {
 
   const isMobile = window.innerWidth <= 480;
   const colsHtml = cols.map(col => `
-    <div ${col.key==='ready' ? 'id="kanban-ready-col"' : ''} style="background:var(--surface-2);border-radius:12px;border:1px solid var(--br);overflow:hidden;${isMobile ? 'min-width:80vw' : 'min-width:0'}">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface);border-bottom:2px solid ${col.color}">
-        <span style="font-size:12px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:${col.color}">${col.label}</span>
-        <span style="font-size:11px;font-weight:800;padding:2px 9px;border-radius:20px;background:${col.bg};color:${col.color}">${col.count}</span>
+    <div ${col.key==='ready' ? 'id="kanban-ready-col"' : ''} style="background:var(--surface);border-radius:14px;border:1px solid var(--br2);overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.05);${isMobile ? 'min-width:80vw' : 'min-width:0'}">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:${col.bg};border-bottom:1px solid rgba(0,0,0,.07)">
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="width:8px;height:8px;border-radius:50%;background:${col.color};flex-shrink:0;box-shadow:0 0 0 2px rgba(255,255,255,.8),0 0 8px ${col.color}40"></span>
+          <span style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:${col.color}">${col.label}</span>
+        </div>
+        <span style="font-size:13px;font-weight:800;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(255,255,255,.7);color:${col.color};border:1px solid rgba(0,0,0,.08)">${col.count}</span>
       </div>
       <div style="padding:8px;display:flex;flex-direction:column;gap:6px;min-height:80px">
-        ${col.key === 'busy' ? renderBusyCol() : (col.items.length ? col.items.map(w => miniCard(w)).join('') : '<div style="text-align:center;padding:20px 0;color:var(--t4);font-size:12px">Trống</div>')}
+        ${col.key === 'busy' ? renderBusyCol() : (col.items.length ? col.items.map(w => miniCard(w)).join('') : '<div style="text-align:center;padding:28px 16px;color:var(--t4)"><div style="font-size:24px;margin-bottom:6px;opacity:.5">○</div><div style="font-size:11px;font-weight:500">Không có ai</div></div>')}
       </div>
     </div>`).join('');
 
