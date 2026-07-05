@@ -1,5 +1,5 @@
 // NailTurn Service Worker - Xử lý Web Push Notification
-const CACHE_NAME = 'nailturn-v3';
+const CACHE_NAME = 'nailturn-v4';
 
 async function ackNotification(data) {
   try {
