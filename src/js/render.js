@@ -72,7 +72,7 @@ function render() {
   if (mb) mb.style.display = multiMode ? 'flex' : 'none';
   const mc = document.getElementById('multi-cnt'); if (mc) mc.textContent = multiSel.size;
   const bm = document.getElementById('btn-multi');
-  if (bm) { bm.style.background = multiMode ? '#1D4ED8' : ''; bm.style.color = multiMode ? '#fff' : '#3B82F6'; }
+  if (bm) { bm.style.background = multiMode ? 'var(--rose)' : ''; bm.style.color = multiMode ? '#fff' : 'var(--rose)'; }
   const vb = document.getElementById('btn-view');
   if (vb) vb.textContent = shiftView === 1 ? 'Xem dạng cột' : 'Xem dạng danh sách';
 }

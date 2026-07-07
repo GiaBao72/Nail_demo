@@ -29,8 +29,8 @@
     font-size: 9px;
   }
   .bottom-nav .nav-btn.active {
-    background: linear-gradient(140deg, rgba(200,73,107,.25), rgba(200,73,107,.12));
-    color: #F9A8C0;
+    background: linear-gradient(140deg, rgba(201,168,76,.28), rgba(201,168,76,.12));
+    color: #D4B96A;
   }
 
   .next-worker-card { flex-wrap: wrap; gap: 10px; padding: 12px 14px; }

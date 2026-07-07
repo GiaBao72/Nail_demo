@@ -20,7 +20,7 @@ function renderKanban() {
     if (isPen && pt) sub = `<div style="margin-top:6px"><span class="sc-tag t-pen" style="font-size:9px;padding:1px 6px" id="kcpen-${w.id}">${fmtP(pt.ut)}</span></div>`;
     let actionBtn = '';
     if (multiMode && isReady) {
-      actionBtn = `<button onclick="event.stopPropagation();toggleChk(${w.id})" style="padding:0 8px;height:26px;border-radius:6px;border:none;background:${isChk?'#1D4ED8':'var(--surface-3)'};color:${isChk?'#fff':'var(--t2)'};font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;line-height:1;font-family:inherit;white-space:nowrap">${isChk?'<i class="ph-bold ph-check" style="font-size:11px;line-height:1;vertical-align:-1px"></i> Đã chọn':'Chọn'}</button>`;
+      actionBtn = `<button onclick="event.stopPropagation();toggleChk(${w.id})" style="padding:0 8px;height:26px;border-radius:6px;border:none;background:${isChk?'var(--rose)':'var(--surface-3)'};color:${isChk?'#fff':'var(--t2)'};font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;line-height:1;font-family:inherit;white-space:nowrap">${isChk?'<i class="ph-bold ph-check" style="font-size:11px;line-height:1;vertical-align:-1px"></i> Đã chọn':'Chọn'}</button>`;
     } else if (w.status==='busy') {
       actionBtn = `<button onclick="event.stopPropagation();openPopup(${w.id})" style="padding:0 8px;height:26px;border-radius:6px;border:1px solid var(--br2);background:var(--surface-2);color:var(--t2);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Lịch sử</button>`;
     } else if (isReady) {
@@ -32,7 +32,7 @@ function renderKanban() {
     }
     const clickFn = (multiMode && isReady) ? `toggleChk(${w.id})` : `openDetail(${w.id})`;
     const statusCls = isPen ? 'kc-pen' : w.status==='busy' ? 'kc-busy' : w.status==='off' ? 'kc-off' : 'kc-ready';
-    const chkStyle = isChk ? 'background:#EFF6FF;border:2px solid #1D4ED8;' : '';
+    const chkStyle = isChk ? 'background:var(--rose-bg);border:2px solid var(--rose);' : '';
     const draggable = (!multiMode && isReady) ? 'draggable="true"' : '';
     return `<div class="kc ${statusCls}" ${draggable} data-id="${w.id}" style="${chkStyle}cursor:${(!multiMode && isReady) ? 'grab' : 'pointer'}" onclick="${clickFn}">
       <div style="display:flex;align-items:center;gap:10px">

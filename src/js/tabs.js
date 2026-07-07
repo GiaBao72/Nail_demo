@@ -45,7 +45,7 @@ function getShiftHTML() {
 <i class="ph-fill ph-user-plus" style="font-size:16px;line-height:1"></i>
             Vào turn
           </button>
-          <button class="btn btn-ghost btn-sm" id="btn-multi" onclick="toggleMulti()" style="width:auto;padding:9px 14px;color:#3B82F6;border-color:rgba(59,130,246,.25)">
+          <button class="btn btn-ghost btn-sm" id="btn-multi" onclick="toggleMulti()" style="width:auto;padding:9px 14px;color:var(--rose);border-color:var(--rose-b)">
 <i class="ph-bold ph-squares-four" style="font-size:15px;line-height:1"></i>
             Chọn nhóm
           </button>
