@@ -481,7 +481,22 @@ function renderSystemPane(container) {
     '<label class="btn btn-ghost" style="width:auto;padding:9px 16px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">' +
     '⬆ Nhập khôi phục' +
     '<input type="file" accept=".json" style="display:none" onchange="confirmImportBackup(this)">' +
-    '</label></div></div></div>';
+    '</label></div></div></div>' +
+
+    // ── Reset ca ──
+    '<div class="settings-section" style="margin-top:10px">' +
+    '<div class="settings-section-head"><div>' +
+    '<div class="settings-section-title"><i class="ph-bold ph-arrows-clockwise" style="font-size:14px;line-height:1;vertical-align:-2px;margin-right:5px"></i>Reset ca làm việc</div>' +
+    '<div class="settings-section-sub">Xóa toàn bộ dữ liệu ca hiện tại, về trạng thái ban đầu</div>' +
+    '</div></div>' +
+    '<div style="padding:16px 18px">' +
+    '<p style="font-size:13px;color:var(--t3);margin:0 0 16px;line-height:1.7">' +
+    'Reset sẽ đưa toàn bộ thợ về trạng thái <b>nghỉ</b>, số turn về 0, và xóa lịch sử ngày hôm nay. ' +
+    '<span style="color:var(--c-pen);font-weight:600">Hành động không thể hoàn tác.</span>' +
+    '</p>' +
+    '<button class="btn btn-ghost" onclick="confirmResetCa()" style="width:auto;padding:9px 18px;color:var(--c-pen);border-color:var(--c-pen-b)">' +
+    '<i class="ph-bold ph-arrows-clockwise" style="font-size:14px;line-height:1"></i> Reset ca mới</button>' +
+    '</div></div>';
 }
 
 // ── Telegram config helpers ──

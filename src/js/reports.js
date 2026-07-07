@@ -27,9 +27,6 @@ function getReportHTML() {
       <button class="btn btn-ghost btn-sm" onclick="exportCSV()" style="width:auto;padding:8px 14px">
         ⬇️ Xuất CSV
       </button>
-      <button class="btn btn-ghost btn-sm" onclick="confirmResetCa()" style="width:auto;padding:8px 14px;color:var(--c-pen);border-color:var(--c-pen-b)">
-        🔄 Reset ca
-      </button>
     </div>
   </div>
   <div id="report-wrap"></div>`;
