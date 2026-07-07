@@ -30,7 +30,7 @@
   }
   .bottom-nav .nav-btn.active {
     background: linear-gradient(140deg, rgba(201,168,76,.28), rgba(201,168,76,.12));
-    color: #D4B96A;
+    color: var(--nav-accent);
   }
 
   .next-worker-card { flex-wrap: wrap; gap: 10px; padding: 12px 14px; }
@@ -73,5 +73,4 @@
   .sc-avatar { width: 36px; height: 36px; font-size: 10.5px; border-radius: 10px; }
 
   .report-grid-4 { grid-template-columns: repeat(2,1fr) !important; }
-  .rsc-val { font-size: 18px; }
-}
+  .rsc-val { font-size: 
