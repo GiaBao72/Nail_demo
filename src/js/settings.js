@@ -708,3 +708,52 @@ function confirmImportBackup(input) {
     delete window._doImport;
   };
 }
+
+// ── SERVICE DRAG & DROP (sắp xếp thứ tự) ──
+function initSvcDrag() {
+  var list = document.getElementById('svc-list');
+  if (!list || list._dragInit) return;
+  list._dragInit = true;
+  var dragIdx = null;
+
+  list.addEventListener('dragstart', function(e) {
+    var row = e.target.closest('.svc-row');
+    if (!row) return;
+    dragIdx = parseInt(row.dataset.idx);
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(function() { if (row) row.style.opacity = '0.4'; }, 0);
+  });
+
+  list.addEventListener('dragend', function() {
+    list.querySelectorAll('.svc-row').forEach(function(r) {
+      r.style.opacity = '';
+      r.classList.remove('svc-drag-over');
+    });
+    dragIdx = null;
+  });
+
+  list.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    var row = e.target.closest('.svc-row');
+    if (!row) return;
+    list.querySelectorAll('.svc-row').forEach(function(r) { r.classList.remove('svc-drag-over'); });
+    row.classList.add('svc-drag-over');
+  });
+
+  list.addEventListener('drop', function(e) {
+    e.preventDefault();
+    var row = e.target.closest('.svc-row');
+    if (!row || dragIdx === null) return;
+    var dropIdx = parseInt(row.dataset.idx);
+    if (dragIdx === dropIdx) return;
+    var moved = SVCS_USER.splice(dragIdx, 1)[0];
+    SVCS_USER.splice(dropIdx, 0, moved);
+    saveSvcs();
+    var content = document.getElementById('settings-content');
+    if (content) renderServicesPane(content);
+  });
+
+  list.querySelectorAll('.svc-row').forEach(function(row) {
+    row.setAttribute('draggable', 'true');
+  });
+}

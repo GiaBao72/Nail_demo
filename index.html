@@ -153,4 +153,24 @@
 <script src="src/js/config.js"></script>
 <script src="src/js/state.js"></script>
 <script src="src/js/utils.js"></script>
-<!-- View layer --
+<!-- View layer -->
+<script src="src/js/drag.js"></script>
+<script src="src/js/kanban.js"></script>
+<script src="src/js/render.js"></script>
+<!-- Business logic -->
+<script src="src/js/workers.js"></script>
+<script src="src/js/popups.js"></script>
+<script src="src/js/reports.js"></script>
+<script src="src/js/settings.js"></script>
+<!-- App shell -->
+<script src="src/js/tabs.js"></script>
+<script src="src/js/clock.js"></script>
+<script src="src/js/main.js"></script>
+<script src="src/js/auth.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  }
+</script>
+</body>
+</html>
