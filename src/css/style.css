@@ -1608,3 +1608,33 @@ input, select, textarea { font-family: inherit; }
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-thumb { background: #d1d5db; }
 ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+/* ════════════════════════════════
+   BULK CHECK-IN POPUP
+════════════════════════════════ */
+.ci-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--br2);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: background .12s, border-color .12s;
+  user-select: none;
+}
+.ci-item:hover { background: var(--surface-3); border-color: var(--br3); }
+.ci-item.ci-selected {
+  background: var(--c-ready-bg);
+  border-color: var(--c-ready-b);
+}
+.ci-check {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  border: 1.5px solid var(--br2);
+  background: var(--surface-3);
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .12s, border-color .12s;
+}

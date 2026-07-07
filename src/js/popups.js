@@ -203,7 +203,7 @@ function clearEditPhoto(id) {
   if (!hid) { hid = document.createElement('input'); hid.type='hidden'; hid.id='edit-photo-data'; document.getElementById('popup-body').appendChild(hid); }
   hid.value = '__clear__';
   const prev = document.getElementById('photo-preview');
-  if (prev) prev.innerHTML = w.ini;
+  if (prev) prev.innerHTML = avImg(w, 44);
   toast('Đã xóa ảnh');
 }
 
@@ -299,4 +299,133 @@ function doRemoveStaff(id) {
   toast((w?w.name:'Thợ') + ' đã xóa');
   closePopup();
   if (currentTab==='settings') renderSettingsPane();
+}
+
+// ── BULK CHECK-IN ──
+var _bulkAll = false;
+
+function bulkCheckin() {
+  const offWorkers = W.filter(x => !x.checkinTime && x.status === 'off');
+  const now = new Date().toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'});
+  const dateStr = new Date().toLocaleDateString('vi-VN', {weekday:'long', day:'2-digit', month:'2-digit'});
+
+  document.getElementById('popup-head').innerHTML =
+    '<div class="popup-av av-ready" style="background:linear-gradient(140deg,#D8F5E8,#A8ECC8)">' +
+      '<i class="ph-fill ph-users-three" style="font-size:20px;color:#145235;line-height:1"></i>' +
+    '</div>' +
+    '<div><div class="popup-name">Check-in đầu ca</div>' +
+    '<div class="popup-meta">' + dateStr + ' · ' + now + '</div></div>' +
+    '<button class="popup-close" onclick="closePopup()" title="Đóng">' +
+      '<i class="ph-bold ph-x" style="font-size:16px;line-height:1"></i>' +
+    '</button>';
+
+  if (offWorkers.length === 0) {
+    document.getElementById('popup-body').innerHTML =
+      '<div style="text-align:center;padding:20px 0;color:var(--t3);font-size:13px">' +
+        '<i class="ph-fill ph-check-circle" style="font-size:32px;color:var(--c-ready);display:block;margin-bottom:10px;line-height:1"></i>' +
+        'Tất cả nhân viên đã check-in rồi!' +
+      '</div>' +
+      '<button class="btn btn-ghost" onclick="closePopup()">Đóng</button>';
+    document.getElementById('popup-overlay').style.display = 'flex';
+    return;
+  }
+
+  _bulkAll = false;
+  var listHTML = offWorkers.map(function(w) {
+    return '<label class="ci-item" id="ci-item-' + w.id + '" onclick="toggleCiItem(' + w.id + ')">' +
+      '<div class="sc-avatar av-off" style="width:38px;height:38px;flex-shrink:0;font-size:14px">' +
+        avImg(w, 38) +
+      '</div>' +
+      '<span style="flex:1;font-size:13.5px;font-weight:600;color:var(--t1)">' + w.name + '</span>' +
+      '<div class="ci-check" id="ci-check-' + w.id + '">' +
+        '<i class="ph-bold ph-check" style="font-size:13px;line-height:1;color:#fff;display:none" id="ci-chk-icon-' + w.id + '"></i>' +
+      '</div>' +
+    '</label>';
+  }).join('');
+
+  document.getElementById('popup-body').innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">' +
+      '<span style="font-size:11.5px;color:var(--t3);font-weight:500">' +
+        offWorkers.length + ' nhân viên chưa check-in' +
+      '</span>' +
+      '<button onclick="toggleAllCi()" id="btn-all-ci" style="font-size:11.5px;font-weight:700;color:var(--rose);background:none;border:none;cursor:pointer;padding:4px 0">Chọn tất cả</button>' +
+    '</div>' +
+    '<div style="display:flex;flex-direction:column;gap:5px;max-height:300px;overflow-y:auto;padding-right:2px" id="ci-list">' +
+      listHTML +
+    '</div>' +
+    '<button class="btn btn-green" id="btn-do-bulk-ci" onclick="doBulkCheckin()" style="margin-top:4px">' +
+      '<i class="ph-fill ph-check-circle" style="font-size:15px;line-height:1"></i>' +
+      '<span id="bulk-ci-label">Check-in (0 người)</span>' +
+    '</button>' +
+    '<button class="btn btn-ghost" onclick="closePopup()">Hủy</button>';
+
+  document.getElementById('popup-overlay').style.display = 'flex';
+}
+
+function toggleCiItem(id) {
+  var item = document.getElementById('ci-item-' + id);
+  var box  = document.getElementById('ci-check-' + id);
+  var icon = document.getElementById('ci-chk-icon-' + id);
+  var sel  = item.classList.contains('ci-selected');
+  if (sel) {
+    item.classList.remove('ci-selected');
+    box.style.background = 'var(--surface-3)';
+    box.style.borderColor = 'var(--br2)';
+    if (icon) icon.style.display = 'none';
+  } else {
+    item.classList.add('ci-selected');
+    box.style.background = 'var(--c-ready)';
+    box.style.borderColor = 'var(--c-ready)';
+    if (icon) icon.style.display = 'block';
+  }
+  _updateBulkCiBtn();
+}
+
+function toggleAllCi() {
+  _bulkAll = !_bulkAll;
+  var items = document.querySelectorAll('.ci-item');
+  items.forEach(function(item) {
+    var id = parseInt(item.id.replace('ci-item-', ''));
+    var box  = document.getElementById('ci-check-' + id);
+    var icon = document.getElementById('ci-chk-icon-' + id);
+    if (_bulkAll) {
+      item.classList.add('ci-selected');
+      if (box) { box.style.background = 'var(--c-ready)'; box.style.borderColor = 'var(--c-ready)'; }
+      if (icon) icon.style.display = 'block';
+    } else {
+      item.classList.remove('ci-selected');
+      if (box) { box.style.background = 'var(--surface-3)'; box.style.borderColor = 'var(--br2)'; }
+      if (icon) icon.style.display = 'none';
+    }
+  });
+  var btnAll = document.getElementById('btn-all-ci');
+  if (btnAll) btnAll.textContent = _bulkAll ? 'Bỏ chọn tất cả' : 'Chọn tất cả';
+  _updateBulkCiBtn();
+}
+
+function _updateBulkCiBtn() {
+  var cnt = document.querySelectorAll('.ci-item.ci-selected').length;
+  var lbl = document.getElementById('bulk-ci-label');
+  if (lbl) lbl.textContent = 'Check-in (' + cnt + ' người)';
+  var btn = document.getElementById('btn-do-bulk-ci');
+  if (btn) btn.disabled = cnt === 0;
+  if (btn) btn.style.opacity = cnt === 0 ? '0.45' : '1';
+}
+
+function doBulkCheckin() {
+  var selected = document.querySelectorAll('.ci-item.ci-selected');
+  if (!selected.length) return;
+  var names = [];
+  selected.forEach(function(item) {
+    var id = parseInt(item.id.replace('ci-item-', ''));
+    var w = W.find(function(x) { return x.id === id; });
+    if (!w) return;
+    w.checkinTime = Date.now();
+    if (w.status === 'off') w.status = 'ready';
+    names.push(w.name);
+  });
+  toast('Check-in ' + names.length + ' người: ' + names.join(', ') + ' ✅');
+  closePopup();
+  saveState();
+  renderSettingsPane();
 }
