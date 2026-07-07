@@ -7,7 +7,8 @@
 function avImg(w, size) {
   const s = size || 40;
   if (w && w.photo) return '<img src="'+w.photo+'" style="width:'+s+'px;height:'+s+'px;border-radius:inherit;object-fit:cover;display:block">';
-  return w ? w.ini : '+';
+  if (w) return '<i class="ph-fill ph-user" style="font-size:'+Math.round(s*0.48)+'px;line-height:1;opacity:.65"></i>';
+  return '+';
 }
 
 // ── SERVICES ──
