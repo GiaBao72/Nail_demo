@@ -515,8 +515,8 @@ function _openPinPopup(titleText, subText, onComplete) {
     for (var i = 0; i < 4; i++) {
       var d = document.getElementById('pmdot-'+i);
       if (!d) return;
-      d.style.background  = i < pinInput.length ? '#E11D48' : '#fff';
-      d.style.borderColor = i < pinInput.length ? '#E11D48' : '#e0e0e0';
+      d.style.background  = i < pinInput.length ? '#B8912A' : '#FDFAF5';
+      d.style.borderColor = i < pinInput.length ? '#B8912A' : '#D4C5B0';
     }
   }
 

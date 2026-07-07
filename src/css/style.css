@@ -162,7 +162,7 @@ input, select, textarea { font-family: inherit; }
   flex-shrink: 0;
   box-shadow: 0 0 6px currentColor;
 }
-.sp-label { font-size: 10.5px; color: rgba(255,255,255,.40); font-weight: 500; }
+.sp-label { font-size: 10.5px; color: rgba(242,236,216,.45); font-weight: 500; }
 .sp-val {
   font-size: 17px;
   font-weight: 800;
@@ -360,8 +360,8 @@ input, select, textarea { font-family: inherit; }
   transition: all .12s;
   box-shadow: 0 1px 2px rgba(0,0,0,.04);
 }
-.filter-btn:hover { border-color: var(--br3); color: var(--t2); }
-.filter-btn.active { background: var(--t1); color: #fff; border-color: var(--t1); }
+.filter-btn:hover { background: var(--surface-2); border-color: var(--br3); color: var(--t2); }
+.filter-btn.active { background: linear-gradient(135deg, #CBA840, #8C6A18); color: #fff; border-color: transparent; box-shadow: 0 2px 8px rgba(184,145,42,.28); }
 
 /* ════════════════════════════════
    STAFF GRID
@@ -388,10 +388,10 @@ input, select, textarea { font-family: inherit; }
 }
 .staff-card:active { transform: scale(.99); box-shadow: var(--s-sm); }
 .staff-card.sc-selected { border-color: var(--rose); box-shadow: var(--rose-glow); background: #FDFAF3; }
-.staff-card.sc-busy { border-color: rgba(217,119,6,.22); background: #FFFCF5; }
+.staff-card.sc-busy { border-color: rgba(181,116,10,.20); background: #FEF8ED; }
 .staff-card.sc-off { opacity: .60; }
-.staff-card.sc-pen { border-color: rgba(220,38,38,.20); background: #FFFAFA; }
-.staff-card.sc-next { border-color: rgba(5,150,105,.22); background: #FAFFFC; }
+.staff-card.sc-pen { border-color: rgba(181,36,36,.18); background: #FEF0F0; }
+.staff-card.sc-next { border-color: rgba(184,145,42,.22); background: #FAF6ED; }
 
 /* Left status strip */
 .sc-strip {
@@ -480,7 +480,7 @@ input, select, textarea { font-family: inherit; }
   line-height: 1.7;
 }
 .t-svc   { background: #FAF6ED; color: #8C6A18; border-color: rgba(184,145,42,.18); }
-.t-timer { background: var(--c-busy-bg); color: #B45309; border-color: var(--c-busy-b); font-variant-numeric: tabular-nums; }
+.t-timer { background: var(--c-busy-bg); color: var(--c-busy); border-color: var(--c-busy-b); font-variant-numeric: tabular-nums; }
 .t-pen   { background: var(--c-pen-bg); color: var(--c-pen); border-color: var(--c-pen-b); font-weight: 800; font-variant-numeric: tabular-nums; }
 .t-group { background: #F0FDF4; color: #15803D; border-color: rgba(21,128,61,.16); }
 
@@ -551,7 +551,7 @@ input, select, textarea { font-family: inherit; }
 .gm-row {
   display: flex; align-items: center; gap: 10px;
   background: rgba(255,255,255,.7);
-  border: 1px solid rgba(217,119,6,.14);
+  border: 1px solid rgba(184,145,42,.14);
   border-radius: var(--r-sm);
   padding: 8px 10px;
 }
@@ -581,7 +581,7 @@ input, select, textarea { font-family: inherit; }
   width: 3px;
 }
 .kc-ready::before { background: linear-gradient(180deg, #059669, #34D399); }
-.kc-busy::before  { background: linear-gradient(180deg, #D97706, #F59E0B); }
+.kc-busy::before  { background: linear-gradient(180deg, #B5740A, #D4940E); }
 .kc-pen::before   { background: linear-gradient(180deg, #DC2626, #F87171); }
 .kc-off::before   { background: var(--c-off); }
 .kc:hover { box-shadow: var(--s-md); transform: translateY(-1.5px); border-color: var(--br2); }
@@ -1114,7 +1114,7 @@ input, select, textarea { font-family: inherit; }
 .settings-nav-label {
   font-size: 10px;
   font-weight: 800;
-  color: var(--t4);
+  color: var(--t3);
   letter-spacing: .1em;
   text-transform: uppercase;
   padding: 14px 16px 8px;
@@ -1253,7 +1253,7 @@ input, select, textarea { font-family: inherit; }
 .av-break { background: linear-gradient(140deg, #EDE9FE, #DDD6FE); color: #5B21B6; }
 .sb-break { background: #F5F3FF; color: #7C3AED; border-color: rgba(124,58,237,.20); }
 .sc-break { border-color: rgba(124,58,237,.20); background: #FDFCFF; }
-.t-speed { background: #F5F3FF; color: #7C3AED; border-color: rgba(124,58,237,.16); }
+.t-speed { background: var(--rose-bg); color: var(--rose-dark); border-color: var(--rose-b); }
 .t-break { background: #F5F3FF; color: #7C3AED; border-color: rgba(124,58,237,.16); }
 
 /* Overtime glow */
