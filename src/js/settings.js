@@ -422,13 +422,14 @@ function renderSystemPane(container) {
     '<div class="settings-section-sub">Telegram, bảo mật PIN & sao lưu dữ liệu</div>' +
     '</div></div>' +
 
-    '<div class="settings-section">' +
+    // ── Telegram ──
+    '<div class="settings-section" style="margin-top:14px">' +
     '<div class="settings-section-head"><div>' +
     '<div class="settings-section-title">✈️ Telegram Bot</div>' +
     '<div class="settings-section-sub">Gửi thông báo lượt thợ qua Telegram' +
     (cfg.token ? ' · <span style="color:var(--c-ready)">Đang bật</span>' : ' · <span style="color:var(--t4)">Chưa cài đặt</span>') +
     '</div></div></div>' +
-    '<div style="display:flex;flex-direction:column;gap:12px">' +
+    '<div style="padding:16px 18px;display:flex;flex-direction:column;gap:14px">' +
     '<div><div class="f-label">Bot Token</div>' +
     '<input class="f-input" id="sys-tg-token" type="password" value="' + cfg.token + '" placeholder="1234567890:AAAA..." autocomplete="off"></div>' +
     '<div><div class="f-label">Group Chat ID</div>' +
@@ -441,6 +442,7 @@ function renderSystemPane(container) {
     '<button class="btn btn-ghost" onclick="clearTgConfig()" style="width:auto;padding:9px 14px;color:var(--c-pen);border-color:var(--c-pen-b)">Xóa token</button>' +
     '</div></div></div>' +
 
+    // ── PIN ──
     '<div class="settings-section" style="margin-top:10px">' +
     '<div class="settings-section-head"><div>' +
     '<div class="settings-section-title">🔒 Bảo mật PIN</div>' +
@@ -448,30 +450,32 @@ function renderSystemPane(container) {
     (hasPIN ? 'Đang bật · <span style="color:var(--c-ready)">Yêu cầu PIN khi mở tab mới</span>'
             : 'Đang tắt · <span style="color:var(--t4)">Bất kỳ ai cũng có thể mở ứng dụng</span>') +
     '</div></div></div>' +
-    '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+    '<div style="padding:14px 18px;display:flex;gap:8px;flex-wrap:wrap">' +
     (hasPIN
       ? '<button class="btn btn-ghost" onclick="openChangePinFlow()" style="width:auto;padding:9px 16px">Đổi PIN</button>' +
         '<button class="btn btn-ghost" onclick="confirmClearPin()" style="width:auto;padding:9px 14px;color:var(--c-pen);border-color:var(--c-pen-b)">Tắt PIN</button>'
       : '<button class="btn btn-rose" onclick="openSetPinFlow()" style="width:auto;padding:9px 20px">Bật bảo vệ PIN</button>') +
     '</div></div>' +
 
+    // ── Backup ──
     '<div class="settings-section" style="margin-top:10px">' +
     '<div class="settings-section-head"><div>' +
     '<div class="settings-section-title">💾 Backup & Khôi phục</div>' +
     '<div class="settings-section-sub">Lần cuối: <span style="font-weight:600;color:' +
     (bk.warn ? '#D97706' : 'var(--c-ready)') + '">' + bk.label + '</span>' +
-    (bk.warn ? '<span style="margin-left:6px;background:#FEF3C7;color:#92400E;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px">NÊN BACKUP</span>' : '') +
+    (bk.warn ? ' <span style="background:#FEF3C7;color:#92400E;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px">NÊN BACKUP</span>' : '') +
     '</div></div></div>' +
-    '<div style="font-size:12.5px;color:var(--t3);margin-bottom:14px;line-height:1.7">' +
+    '<div style="padding:16px 18px">' +
+    '<p style="font-size:13px;color:var(--t3);margin:0 0 16px;line-height:1.7">' +
     'Xuất toàn bộ dữ liệu (thợ, lịch sử, cài đặt) ra file <code style="background:var(--surface-2);padding:1px 5px;border-radius:4px">.json</code>. ' +
     'Lưu vào điện thoại hoặc Google Drive để dùng khi cần khôi phục.' +
-    '</div>' +
+    '</p>' +
     '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">' +
     '<button class="btn btn-rose" onclick="exportBackup()" style="width:auto;padding:9px 20px">⬇ Xuất backup (.json)</button>' +
     '<label class="btn btn-ghost" style="width:auto;padding:9px 16px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">' +
     '⬆ Nhập khôi phục' +
     '<input type="file" accept=".json" style="display:none" onchange="confirmImportBackup(this)">' +
-    '</label></div></div>';
+    '</label></div></div></div>';
 }
 
 // ── Telegram config helpers ──
