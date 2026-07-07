@@ -42,11 +42,11 @@ function getShiftHTML() {
         </div>
         <div class="nwc-actions" style="margin-left:auto;display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap">
           <button class="btn btn-rose btn-sm" onclick="assignNext()" style="width:auto;padding:9px 18px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+<i class="ph-fill ph-user-plus" style="font-size:16px;line-height:1"></i>
             Vào turn
           </button>
           <button class="btn btn-ghost btn-sm" id="btn-multi" onclick="toggleMulti()" style="width:auto;padding:9px 14px;color:#3B82F6;border-color:rgba(59,130,246,.25)">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+<i class="ph-bold ph-squares-four" style="font-size:15px;line-height:1"></i>
             Chọn nhóm
           </button>
           <button id="btn-view" class="btn btn-ghost btn-sm" onclick="toggleView()" style="width:auto;padding:9px 14px;color:var(--t2);border-color:var(--br2)">
@@ -61,13 +61,13 @@ function getShiftHTML() {
         <div class="mb-sub">Click thợ rảnh để chọn/bỏ chọn</div>
       </div>
       <div style="display:flex;gap:6px">
-        <button class="btn btn-rose btn-sm" onclick="assignMulti()" style="width:auto">Giao ca</button>
+        <button class="btn btn-rose btn-sm" onclick="assignMulti()" style="width:auto">Giao ca nhóm</button>
         <button class="btn btn-ghost btn-sm" onclick="cancelMulti()" style="width:auto">✕</button>
       </div>
     </div>
     <div class="search-filter-bar" style="${shiftView === 2 ? 'display:none' : ''}">
       <div class="search-wrap">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+<i class="ph-bold ph-magnifying-glass" style="font-size:15px;color:var(--t4)"></i>
         <input class="search-input" placeholder="Tìm thợ..." oninput="onSearch(this.value)" value="">
       </div>
       <div class="filter-tabs">
@@ -77,5 +77,4 @@ function getShiftHTML() {
         <button class="filter-btn" data-f="off" onclick="setFilter('off')">Nghỉ</button>
       </div>
     </div>
-    <div class="staff-grid" id="staff-grid"></div>`;
-}
+    <div class="staff-grid" id="staff-grid"></div

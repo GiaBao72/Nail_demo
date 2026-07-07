@@ -30,7 +30,7 @@ function assignW(id) {
     <div><div class="f-label" style="margin-bottom:6px">Dịch vụ</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">${svcCheckboxes('','asn-svc-'+id)}</div></div>
     <div><div class="f-label">Ghi chú khách</div><textarea class="f-textarea" id="asn-note-${id}" rows="2" placeholder="Khách VIP, yêu cầu đặc biệt..."></textarea></div>
     <button class="btn btn-rose" onclick="doAssignW(${id})">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      <i class="ph-fill ph-user" style="font-size:15px;line-height:1"></i>
       Xác nhận vào turn
     </button>
     <button class="btn btn-ghost" onclick="closePopup()">Hủy</button>`;
@@ -196,7 +196,7 @@ function assignMulti() {
     <div style="display:flex;flex-direction:column;gap:8px;max-height:60dvh;overflow-y:auto">${memberRows}</div>
     <div><div class="f-label">Ghi chú chung</div><textarea class="f-textarea" id="mgrp-note" rows="2" placeholder="Khách VIP, yêu cầu đặc biệt..."></textarea></div>
     <button class="btn btn-rose" onclick="doAssignMulti()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+      <i class="ph-fill ph-user-plus" style="font-size:15px;line-height:1"></i>
       Xác nhận giao ca nhóm
     </button>
     <button class="btn btn-ghost" onclick="closePopup()">Hủy</button>`;
@@ -233,7 +233,7 @@ function penW(id, hours) {
       <span style="font-size:12px;color:var(--t3)">Thợ sẽ không nhận turn trong thời gian này.</span>
     </div>
     <button class="btn btn-ghost" style="color:var(--c-pen);border-color:var(--c-pen-b)" onclick="doPenW(${id},${hours})">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <i class="ph-fill ph-lock" style="font-size:15px;line-height:1"></i>
       Xác nhận phạt ${lbl}
     </button>
     <button class="btn btn-ghost" onclick="closePopup()">Hủy</button>`;
@@ -256,7 +256,7 @@ function remPen(id) {
       Gỡ phạt sớm cho <strong>${w.name}</strong>?${remaining ? `<br><span style="font-size:12px;color:var(--t3)">Còn ${remaining} chưa hết hạn.</span>` : ''}
     </div>
     <button class="btn btn-green" onclick="doRemPen(${id})">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+      <i class="ph-fill ph-lock-open" style="font-size:15px;line-height:1"></i>
       Xác nhận gỡ phạt
     </button>
     <button class="btn btn-ghost" onclick="closePopup()">Hủy</button>`;

@@ -42,7 +42,7 @@ function openDetail(id) {
       <div><div class="f-label" style="margin-bottom:6px">Dịch vụ</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">${svcCheckboxes(w.service,'svc-'+w.id)}</div></div>
       <div><div class="f-label">Ghi chú</div><textarea class="f-textarea" id="nt-${w.id}" rows="2" placeholder="Khách VIP, hẹn lại...">${w.note||''}</textarea></div>
       <button class="btn btn-dark" onclick="saveInfo(${w.id})" style="margin-top:2px">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        <i class="ph-fill ph-floppy-disk" style="font-size:15px;line-height:1"></i>
         Lưu thông tin
       </button>
       <div class="sec-div"><div class="sec-div-line"></div><div class="sec-div-txt">Xong việc — tính turn</div><div class="sec-div-line"></div></div>
@@ -53,7 +53,7 @@ function openDetail(id) {
       </div>
       <div class="sec-div"><div class="sec-div-line"></div><div class="sec-div-txt">Chuyển ca</div><div class="sec-div-line"></div></div>
       <button class="btn btn-ghost" onclick="openTransferTurn(${w.id})">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        <i class="ph-bold ph-swap" style="font-size:15px;line-height:1"></i>
         Chuyển ca cho thợ khác
       </button>`;
   } else if (w.status === 'penalized') {
@@ -62,7 +62,7 @@ function openDetail(id) {
       <button class="btn btn-green" onclick="remPen(${w.id})">✅ Gỡ phạt sớm</button>`;
   } else if (w.status === 'ready') {
     body = `<button class="btn btn-rose" onclick="assignW(${w.id})">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        <i class="ph-fill ph-user" style="font-size:15px;line-height:1"></i>
         Vào turn ngay
       </button>
       <button class="btn btn-ghost" onclick="setSt(${w.id},'off')">😴 Cho nghỉ</button>
@@ -220,7 +220,7 @@ function checkinStaff(id) {
       Xác nhận <strong>${w.name}</strong> bắt đầu ca làm việc lúc <strong>${now}</strong>?
     </div>
     <button class="btn btn-green" onclick="doCheckin(${id})">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      <i class="ph-fill ph-check-circle" style="font-size:15px;line-height:1"></i>
       Xác nhận Check-in
     </button>
     <button class="btn btn-ghost" onclick="closePopup()">Hủy</button>`;
@@ -257,7 +257,7 @@ function checkoutStaff(id) {
       ${w.turns ? `<strong>${w.name}</strong> đã hoàn thành <strong>${w.turns} turn</strong> hôm nay.` : `<strong>${w.name}</strong> chưa có turn nào hôm nay.`}
     </div>
     <button class="btn btn-dark" onclick="doCheckout(${id},${now})">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      <i class="ph-bold ph-sign-out" style="font-size:15px;line-height:1"></i>
       Xác nhận Check-out
     </button>
     <button class="btn btn-ghost" onclick="closePopup()">Hủy</button>`;

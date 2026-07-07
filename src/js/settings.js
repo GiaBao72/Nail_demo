@@ -102,7 +102,7 @@ function renderStaffPane(container) {
         <div class="settings-section-sub">${W.length} nhân viên · ${W.filter(w=>w.checkinTime).length} đang trong ca · ${W.filter(w=>w.checkoutTime&&!w.checkinTime).length} đã checkout</div>
       </div>
       <button class="btn btn-rose btn-sm" onclick="openAddStaff()" style="width:auto;padding:9px 18px">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <i class="ph-bold ph-plus" style="font-size:14px;line-height:1"></i>
         Thêm nhân viên
       </button>
     </div>
@@ -141,7 +141,7 @@ function renderServicesPane(container) {
   const rows = SVCS_USER.map((s, i) => `
     <div class="svc-row" data-idx="${i}" id="svcrow-${i}">
       <div class="svc-drag-handle" title="Kéo để sắp xếp">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="18" x2="16" y2="18"/></svg>
+        <i class="ph-bold ph-dots-six-vertical" style="font-size:14px;line-height:1;color:var(--t3)"></i>
       </div>
       <div class="svc-emoji-btn" onclick="openEmojiPicker(${i})" title="Chọn icon">${s.l.split(' ')[0]}</div>
       <div class="svc-name-display">${s.l.replace(/^\S+\s*/, '')}</div>
@@ -159,7 +159,7 @@ function renderServicesPane(container) {
         <div class="settings-section-sub">${SVCS_USER.length} dịch vụ · Kéo để sắp xếp thứ tự hiển thị</div>
       </div>
       <button class="btn btn-rose btn-sm" onclick="openAddSvc()" style="width:auto;padding:9px 18px">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <i class="ph-bold ph-plus" style="font-size:14px;line-height:1"></i>
         Thêm dịch vụ
       </button>
     </div>
@@ -213,7 +213,7 @@ function openAddSvc() {
       💅 Dịch vụ mới
     </div>
     <button class="btn btn-rose" onclick="doAddSvc()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <i class="ph-bold ph-plus" style="font-size:14px;line-height:1"></i>
       Thêm dịch vụ
     </button>
     <button class="btn btn-ghost" onclick="closePopup()">Hủy</button>`;
