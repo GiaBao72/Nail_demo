@@ -2,15 +2,19 @@
 //  config.js — Hằng số & Telegram
 // ═══════════════════════════════════════
 
-// ── TELEGRAM ──
-// TODO (bảo mật): chuyển token ra biến môi trường / backend proxy
-const TELEGRAM_BOT_TOKEN  = '8796284072:AAF7x6OA2Lh1IwsnhBbUtS50PgoRc5MN1dg';
-const TELEGRAM_CHAT_GROUP = '-5122704943'; // group Nail_demo
-const TELEGRAM_CHAT_DM    = '1375328147';  // DM cá nhân
+// ── TELEGRAM (đọc từ cài đặt, không hardcode) ──
+function getTgConfig() {
+  return {
+    token: localStorage.getItem('nt_tg_token') || '',
+    group: localStorage.getItem('nt_tg_group') || '',
+    dm:    localStorage.getItem('nt_tg_dm')    || '',
+  };
+}
 
 function sendTelegramMsgTo(chatId, text) {
-  if (!TELEGRAM_BOT_TOKEN || !chatId) return;
-  fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+  const { token } = getTgConfig();
+  if (!token || !chatId) return;
+  fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' })
@@ -18,8 +22,9 @@ function sendTelegramMsgTo(chatId, text) {
 }
 
 function sendTelegramMsg(text) {
-  if (!TELEGRAM_BOT_TOKEN) return;
-  [TELEGRAM_CHAT_GROUP, TELEGRAM_CHAT_DM].forEach(chatId => sendTelegramMsgTo(chatId, text));
+  const { token, group, dm } = getTgConfig();
+  if (!token) return;
+  [group, dm].filter(Boolean).forEach(chatId => sendTelegramMsgTo(chatId, text));
 }
 
 // ── APP CONSTANTS ──

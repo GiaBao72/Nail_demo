@@ -25,8 +25,9 @@ function renderSettingsTab() {
 function renderSettingsPane() {
   const content = document.getElementById('settings-content');
   if (!content) return;
-  if (settingsPane === 'staff') renderStaffPane(content);
-  else renderServicesPane(content);
+  if (settingsPane === 'staff')    renderStaffPane(content);
+  else if (settingsPane === 'services') renderServicesPane(content);
+  else if (settingsPane === 'system')   renderSystemPane(content);
 }
 
 // ── STAFF PANE ──
@@ -394,51 +395,35 @@ function doResetSvcs() {
 
 function openEmojiPicker(idx) { openEditSvc(idx); }
 
-// ── DRAG SERVICE REORDER ──
-function initSvcDrag() {
-  const list = document.getElementById('svc-list');
-  if (!list || list._svcdrag) return;
-  list._svcdrag = true;
-  let dragIdx = null;
+// ══════════════════════════════════════════
+// ── SYSTEM PANE ──
+// ══════════════════════════════════════════
 
-  list.addEventListener('dragstart', e => {
-    const row = e.target.closest('.svc-row'); if (!row) return;
-    dragIdx = parseInt(row.dataset.idx);
-    setTimeout(() => { row.style.opacity = '0.35'; }, 0);
-    e.dataTransfer.effectAllowed = 'move';
-  });
+function renderSystemPane(container) {
+  const cfg    = getTgConfig();
+  const hasPIN = !!localStorage.getItem('nt_pin_hash');
 
-  list.addEventListener('dragover', e => {
-    e.preventDefault();
-    const row = e.target.closest('.svc-row');
-    if (!row || parseInt(row.dataset.idx) === dragIdx) return;
-    list.querySelectorAll('.svc-row').forEach(r => r.classList.remove('svc-drag-over'));
-    row.classList.add('svc-drag-over');
-  });
+  container.innerHTML = `
+    <div class="settings-pane-head">
+      <div>
+        <div class="settings-section-title">Cài đặt hệ thống</div>
+        <div class="settings-section-sub">Telegram, bảo mật PIN & sao lưu dữ liệu</div>
+      </div>
+    </div>
 
-  list.addEventListener('dragleave', e => {
-    if (!list.contains(e.relatedTarget))
-      list.querySelectorAll('.svc-row').forEach(r => r.classList.remove('svc-drag-over'));
-  });
-
-  list.addEventListener('drop', e => {
-    e.preventDefault();
-    const row = e.target.closest('.svc-row.svc-drag-over');
-    list.querySelectorAll('.svc-row').forEach(r => r.classList.remove('svc-drag-over'));
-    if (!row || dragIdx === null) return;
-    const tIdx = parseInt(row.dataset.idx);
-    if (tIdx === dragIdx) return;
-    const [moved] = SVCS_USER.splice(dragIdx, 1);
-    SVCS_USER.splice(tIdx, 0, moved);
-    saveSvcs();
-    renderSettingsTab();
-    toast('Đã cập nhật thứ tự dịch vụ ✓');
-  });
-
-  list.addEventListener('dragend', () => {
-    list.querySelectorAll('.svc-row').forEach(r => { r.style.opacity = ''; r.classList.remove('svc-drag-over'); });
-    dragIdx = null;
-  });
-
-  list.querySelectorAll('.svc-row').forEach(row => row.setAttribute('draggable', 'true'));
-}
+    <!-- Telegram -->
+    <div class="settings-section">
+      <div class="settings-section-head">
+        <div>
+          <div class="settings-section-title">✈️ Telegram Bot</div>
+          <div class="settings-section-sub">Gửi thông báo lượt thợ qua Telegram${cfg.token ? ' · <span style="color:var(--c-ready)">Đang bật</span>' : ' · <span style="color:var(--t4)">Chưa cài đặt</span>'}</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <div class="f-label">Bot Token <span style="font-weight:400;color:var(--t4)">(lấy từ @BotFather)</span></div>
+          <input class="f-input" id="sys-tg-token" type="password" value="${cfg.token}" placeholder="1234567890:AAAA..." autocomplete="off">
+        </div>
+        <div>
+          <div class="f-label">Group Chat ID <span style="font-weight:400;color:var(--t4)">(thông báo nhóm)</span></div>
+          <input class="
