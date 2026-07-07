@@ -526,7 +526,7 @@ function _openPinPopup(titleText, subText, onComplete) {
   var keys = [1,2,3,4,5,6,7,8,9,'','0','⌫'];
   var padHTML = keys.map(function(k) {
     if (k === '') return '<div></div>';
-    return '<button onclick="pinMgmtKey('' + k + '')" style="height:52px;border-radius:10px;border:1.5px solid var(--br2);background:var(--surface-2);font-size:' + (k==='⌫'?'18':'20') + 'px;font-weight:600;color:var(--t1);cursor:pointer;transition:.1s" onmousedown="this.style.background='var(--br)'" onmouseup="this.style.background='var(--surface-2)'">' + k + '</button>';
+    return '<button onclick="pinMgmtKey(' + String.fromCharCode(39) + k + String.fromCharCode(39) + ')" style="height:52px;border-radius:10px;border:1.5px solid var(--br2);background:var(--surface-2);font-size:' + (k==='⌫'?'18':'20') + 'px;font-weight:600;color:var(--t1);cursor:pointer;transition:.1s" onmousedown=\"this.style.background:var(--br)\" onmouseup=\"this.style.background:var(--surface-2)\">' + k + '</button>';
   }).join('');
 
   document.getElementById('popup-head').innerHTML =
