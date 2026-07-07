@@ -46,14 +46,14 @@ function renderReport() {
 
   const allTurns = [];
   workers.forEach(w => {
-    (w.history||[]).forEach(h => allTurns.push({...h, wName: w.name, wIni: w.ini}));
+    (w.history||[]).forEach(h => allTurns.push({...h, wName: w.name}));
   });
   allTurns.sort((a,b) => (a.ti||'').localeCompare(b.ti||''));
 
   const histRows = allTurns.map(h => `<tr>
     <td style="padding:10px 14px">
       <div style="display:flex;align-items:center;gap:8px">
-        <div class="sc-avatar av-ready" style="width:30px;height:30px;font-size:10px">${h.wIni}</div>
+        <div class="sc-avatar av-ready" style="width:30px;height:30px;font-size:10px;display:flex;align-items:center;justify-content:center"><i class="ph-fill ph-user" style="font-size:14px;line-height:1;opacity:.65"></i></div>
         <span style="font-size:13px;font-weight:700">${h.wName}</span>
       </div>
     </td>

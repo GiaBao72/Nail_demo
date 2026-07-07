@@ -156,7 +156,6 @@ function openEditStaff(id) {
       </div>
     </div>
     <div><div class="f-label">Tên nhân viên</div><input class="f-input" id="edit-name" value="${w.name}" style="font-size:13px;font-weight:500"></div>
-    <div><div class="f-label">Chữ viết tắt</div><input class="f-input" id="edit-ini" value="${w.ini}" maxlength="2" style="text-transform:uppercase;font-size:13px;font-weight:700"></div>
     <div>
       <div class="f-label">Telegram ID <span style="color:var(--t4);font-weight:400;text-transform:none">(để bot nhắn riêng khi đến turn)</span></div>
       <input class="f-input" id="edit-tgid" value="${w.telegramId||''}" placeholder="VD: 123456789" inputmode="numeric" style="font-size:13px">
@@ -170,11 +169,10 @@ function openEditStaff(id) {
 function saveEditStaff(id) {
   const w = W.find(x=>x.id===id); if (!w) return;
   const nm = document.getElementById('edit-name').value.trim();
-  const ini = document.getElementById('edit-ini').value.trim().toUpperCase();
   const tgid = (document.getElementById('edit-tgid')?.value || '').trim();
   const photoEl = document.getElementById('edit-photo-data');
   if (!nm) { toast('Tên không được để trống!'); return; }
-  w.name = nm; if (ini) w.ini = ini;
+  w.name = nm;
   w.telegramId = tgid;
   if (photoEl) { if (photoEl.value === '__clear__') w.photo = ''; else if (photoEl.value !== '') w.photo = photoEl.value; }
   toast('Đã cập nhật ' + nm);
