@@ -156,9 +156,9 @@ function openEditStaff(id) {
     </div>
     <div><div class="f-label">Tên nhân viên</div><input class="f-input" id="edit-name" value="${w.name}" style="font-size:13px;font-weight:500"></div>
     <div>
-      <div class="f-label">Telegram ID <span style="color:var(--t4);font-weight:400;text-transform:none">(để bot nhắn riêng khi đến turn)</span></div>
-      <input class="f-input" id="edit-tgid" value="${w.telegramId||''}" placeholder="VD: 123456789" inputmode="numeric" style="font-size:13px">
-      <div style="font-size:11px;color:var(--t4);margin-top:4px">Nhân viên nhắn /start cho @VGB_AssistantBot rồi gửi ID tại <a href="https://t.me/userinfobot" target="_blank" style="color:var(--rose)">@userinfobot</a></div>
+      <div class="f-label">Telegram ID <span style="color:var(--t4);font-weight:400;text-transform:none">(tuỳ chọn — để bot nhắn riêng khi đến turn)</span></div>
+      <input class="f-input" id="edit-tgid" value="${w.telegramId||''}" placeholder="Bỏ trống nếu chưa dùng Telegram" inputmode="numeric" style="font-size:13px">
+      <div style="font-size:11px;color:var(--t4);margin-top:4px">Lấy ID tại <a href="https://t.me/userinfobot" target="_blank" style="color:var(--rose)">@userinfobot</a> · Cần cài đặt Telegram Bot trong Hệ thống trước</div>
     </div>
     <button class="btn btn-dark" onclick="saveEditStaff(${id})">Lưu thay đổi</button>
     <button class="btn btn-ghost" onclick="closePopup()">Hủy</button>`;

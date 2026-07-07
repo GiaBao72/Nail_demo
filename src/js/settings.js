@@ -55,7 +55,7 @@ function renderStaffPane(container) {
           <span style="color:${statusDot};font-weight:600">${statusLbl}</span>
           ${isIn ? `<span style="color:var(--t4)">· check-in ${ciTime}</span>` : ''}
           ${w.turns ? `<span style="color:var(--t4)">· ${w.turns} turn</span>` : ''}
-          ${w.telegramId ? `<span style="color:#2BA5F7;font-size:10px">· ✈️ TG</span>` : `<span style="color:var(--t5);font-size:10px">· chưa có TG</span>`}
+          ${w.telegramId ? `<span style="color:#2BA5F7;font-size:10px">· ✈️ TG</span>` : ''}
         </div>
       </div>
       <div class="staff-row-actions" onclick="event.stopPropagation()">
@@ -446,9 +446,9 @@ function renderSystemPane(container) {
     // ── Telegram ──
     '<div class="settings-section" style="margin-top:10px">' +
     '<div class="settings-section-head"><div>' +
-    '<div class="settings-section-title">✈️ Telegram Bot</div>' +
+    '<div class="settings-section-title">✈️ Telegram Bot <span style="font-size:10px;font-weight:500;color:var(--t4);text-transform:none;letter-spacing:0">(tuỳ chọn)</span></div>' +
     '<div class="settings-section-sub">Gửi thông báo lượt thợ qua Telegram' +
-    (cfg.token ? ' · <span style="color:var(--c-ready)">Đang bật</span>' : ' · <span style="color:var(--t4)">Chưa cài đặt</span>') +
+    (cfg.token ? ' · <span style="color:var(--c-ready)">Đang bật</span>' : ' · <span style="color:var(--t4)">Chưa cài đặt — app vẫn hoạt động bình thường</span>') +
     '</div></div></div>' +
     '<div style="padding:16px 18px;display:flex;flex-direction:column;gap:14px">' +
     '<div><div class="f-label">Bot Token</div>' +
@@ -508,6 +508,8 @@ function saveTgConfig() {
 
 function testTg() {
   saveTgConfig();
+  var token = localStorage.getItem('nt_tg_token');
+  if (!token) { toast('Chưa nhập Bot Token!'); return; }
   sendTelegramMsg('✅ Nail Turn — kết nối Telegram thành công!');
   toast('Đã gửi thử ↗ Kiểm tra Telegram của bạn');
 }
