@@ -62,7 +62,7 @@ function getShiftHTML() {
       </div>
       <div style="display:flex;gap:6px">
         <button class="btn btn-rose btn-sm" onclick="assignMulti()" style="width:auto">Giao ca</button>
-        <button class="btn btn-ghost btn-sm" onclick="cancelMulti()" style="width:auto">✕</button>
+        <button class="btn btn-ghost btn-sm" onclick="cancelMulti()" style="width:auto"><i class="ph-bold ph-x" style="font-size:14px;line-height:1"></i></button>
       </div>
     </div>
     <div class="search-filter-bar" style="${shiftView === 2 ? 'display:none' : ''}">

@@ -10,7 +10,7 @@ function openPopup(id) {
   const avCls = w.status==='busy'?'av-busy':w.status==='penalized'?'av-pen':w.status==='off'?'av-off':'av-ready';
   document.getElementById('popup-head').innerHTML = `<div class="popup-av ${avCls}" style="overflow:hidden">${avImg(w,44)}</div>
     <div><div class="popup-name">${w.name}</div><div class="popup-meta">${w.turns} turn</div></div>
-    <button class="popup-close" onclick="closePopup()">✕</button>`;
+    <button class="popup-close" onclick="closePopup()" title="Đóng"><i class="ph-bold ph-x" style="font-size:16px;line-height:1"></i></button>`;
   const histRows = w.history.length ? w.history.map(h=>`<div class="hr">
     <div><div class="hr-t">${h.ti}</div><div class="hr-d">${h.dur}</div></div>
     <div><div class="hr-s">${h.svc?svcL(h.svc):'—'}</div>${h.note?'<div class="hr-n">'+h.note+'</div>':''}</div>
@@ -33,7 +33,7 @@ function openDetail(id) {
   const stLbl = w.status==='ready'?'Rảnh':w.status==='busy'?'Đang làm':w.status==='penalized'?'Bị phạt':'Nghỉ';
   document.getElementById('popup-head').innerHTML = `<div class="popup-av ${avCls}" style="overflow:hidden">${avImg(w,44)}</div>
     <div><div class="popup-name">${w.name}</div><div class="popup-meta">${w.turns} turn · ${stLbl}</div></div>
-    <button class="popup-close" onclick="closePopup()">✕</button>`;
+    <button class="popup-close" onclick="closePopup()" title="Đóng"><i class="ph-bold ph-x" style="font-size:16px;line-height:1"></i></button>`;
   let body = '';
   if (w.status === 'busy') {
     const elapsed = w.startTime ? Date.now()-w.startTime : 0;
@@ -59,7 +59,7 @@ function openDetail(id) {
   } else if (w.status === 'penalized') {
     const pt = penT[w.id];
     body = `<div class="pen-timer-display"><div class="ptd-val" id="popen-${w.id}">${pt?fmtP(pt.ut):'--:--'}</div><div class="ptd-sub">Còn lại</div></div>
-      <button class="btn btn-green" onclick="remPen(${w.id})">✅ Gỡ phạt sớm</button>`;
+      <button class="btn btn-green" onclick="remPen(${w.id})"><i class="ph-fill ph-check-circle" style="font-size:14px;line-height:1"></i> Gỡ phạt sớm</button>`;
   } else if (w.status === 'ready') {
     body = `<button class="btn btn-rose" onclick="assignW(${w.id})">
         <i class="ph-fill ph-user" style="font-size:15px;line-height:1"></i>
@@ -98,7 +98,7 @@ function openStaffDetail(id) {
   </div>`).join('') : '<div style="text-align:center;padding:20px;color:var(--t4)">Chưa có lịch sử</div>';
   document.getElementById('popup-head').innerHTML = `<div class="popup-av ${avCls}" style="overflow:hidden">${avImg(w,44)}</div>
     <div><div class="popup-name">${w.name}</div><div class="popup-meta">${w.turns} turn</div></div>
-    <button class="popup-close" onclick="closePopup()">✕</button>`;
+    <button class="popup-close" onclick="closePopup()" title="Đóng"><i class="ph-bold ph-x" style="font-size:16px;line-height:1"></i></button>`;
   document.getElementById('popup-body').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr;gap:8px">
       <div class="mini-stat"><div class="ms-val">${w.turns}</div><div class="ms-lbl">Turn hôm nay</div></div>
@@ -113,7 +113,7 @@ function openStaffDetail(id) {
 function openAddStaff() {
   document.getElementById('popup-head').innerHTML = `<div class="popup-av av-ready">+</div>
     <div><div class="popup-name">Thêm nhân viên</div><div class="popup-meta">Nhập thông tin thợ mới</div></div>
-    <button class="popup-close" onclick="closePopup()">✕</button>`;
+    <button class="popup-close" onclick="closePopup()" title="Đóng"><i class="ph-bold ph-x" style="font-size:16px;line-height:1"></i></button>`;
   document.getElementById('popup-body').innerHTML = `
     <div><div class="f-label">Tên nhân viên</div><input class="f-input" id="add-name" placeholder="VD: Nguyễn Thị Lan" style="font-size:13px;font-weight:500"></div>
     <div><div class="f-label">Chữ viết tắt (2 ký tự)</div><input class="f-input" id="add-ini" placeholder="VD: LA" maxlength="2" style="text-transform:uppercase;font-size:13px;font-weight:700"></div>
@@ -140,7 +140,7 @@ function openEditStaff(id) {
   const w = W.find(x=>x.id===id); if (!w) return;
   document.getElementById('popup-head').innerHTML = `<div class="popup-av av-ready" style="overflow:hidden">${avImg(w,46)}</div>
     <div><div class="popup-name">Sửa thông tin</div><div class="popup-meta">${w.name}</div></div>
-    <button class="popup-close" onclick="closePopup()">✕</button>`;
+    <button class="popup-close" onclick="closePopup()" title="Đóng"><i class="ph-bold ph-x" style="font-size:16px;line-height:1"></i></button>`;
   document.getElementById('popup-body').innerHTML = `
     <div>
       <div class="f-label">Ảnh đại diện</div>
@@ -214,7 +214,7 @@ function checkinStaff(id) {
   document.getElementById('popup-head').innerHTML = `
     <div class="popup-av av-ready" style="overflow:hidden">${avImg(w,44)}</div>
     <div><div class="popup-name">Check-in</div><div class="popup-meta">${w.name} · ${now}</div></div>
-    <button class="popup-close" onclick="closePopup()">✕</button>`;
+    <button class="popup-close" onclick="closePopup()" title="Đóng"><i class="ph-bold ph-x" style="font-size:16px;line-height:1"></i></button>`;
   document.getElementById('popup-body').innerHTML = `
     <div style="text-align:center;padding:8px 0 4px;font-size:13px;color:var(--t2);line-height:1.8">
       Xác nhận <strong>${w.name}</strong> bắt đầu ca làm việc lúc <strong>${now}</strong>?
@@ -246,7 +246,7 @@ function checkoutStaff(id) {
   document.getElementById('popup-head').innerHTML = `
     <div class="popup-av av-off" style="overflow:hidden">${avImg(w,44)}</div>
     <div><div class="popup-name">Check-out</div><div class="popup-meta">${w.name}</div></div>
-    <button class="popup-close" onclick="closePopup()">✕</button>`;
+    <button class="popup-close" onclick="closePopup()" title="Đóng"><i class="ph-bold ph-x" style="font-size:16px;line-height:1"></i></button>`;
   document.getElementById('popup-body').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
       <div class="mini-stat"><div class="ms-val">${ciStr}</div><div class="ms-lbl">Check-in</div></div>
@@ -285,7 +285,7 @@ function confirmRemoveStaff(id) {
   const w = W.find(x=>x.id===id); if (!w) return;
   document.getElementById('popup-head').innerHTML = `<div class="popup-av" style="background:var(--c-pen-bg);color:var(--c-pen)">!</div>
     <div><div class="popup-name">Xóa nhân viên</div><div class="popup-meta">${w.name}</div></div>
-    <button class="popup-close" onclick="closePopup()">✕</button>`;
+    <button class="popup-close" onclick="closePopup()" title="Đóng"><i class="ph-bold ph-x" style="font-size:16px;line-height:1"></i></button>`;
   document.getElementById('popup-body').innerHTML = `
     <div style="text-align:center;padding:8px 0;color:var(--t2);font-size:13px;line-height:1.7">Xóa <strong>${w.name}</strong> khỏi danh sách?<br><span style="color:var(--t3);font-size:12px">Lịch sử ca sẽ mất đi.</span></div>
     <button class="btn btn-ghost" style="color:var(--c-pen);border-color:var(--c-pen-b)" onclick="doRemoveStaff(${id})">Xác nhận xóa</button>

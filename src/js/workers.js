@@ -25,7 +25,7 @@ function assignW(id) {
   const rd = readyW();
   document.getElementById('popup-head').innerHTML = `<div class="popup-av av-ready" style="overflow:hidden">${avImg(w,44)}</div>
     <div><div class="popup-name">${w.name}</div><div class="popup-meta">Hàng chờ #${rd.indexOf(w)+1} · ${rd.length} thợ rảnh</div></div>
-    <button class="popup-close" onclick="closePopup()">✕</button>`;
+    <button class="popup-close" onclick="closePopup()" title="Đóng"><i class="ph-bold ph-x" style="font-size:16px;line-height:1"></i></button>`;
   document.getElementById('popup-body').innerHTML = `
     <div><div class="f-label" style="margin-bottom:6px">Dịch vụ</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">${svcCheckboxes('','asn-svc-'+id)}</div></div>
     <div><div class="f-label">Ghi chú khách</div><textarea class="f-textarea" id="asn-note-${id}" rows="2" placeholder="Khách VIP, yêu cầu đặc biệt..."></textarea></div>
@@ -84,7 +84,7 @@ function finishW(id, tw) {
     const twColor = tw===0 ? 'var(--t3)' : 'var(--c-ready)';
     document.getElementById('popup-head').innerHTML = `<div class="popup-av av-busy" style="overflow:hidden">${avImg(w,44)}</div>
       <div><div class="popup-name">${w.name}</div><div class="popup-meta">Xong việc · ${fmtT(elapsed)}</div></div>
-      <button class="popup-close" onclick="closePopup()">✕</button>`;
+      <button class="popup-close" onclick="closePopup()" title="Đóng"><i class="ph-bold ph-x" style="font-size:16px;line-height:1"></i></button>`;
     document.getElementById('popup-body').innerHTML = `
       <div style="text-align:center;padding:12px 0 8px">
         <div style="font-size:13px;color:var(--t3);margin-bottom:4px">Thời gian làm việc</div>
@@ -131,7 +131,7 @@ function openTransferTurn(fromId) {
   document.getElementById('popup-head').innerHTML = `
     <div class="popup-av av-busy" style="overflow:hidden">${avImg(from,44)}</div>
     <div><div class="popup-name">Chuyển ca</div><div class="popup-meta">Từ ${from.name} → chọn thợ nhận</div></div>
-    <button class="popup-close" onclick="closePopup()">✕</button>`;
+    <button class="popup-close" onclick="closePopup()" title="Đóng"><i class="ph-bold ph-x" style="font-size:16px;line-height:1"></i></button>`;
   const opts = available.map(w => `
     <button onclick="confirmTransfer(${fromId},${w.id})" style="display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid var(--br2);background:var(--surface-2);cursor:pointer;font-family:inherit;transition:all .15s;text-align:left" onmouseover="this.style.borderColor='var(--c-ready)';this.style.background='var(--c-ready-bg)'" onmouseout="this.style.borderColor='var(--br2)';this.style.background='var(--surface-2)'">
       <div class="sc-avatar av-ready" style="width:36px;height:36px;overflow:hidden;font-size:11px;flex-shrink:0">${avImg(w,36)}</div>
@@ -191,7 +191,7 @@ function assignMulti() {
   document.getElementById('popup-head').innerHTML = `
     <div style="display:flex;gap:4px">${members.map(m=>`<div class="sc-avatar av-ready" style="width:32px;height:32px;overflow:hidden;font-size:10px">${avImg(m,32)}</div>`).join('')}</div>
     <div><div class="popup-name">Giao ca nhóm</div><div class="popup-meta">${members.length} thợ · chọn dịch vụ cho từng người</div></div>
-    <button class="popup-close" onclick="closePopup()">✕</button>`;
+    <button class="popup-close" onclick="closePopup()" title="Đóng"><i class="ph-bold ph-x" style="font-size:16px;line-height:1"></i></button>`;
   document.getElementById('popup-body').innerHTML = `
     <div style="display:flex;flex-direction:column;gap:8px;max-height:60dvh;overflow-y:auto">${memberRows}</div>
     <div><div class="f-label">Ghi chú chung</div><textarea class="f-textarea" id="mgrp-note" rows="2" placeholder="Khách VIP, yêu cầu đặc biệt..."></textarea></div>
@@ -288,7 +288,7 @@ function openGroupPopup(gid) {
   document.getElementById('popup-head').innerHTML = `
     <div style="display:flex;gap:4px">${members.map(m=>`<div class="sc-avatar av-busy" style="width:32px;height:32px;overflow:hidden;font-size:10px">${avImg(m,32)}</div>`).join('')}</div>
     <div><div class="popup-name">Nhóm ${members.length} thợ</div><div class="popup-meta">${members.map(m=>m.name).join(', ')}</div></div>
-    <button class="popup-close" onclick="closePopup()">✕</button>`;
+    <button class="popup-close" onclick="closePopup()" title="Đóng"><i class="ph-bold ph-x" style="font-size:16px;line-height:1"></i></button>`;
   document.getElementById('popup-body').innerHTML = `
     <div class="popup-timer"><div class="pt-val" id="pt-g-${gid}">${fmtT(elapsed)}</div><div class="pt-sub">Bắt đầu lúc ${startStr}</div></div>
     <div style="display:flex;flex-direction:column;gap:8px;max-height:55dvh;overflow-y:auto">${memberRows}</div>

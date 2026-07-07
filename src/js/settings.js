@@ -116,7 +116,7 @@ function renderStaffPane(container) {
     <div class="settings-section" style="margin-top:10px">
       <div class="settings-section-head">
         <div>
-          <div class="settings-section-title">📋 Chấm công hôm nay</div>
+          <div class="settings-section-title"><i class="ph-bold ph-clock-clockwise" style="font-size:14px;line-height:1;vertical-align:-2px;margin-right:5px"></i>Chấm công hôm nay</div>
           <div class="settings-section-sub">Tổng ${totalHrs.toFixed(1)}h · ${W.filter(w=>w.checkinTime).length} đang làm</div>
         </div>
       </div>
@@ -192,7 +192,7 @@ function openAddSvc() {
   document.getElementById('popup-head').innerHTML = `
     <div class="popup-av" style="background:var(--rose-bg);color:var(--rose);font-size:20px">✨</div>
     <div><div class="popup-name">Thêm dịch vụ mới</div><div class="popup-meta">Điền thông tin dịch vụ</div></div>
-    <button class="popup-close" onclick="closePopup()">✕</button>`;
+    <button class="popup-close" onclick="closePopup()" title="Đóng"><i class="ph-bold ph-x" style="font-size:16px;line-height:1"></i></button>`;
   document.getElementById('popup-body').innerHTML = `
     <div>
       <div class="f-label">Icon dịch vụ</div>
@@ -278,7 +278,7 @@ function openEditSvc(idx) {
   document.getElementById('popup-head').innerHTML = `
     <div class="popup-av" style="background:var(--rose-bg);color:var(--rose);font-size:20px">${emoji}</div>
     <div><div class="popup-name">Sửa dịch vụ</div><div class="popup-meta">${s.l}</div></div>
-    <button class="popup-close" onclick="closePopup()">✕</button>`;
+    <button class="popup-close" onclick="closePopup()" title="Đóng"><i class="ph-bold ph-x" style="font-size:16px;line-height:1"></i></button>`;
   document.getElementById('popup-body').innerHTML = `
     <div>
       <div class="f-label">Icon dịch vụ</div>
@@ -347,7 +347,7 @@ function confirmDeleteSvc(idx) {
   document.getElementById('popup-head').innerHTML = `
     <div class="popup-av" style="background:var(--c-pen-bg);color:var(--c-pen)">!</div>
     <div><div class="popup-name">Xóa dịch vụ</div><div class="popup-meta">${s.l}</div></div>
-    <button class="popup-close" onclick="closePopup()">✕</button>`;
+    <button class="popup-close" onclick="closePopup()" title="Đóng"><i class="ph-bold ph-x" style="font-size:16px;line-height:1"></i></button>`;
   document.getElementById('popup-body').innerHTML = `
     <div style="text-align:center;padding:8px 0;font-size:13px;color:var(--t2);line-height:1.8">
       Xóa <strong>${s.l}</strong>?<br>
@@ -373,7 +373,7 @@ function confirmResetSvcs() {
   document.getElementById('popup-head').innerHTML = `
     <div class="popup-av" style="background:var(--rose-bg);color:var(--rose)">🔄</div>
     <div><div class="popup-name">Khôi phục mặc định</div><div class="popup-meta">Đặt lại danh sách dịch vụ</div></div>
-    <button class="popup-close" onclick="closePopup()">✕</button>`;
+    <button class="popup-close" onclick="closePopup()" title="Đóng"><i class="ph-bold ph-x" style="font-size:16px;line-height:1"></i></button>`;
   document.getElementById('popup-body').innerHTML = `
     <div style="text-align:center;padding:8px 0;font-size:13px;color:var(--t2);line-height:1.8">
       Danh sách dịch vụ sẽ về <strong>7 dịch vụ mặc định</strong>.<br>
@@ -460,7 +460,7 @@ function renderSystemPane(container) {
     // ── Backup ──
     '<div class="settings-section" style="margin-top:10px">' +
     '<div class="settings-section-head"><div>' +
-    '<div class="settings-section-title">💾 Backup & Khôi phục</div>' +
+    '<div class="settings-section-title"><i class="ph-bold ph-cloud-arrow-up" style="font-size:14px;line-height:1;vertical-align:-2px;margin-right:5px"></i>Backup & Khôi phục</div>' +
     '<div class="settings-section-sub">Lần cuối: <span style="font-weight:600;color:' +
     (bk.warn ? '#D97706' : 'var(--c-ready)') + '">' + bk.label + '</span>' +
     (bk.warn ? ' <span style="background:#FEF3C7;color:#92400E;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px">NÊN BACKUP</span>' : '') +
@@ -537,7 +537,7 @@ function _openPinPopup(titleText, subText, onComplete) {
     '<div class="popup-av" style="background:var(--rose-bg);color:var(--rose);font-size:20px">🔒</div>' +
     '<div><div class="popup-name" id="pm-popup-title">' + titleText + '</div>' +
     '<div class="popup-meta" id="pm-popup-sub">' + subText + '</div></div>' +
-    '<button class="popup-close" onclick="closePopup()">✕</button>';
+    '<button class="popup-close" onclick="closePopup()" title="Đóng"><i class="ph-bold ph-x" style="font-size:16px;line-height:1"></i></button>';
 
   document.getElementById('popup-body').innerHTML =
     '<div style="display:flex;justify-content:center;gap:12px;margin:8px 0 4px">' +
@@ -628,7 +628,7 @@ function confirmClearPin() {
   document.getElementById('popup-head').innerHTML =
     '<div class="popup-av" style="background:var(--c-pen-bg);color:var(--c-pen)">🔓</div>' +
     '<div><div class="popup-name">Tắt bảo mật PIN</div><div class="popup-meta">Xác nhận hành động</div></div>' +
-    '<button class="popup-close" onclick="closePopup()">✕</button>';
+    '<button class="popup-close" onclick="closePopup()" title="Đóng"><i class="ph-bold ph-x" style="font-size:16px;line-height:1"></i></button>';
   document.getElementById('popup-body').innerHTML =
     '<div style="text-align:center;padding:8px 0;font-size:13px;color:var(--t2);line-height:1.9">' +
     'Bất kỳ ai cũng có thể mở ứng dụng<br>mà không cần nhập mã PIN.<br>' +
@@ -681,7 +681,7 @@ function confirmImportBackup(input) {
   document.getElementById('popup-head').innerHTML =
     '<div class="popup-av" style="background:var(--rose-bg);color:var(--rose)">⬆</div>' +
     '<div><div class="popup-name">Khôi phục dữ liệu</div><div class="popup-meta">' + file.name + '</div></div>' +
-    '<button class="popup-close" onclick="closePopup()">✕</button>';
+    '<button class="popup-close" onclick="closePopup()" title="Đóng"><i class="ph-bold ph-x" style="font-size:16px;line-height:1"></i></button>';
   document.getElementById('popup-body').innerHTML =
     '<div style="text-align:center;padding:8px 0;font-size:13px;color:var(--t2);line-height:1.9">' +
     'Toàn bộ dữ liệu hiện tại sẽ bị <strong>ghi đè</strong> bởi file backup.<br>' +

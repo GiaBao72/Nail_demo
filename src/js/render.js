@@ -109,18 +109,18 @@ function renderCard(w, rd) {
   }
   let tags = '';
   if (w.service) tags += `<span class="sc-tag t-svc">${svcL(w.service)}</span>`;
-  if (w.status==='busy' && w.startTime) tags += `<span class="sc-tag t-timer">⏱ <span id="ct-${w.id}">${fmtT(Date.now()-w.startTime)}</span></span>`;
+  if (w.status==='busy' && w.startTime) tags += `<span class="sc-tag t-timer"><i class="ph-bold ph-timer" style="font-size:11px;line-height:1;vertical-align:-1px"></i> <span id="ct-${w.id}">${fmtT(Date.now()-w.startTime)}</span></span>`;
   if (isPen && pt) tags += `<span class="sc-tag t-pen" id="cpen-${w.id}">${fmtP(pt.ut)}</span>`;
-  if (w.status==='ready' && avgSpeed(w)) tags += `<span class="sc-tag t-speed">⚡ ${speedLabel(w)}</span>`;
+  if (w.status==='ready' && avgSpeed(w)) tags += `<span class="sc-tag t-speed"><i class="ph-fill ph-lightning" style="font-size:11px;line-height:1;vertical-align:-1px"></i> ${speedLabel(w)}</span>`;
   const tagsHtml = tags ? `<div class="sc-tags">${tags}</div>` : '';
   let qa = '';
   if (multiMode && w.status==='ready') {
-    qa = `<button class="qa-btn ${isChk?'qa-primary':''}" onclick="event.stopPropagation();toggleChk(${w.id})">${isChk?'✓ Đã chọn':'Chọn'}</button>`;
+    qa = `<button class="qa-btn ${isChk?'qa-primary':''}" onclick="event.stopPropagation();toggleChk(${w.id})">${isChk?'<i class="ph-bold ph-check" style="font-size:11px;line-height:1;vertical-align:-1px"></i> Đã chọn':'Chọn'}</button>`;
   } else if (w.status==='ready') {
     qa = `<button class="qa-btn qa-primary" onclick="event.stopPropagation();assignW(${w.id})">Vào turn</button>
 <button class="qa-btn" onclick="event.stopPropagation();openPopup(${w.id})">Lịch sử</button>`;
   } else if (w.status==='busy') {
-    qa = `<button class="qa-btn qa-green" onclick="event.stopPropagation();finishW(${w.id},1)">✓ Xong</button>
+    qa = `<button class="qa-btn qa-green" onclick="event.stopPropagation();finishW(${w.id},1)"><i class="ph-bold ph-check" style="font-size:11px;line-height:1;vertical-align:-1px"></i> Xong</button>
       <button class="qa-btn" onclick="event.stopPropagation();openDetail(${w.id})">Chi tiết</button>`;
   } else if (isPen) {
     qa = `<button class="qa-btn qa-green" onclick="event.stopPropagation();remPen(${w.id})">Gỡ phạt</button>
@@ -172,7 +172,7 @@ function renderGroupCard(gid, members) {
   const memberRows = members.map(m => {
     const me = m.startTime ? Date.now()-m.startTime : 0;
     const svcTag = m.service ? `<span class="sc-tag t-svc">${svcL(m.service)}</span>` : '';
-    const timerTag = `<span class="sc-tag t-timer">⏱ <span id="ct-${m.id}">${fmtT(me)}</span></span>`;
+    const timerTag = `<span class="sc-tag t-timer"><i class="ph-bold ph-timer" style="font-size:11px;line-height:1;vertical-align:-1px"></i> <span id="ct-${m.id}">${fmtT(me)}</span></span>`;
     return `<div class="gm-row">
       <div class="sc-avatar av-busy" style="width:34px;height:34px;font-size:11px;flex-shrink:0;overflow:hidden">${avImg(m,34)}</div>
       <div style="flex:1;min-width:0">

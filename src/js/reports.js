@@ -88,7 +88,7 @@ function renderReport() {
 function confirmResetCa() {
   document.getElementById('popup-head').innerHTML = `<div class="popup-av" style="background:var(--c-pen-bg);color:var(--c-pen)">🔄</div>
     <div><div class="popup-name">Reset ca hôm nay</div><div class="popup-meta">Xóa toàn bộ dữ liệu ca hiện tại</div></div>
-    <button class="popup-close" onclick="closePopup()">✕</button>`;
+    <button class="popup-close" onclick="closePopup()" title="Đóng"><i class="ph-bold ph-x" style="font-size:16px;line-height:1"></i></button>`;
   document.getElementById('popup-body').innerHTML = `
     <div style="text-align:center;padding:8px 0;color:var(--t2);font-size:13px;line-height:1.8">
       Tất cả turn và lịch sử hôm nay sẽ về 0.<br>

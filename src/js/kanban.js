@@ -16,11 +16,11 @@ function renderKanban() {
     const isReady = w.status === 'ready';
     const avCls = w.status==='busy'?'av-busy':isPen?'av-pen':w.status==='off'?'av-off':'av-ready';
     let sub = '';
-    if (w.status==='busy') sub = `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px"><span class="sc-tag t-timer" style="font-size:9px;padding:1px 6px">⏱ <span id="kct-${w.id}">${fmtT(elapsed)}</span></span>${w.service?`<span class="sc-tag t-svc" style="font-size:9px;padding:1px 6px">${svcL(w.service)}</span>`:''}</div>`;
+    if (w.status==='busy') sub = `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px"><span class="sc-tag t-timer" style="font-size:9px;padding:1px 6px"><i class="ph-bold ph-timer" style="font-size:9px;line-height:1;vertical-align:-1px"></i> <span id="kct-${w.id}">${fmtT(elapsed)}</span></span>${w.service?`<span class="sc-tag t-svc" style="font-size:9px;padding:1px 6px">${svcL(w.service)}</span>`:''}</div>`;
     if (isPen && pt) sub = `<div style="margin-top:6px"><span class="sc-tag t-pen" style="font-size:9px;padding:1px 6px" id="kcpen-${w.id}">${fmtP(pt.ut)}</span></div>`;
     let actionBtn = '';
     if (multiMode && isReady) {
-      actionBtn = `<button onclick="event.stopPropagation();toggleChk(${w.id})" style="padding:0 8px;height:26px;border-radius:6px;border:none;background:${isChk?'#1D4ED8':'var(--surface-3)'};color:${isChk?'#fff':'var(--t2)'};font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;line-height:1;font-family:inherit;white-space:nowrap">${isChk?'✓ Đã chọn':'Chọn'}</button>`;
+      actionBtn = `<button onclick="event.stopPropagation();toggleChk(${w.id})" style="padding:0 8px;height:26px;border-radius:6px;border:none;background:${isChk?'#1D4ED8':'var(--surface-3)'};color:${isChk?'#fff':'var(--t2)'};font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;line-height:1;font-family:inherit;white-space:nowrap">${isChk?'<i class="ph-bold ph-check" style="font-size:11px;line-height:1;vertical-align:-1px"></i> Đã chọn':'Chọn'}</button>`;
     } else if (w.status==='busy') {
       actionBtn = `<button onclick="event.stopPropagation();openPopup(${w.id})" style="padding:0 8px;height:26px;border-radius:6px;border:1px solid var(--br2);background:var(--surface-2);color:var(--t2);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Lịch sử</button>`;
     } else if (isReady) {
@@ -28,7 +28,7 @@ function renderKanban() {
     } else if (w.status==='off') {
       actionBtn = '';
     } else if (isPen) {
-      actionBtn = `<button onclick="event.stopPropagation();remPen(${w.id})" style="width:26px;height:26px;border-radius:6px;border:none;background:var(--c-ready);color:#fff;font-size:11px;cursor:pointer;flex-shrink:0" title="Gỡ phạt">✓</button>`;
+      actionBtn = `<button onclick="event.stopPropagation();remPen(${w.id})" style="width:26px;height:26px;border-radius:6px;border:none;background:var(--c-ready);color:#fff;font-size:11px;cursor:pointer;flex-shrink:0" title="Gỡ phạt"><i class="ph-bold ph-check" style="font-size:13px;line-height:1"></i></button>`;
     }
     const clickFn = (multiMode && isReady) ? `toggleChk(${w.id})` : `openDetail(${w.id})`;
     const statusCls = isPen ? 'kc-pen' : w.status==='busy' ? 'kc-busy' : w.status==='off' ? 'kc-off' : 'kc-ready';
@@ -62,7 +62,7 @@ function renderKanban() {
     const memberRows = members.map(m => {
       const me = m.startTime ? Date.now() - m.startTime : 0;
       const svcTag = m.service ? `<span class="sc-tag t-svc" style="font-size:9px;padding:1px 6px">${svcL(m.service)}</span>` : '';
-      const timerTag = `<span class="sc-tag t-timer" style="font-size:9px;padding:1px 6px">⏱ <span id="kct-${m.id}">${fmtT(me)}</span></span>`;
+      const timerTag = `<span class="sc-tag t-timer" style="font-size:9px;padding:1px 6px"><i class="ph-bold ph-timer" style="font-size:9px;line-height:1;vertical-align:-1px"></i> <span id="kct-${m.id}">${fmtT(me)}</span></span>`;
       return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--c-busy-b)" onclick="event.stopPropagation()">
         <div class="sc-avatar av-busy" style="width:28px;height:28px;overflow:hidden;font-size:9px;flex-shrink:0">${avImg(m,28)}</div>
         <div style="flex:1;min-width:0;cursor:default">
@@ -80,7 +80,7 @@ function renderKanban() {
           <span style="font-size:13px">👥</span>
           <div>
             <div style="font-size:11px;font-weight:800;color:var(--c-busy)">Nhóm ${members.length} thợ</div>
-            <div style="font-size:10px;color:var(--t3);margin-top:1px">⏱ <span id="ct-g-${gid}">${fmtT(elapsed)}</span></div>
+            <div style="font-size:10px;color:var(--t3);margin-top:1px"><i class="ph-bold ph-timer" style="font-size:10px;line-height:1;vertical-align:-1px"></i> <span id="ct-g-${gid}">${fmtT(elapsed)}</span></div>
           </div>
         </div>
         <span class="sc-badge sb-busy" style="font-size:9px">Đang làm</span>
