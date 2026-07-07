@@ -424,8 +424,9 @@ function doBulkCheckin() {
     if (w.status === 'off') w.status = 'ready';
     names.push(w.name);
   });
-  toast('Check-in ' + names.length + ' người: ' + names.join(', ') + ' ✅');
+  toast('Check-in ' + names.length + ' người ✅');
   closePopup();
   saveState();
-  renderSettingsPane();
+  if (currentTab === 'settings') renderSettingsPane();
+  else render();
 }

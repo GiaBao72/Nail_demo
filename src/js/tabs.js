@@ -49,10 +49,6 @@ function getShiftHTML() {
 <i class="ph-bold ph-squares-four" style="font-size:15px;line-height:1"></i>
             Chọn nhóm
           </button>
-          <button id="btn-checkin-ca" class="btn btn-ghost btn-sm" onclick="bulkCheckin()" style="width:auto;padding:9px 14px;color:var(--c-ready);border-color:rgba(26,122,71,.22)">
-<i class="ph-bold ph-clock-clockwise" style="font-size:15px;line-height:1"></i>
-            Check-in ca
-          </button>
           <button id="btn-view" class="btn btn-ghost btn-sm" onclick="toggleView()" style="width:auto;padding:9px 14px;color:var(--t2);border-color:var(--br2)">
             ${shiftView === 1 ? 'Xem dạng cột' : 'Xem dạng danh sách'}
           </button>

@@ -101,10 +101,16 @@ function renderStaffPane(container) {
         <div class="settings-section-title">Nhân viên</div>
         <div class="settings-section-sub">${W.length} nhân viên · ${W.filter(w=>w.checkinTime).length} đang trong ca · ${W.filter(w=>w.checkoutTime&&!w.checkinTime).length} đã checkout</div>
       </div>
-      <button class="btn btn-rose btn-sm" onclick="openAddStaff()" style="width:auto;padding:9px 18px">
-        <i class="ph-bold ph-plus" style="font-size:14px;line-height:1"></i>
-        Thêm nhân viên
-      </button>
+      <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
+        <button class="btn btn-ghost btn-sm" onclick="bulkCheckin()" style="width:auto;padding:9px 14px;color:var(--c-ready);border-color:rgba(26,122,71,.22)">
+          <i class="ph-fill ph-check-circle" style="font-size:14px;line-height:1"></i>
+          Check-in ca
+        </button>
+        <button class="btn btn-rose btn-sm" onclick="openAddStaff()" style="width:auto;padding:9px 18px">
+          <i class="ph-bold ph-plus" style="font-size:14px;line-height:1"></i>
+          Thêm nhân viên
+        </button>
+      </div>
     </div>
 
     <div class="settings-section">
