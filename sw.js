@@ -25,8 +25,8 @@ self.addEventListener('push', event => {
 
   const options = {
     body: payload.body || 'Bạn có ca mới!',
-    icon: payload.icon || '/icon-192.png',
-    badge: payload.badge || '/icon-96.png',
+    icon: payload.icon || '/assets/icons/icon-192.png',
+    badge: payload.badge || '/assets/icons/icon-96.png',
     // Rung mạnh hơn: 3 nhịp dài + kết thúc dài
     vibrate: [600, 180, 600, 180, 900, 250, 1200],
     tag: 'nailturn-alert-' + (data.alertId || data.workerId || 'all'),
@@ -58,7 +58,7 @@ self.addEventListener('notificationclick', event => {
   event.notification.close();
   event.waitUntil((async () => {
     await ackNotification(data);
-    const url = '/worker.html';
+    const url = '/';
     const list = await clients.matchAll({ type: 'window', includeUncontrolled: true });
     for (const client of list) {
       if ('focus' in client) return client.focus();
