@@ -467,15 +467,10 @@ function renderSystemPane(container) {
     '<div class="settings-section" style="margin-top:10px">' +
     '<div class="settings-section-head"><div>' +
     '<div class="settings-section-title">🔒 Bảo mật PIN</div>' +
-    '<div class="settings-section-sub">' +
-    (hasPIN ? 'Đang bật · <span style="color:var(--c-ready)">Yêu cầu PIN khi mở tab mới</span>'
-            : 'Đang tắt · <span style="color:var(--t4)">Bất kỳ ai cũng có thể mở ứng dụng</span>') +
+    '<div class="settings-section-sub">Yêu cầu PIN khi mở ứng dụng · Mặc định <b>0000</b></div>' +
     '</div></div></div>' +
     '<div style="padding:14px 18px;display:flex;gap:8px;flex-wrap:wrap">' +
-    (hasPIN
-      ? '<button class="btn btn-ghost" onclick="openChangePinFlow()" style="width:auto;padding:9px 16px">Đổi PIN</button>' +
-        '<button class="btn btn-ghost" onclick="confirmClearPin()" style="width:auto;padding:9px 14px;color:var(--c-pen);border-color:var(--c-pen-b)">Tắt PIN</button>'
-      : '<button class="btn btn-rose" onclick="openSetPinFlow()" style="width:auto;padding:9px 20px">Bật bảo vệ PIN</button>') +
+    '<button class="btn btn-ghost" onclick="openChangePinFlow()" style="width:auto;padding:9px 16px">Đổi PIN</button>' +
     '</div></div>' +
 
     // ── Backup ──
