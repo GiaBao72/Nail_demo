@@ -399,31 +399,312 @@ function openEmojiPicker(idx) { openEditSvc(idx); }
 // ── SYSTEM PANE ──
 // ══════════════════════════════════════════
 
+function _backupStatus() {
+  var ts = localStorage.getItem('nt_last_backup');
+  if (!ts) return { label: 'Chua backup lan nao', warn: true };
+  var d = new Date(parseInt(ts));
+  var today = new Date().toISOString().slice(0, 10);
+  var bDate = d.toISOString().slice(0, 10);
+  var timeStr = d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  if (bDate === today) return { label: 'Hom nay luc ' + timeStr, warn: false };
+  var diff = Math.floor((Date.now() - d) / 86400000);
+  return { label: diff === 1 ? 'Hom qua luc ' + timeStr : diff + ' ngay truoc', warn: true };
+}
+
 function renderSystemPane(container) {
-  const cfg    = getTgConfig();
-  const hasPIN = !!localStorage.getItem('nt_pin_hash');
+  var cfg    = getTgConfig();
+  var hasPIN = !!localStorage.getItem('nt_pin_hash');
+  var bk     = _backupStatus();
 
-  container.innerHTML = `
-    <div class="settings-pane-head">
-      <div>
-        <div class="settings-section-title">Cài đặt hệ thống</div>
-        <div class="settings-section-sub">Telegram, bảo mật PIN & sao lưu dữ liệu</div>
-      </div>
-    </div>
+  container.innerHTML =
+    '<div class="settings-pane-head"><div>' +
+    '<div class="settings-section-title">Cai dat he thong</div>' +
+    '<div class="settings-section-sub">Telegram, bao mat PIN & sao luu du lieu</div>' +
+    '</div></div>' +
 
-    <!-- Telegram -->
-    <div class="settings-section">
-      <div class="settings-section-head">
-        <div>
-          <div class="settings-section-title">✈️ Telegram Bot</div>
-          <div class="settings-section-sub">Gửi thông báo lượt thợ qua Telegram${cfg.token ? ' · <span style="color:var(--c-ready)">Đang bật</span>' : ' · <span style="color:var(--t4)">Chưa cài đặt</span>'}</div>
-        </div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <div>
-          <div class="f-label">Bot Token <span style="font-weight:400;color:var(--t4)">(lấy từ @BotFather)</span></div>
-          <input class="f-input" id="sys-tg-token" type="password" value="${cfg.token}" placeholder="1234567890:AAAA..." autocomplete="off">
-        </div>
-        <div>
-          <div class="f-label">Group Chat ID <span style="font-weight:400;color:var(--t4)">(thông báo nhóm)</span></div>
-          <input class="
+    '<div class="settings-section">' +
+    '<div class="settings-section-head"><div>' +
+    '<div class="settings-section-title">✈️ Telegram Bot</div>' +
+    '<div class="settings-section-sub">Gui thong bao luot tho qua Telegram' +
+    (cfg.token ? ' · <span style="color:var(--c-ready)">Dang bat</span>' : ' · <span style="color:var(--t4)">Chua cai dat</span>') +
+    '</div></div></div>' +
+    '<div style="display:flex;flex-direction:column;gap:12px">' +
+    '<div><div class="f-label">Bot Token</div>' +
+    '<input class="f-input" id="sys-tg-token" type="password" value="' + cfg.token + '" placeholder="1234567890:AAAA..." autocomplete="off"></div>' +
+    '<div><div class="f-label">Group Chat ID</div>' +
+    '<input class="f-input" id="sys-tg-group" value="' + cfg.group + '" placeholder="-100xxxxxxxxxx"></div>' +
+    '<div><div class="f-label">DM Chat ID</div>' +
+    '<input class="f-input" id="sys-tg-dm" value="' + cfg.dm + '" placeholder="xxxxxxxxxx"></div>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+    '<button class="btn btn-rose" onclick="saveTgConfig()" style="width:auto;padding:9px 20px">Luu</button>' +
+    '<button class="btn btn-ghost" onclick="testTg()" style="width:auto;padding:9px 16px">Gui thu</button>' +
+    '<button class="btn btn-ghost" onclick="clearTgConfig()" style="width:auto;padding:9px 14px;color:var(--c-pen);border-color:var(--c-pen-b)">Xoa token</button>' +
+    '</div></div></div>' +
+
+    '<div class="settings-section" style="margin-top:10px">' +
+    '<div class="settings-section-head"><div>' +
+    '<div class="settings-section-title">🔒 Bao mat PIN</div>' +
+    '<div class="settings-section-sub">' +
+    (hasPIN ? 'Dang bat · <span style="color:var(--c-ready)">Yeu cau PIN khi mo tab moi</span>'
+            : 'Dang tat · <span style="color:var(--t4)">Bat ky ai cung co the mo ung dung</span>') +
+    '</div></div></div>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+    (hasPIN
+      ? '<button class="btn btn-ghost" onclick="openChangePinFlow()" style="width:auto;padding:9px 16px">Doi PIN</button>' +
+        '<button class="btn btn-ghost" onclick="confirmClearPin()" style="width:auto;padding:9px 14px;color:var(--c-pen);border-color:var(--c-pen-b)">Tat PIN</button>'
+      : '<button class="btn btn-rose" onclick="openSetPinFlow()" style="width:auto;padding:9px 20px">Bat bao ve PIN</button>') +
+    '</div></div>' +
+
+    '<div class="settings-section" style="margin-top:10px">' +
+    '<div class="settings-section-head"><div>' +
+    '<div class="settings-section-title">💾 Backup & Khoi phuc</div>' +
+    '<div class="settings-section-sub">Lan cuoi: <span style="font-weight:600;color:' +
+    (bk.warn ? '#D97706' : 'var(--c-ready)') + '">' + bk.label + '</span>' +
+    (bk.warn ? '<span style="margin-left:6px;background:#FEF3C7;color:#92400E;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px">NEN BACKUP</span>' : '') +
+    '</div></div></div>' +
+    '<div style="font-size:12.5px;color:var(--t3);margin-bottom:14px;line-height:1.7">' +
+    'Xuat toan bo du lieu (tho, lich su, cai dat) ra file <code style="background:var(--surface-2);padding:1px 5px;border-radius:4px">.json</code>. ' +
+    'Luu vao dien thoai hoac Google Drive de dung khi can khoi phuc.' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">' +
+    '<button class="btn btn-rose" onclick="exportBackup()" style="width:auto;padding:9px 20px">⬇ Xuat backup (.json)</button>' +
+    '<label class="btn btn-ghost" style="width:auto;padding:9px 16px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">' +
+    '⬆ Nhap khoi phuc' +
+    '<input type="file" accept=".json" style="display:none" onchange="confirmImportBackup(this)">' +
+    '</label></div></div>';
+}
+
+// ── Telegram config helpers ──
+function saveTgConfig() {
+  var token = (document.getElementById('sys-tg-token') || {}).value || '';
+  var group = (document.getElementById('sys-tg-group') || {}).value || '';
+  var dm    = (document.getElementById('sys-tg-dm')    || {}).value || '';
+  token.trim() ? localStorage.setItem('nt_tg_token', token.trim()) : localStorage.removeItem('nt_tg_token');
+  group.trim() ? localStorage.setItem('nt_tg_group', group.trim()) : localStorage.removeItem('nt_tg_group');
+  dm.trim()    ? localStorage.setItem('nt_tg_dm',    dm.trim())    : localStorage.removeItem('nt_tg_dm');
+  toast('Da luu cai dat Telegram ✓');
+  renderSettingsPane();
+}
+
+function testTg() {
+  saveTgConfig();
+  sendTelegramMsg('✅ Nail Turn — ket noi Telegram thanh cong!');
+  toast('Da gui thu ↗ Kiem tra Telegram cua ban');
+}
+
+function clearTgConfig() {
+  ['nt_tg_token','nt_tg_group','nt_tg_dm'].forEach(function(k) { localStorage.removeItem(k); });
+  toast('Da xoa cai dat Telegram');
+  renderSettingsPane();
+}
+
+// ── PIN management ──
+async function _sha256(str) {
+  var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(function(b) { return b.toString(16).padStart(2,'0'); }).join('');
+}
+
+function _openPinPopup(titleText, subText, onComplete) {
+  var pinInput = '';
+
+  function updatePmDots() {
+    for (var i = 0; i < 4; i++) {
+      var d = document.getElementById('pmdot-'+i);
+      if (!d) return;
+      d.style.background  = i < pinInput.length ? '#E11D48' : '#fff';
+      d.style.borderColor = i < pinInput.length ? '#E11D48' : '#e0e0e0';
+    }
+  }
+
+  function pmSetText(t, s) {
+    var te = document.getElementById('pm-popup-title');
+    var se = document.getElementById('pm-popup-sub');
+    if (te) te.textContent = t;
+    if (se) se.textContent = s;
+  }
+
+  var keys = [1,2,3,4,5,6,7,8,9,'','0','⌫'];
+  var padHTML = keys.map(function(k) {
+    if (k === '') return '<div></div>';
+    return '<button onclick="pinMgmtKey(\'' + k + '\')" style="height:52px;border-radius:10px;border:1.5px solid var(--br2);background:var(--surface-2);font-size:' + (k==='⌫'?'18':'20') + 'px;font-weight:600;color:var(--t1);cursor:pointer;transition:.1s" onmousedown="this.style.background=\'var(--br)\'" onmouseup="this.style.background=\'var(--surface-2)\'">' + k + '</button>';
+  }).join('');
+
+  document.getElementById('popup-head').innerHTML =
+    '<div class="popup-av" style="background:var(--rose-bg);color:var(--rose);font-size:20px">🔒</div>' +
+    '<div><div class="popup-name" id="pm-popup-title">' + titleText + '</div>' +
+    '<div class="popup-meta" id="pm-popup-sub">' + subText + '</div></div>' +
+    '<button class="popup-close" onclick="closePopup()">✕</button>';
+
+  document.getElementById('popup-body').innerHTML =
+    '<div style="display:flex;justify-content:center;gap:12px;margin:8px 0 4px">' +
+    [0,1,2,3].map(function(i){ return '<div id="pmdot-'+i+'" style="width:13px;height:13px;border-radius:50%;border:2px solid #e0e0e0;background:#fff;transition:.12s"></div>'; }).join('') +
+    '</div>' +
+    '<div id="pm-err" style="text-align:center;font-size:12px;color:#E11D48;min-height:18px;margin-bottom:8px"></div>' +
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">' + padHTML + '</div>';
+
+  document.getElementById('popup-overlay').style.display = 'flex';
+
+  window.pinMgmtKey = async function(k) {
+    if (k === '⌫') {
+      pinInput = pinInput.slice(0, -1); updatePmDots();
+      document.getElementById('pm-err').textContent = '';
+      return;
+    }
+    if (pinInput.length >= 4) return;
+    pinInput += String(k);
+    updatePmDots();
+    if (pinInput.length < 4) return;
+
+    var ctrl = {
+      setTitle: pmSetText,
+      setErr: function(msg) { var e = document.getElementById('pm-err'); if(e) e.textContent = msg; }
+    };
+    await onComplete(pinInput, ctrl);
+    pinInput = '';
+    updatePmDots();
+  };
+}
+
+function openSetPinFlow() {
+  var step = 0, first = '';
+  _openPinPopup('Tao ma PIN', 'Nhap 4 chu so de bao ve ung dung', async function(pin, ctrl) {
+    if (step === 0) {
+      first = pin; step = 1;
+      ctrl.setTitle('Nhap lai PIN', 'Xac nhan ma PIN cua ban');
+      ctrl.setErr('');
+    } else {
+      if (pin !== first) {
+        step = 0; first = '';
+        ctrl.setErr('PIN khong khop, thu lai');
+        ctrl.setTitle('Tao ma PIN', 'Nhap 4 chu so de bao ve ung dung');
+      } else {
+        var hash = await _sha256(pin);
+        localStorage.setItem('nt_pin_hash', hash);
+        sessionStorage.setItem('nt_authed', '1');
+        closePopup();
+        toast('Da bat bao mat PIN ✅');
+        renderSettingsPane();
+      }
+    }
+  });
+}
+
+function openChangePinFlow() {
+  var step = 0, first = '';
+  _openPinPopup('Doi PIN — Xac nhan cu', 'Nhap ma PIN hien tai', async function(pin, ctrl) {
+    if (step === 0) {
+      var hash = await _sha256(pin);
+      if (hash !== localStorage.getItem('nt_pin_hash')) {
+        ctrl.setErr('PIN sai, thu lai'); return;
+      }
+      step = 1;
+      ctrl.setTitle('Nhap PIN moi', 'Dat ma PIN 4 chu so moi');
+      ctrl.setErr('');
+    } else if (step === 1) {
+      first = pin; step = 2;
+      ctrl.setTitle('Nhap lai PIN moi', 'Xac nhan ma PIN moi');
+      ctrl.setErr('');
+    } else {
+      if (pin !== first) {
+        step = 1; first = '';
+        ctrl.setErr('PIN khong khop, thu lai');
+        ctrl.setTitle('Nhap PIN moi', 'Dat ma PIN 4 chu so moi');
+      } else {
+        var hash = await _sha256(pin);
+        localStorage.setItem('nt_pin_hash', hash);
+        closePopup();
+        toast('Da doi PIN thanh cong ✅');
+        renderSettingsPane();
+      }
+    }
+  });
+}
+
+function confirmClearPin() {
+  document.getElementById('popup-head').innerHTML =
+    '<div class="popup-av" style="background:var(--c-pen-bg);color:var(--c-pen)">🔓</div>' +
+    '<div><div class="popup-name">Tat bao mat PIN</div><div class="popup-meta">Xac nhan hanh dong</div></div>' +
+    '<button class="popup-close" onclick="closePopup()">✕</button>';
+  document.getElementById('popup-body').innerHTML =
+    '<div style="text-align:center;padding:8px 0;font-size:13px;color:var(--t2);line-height:1.9">' +
+    'Bat ky ai cung co the mo ung dung<br>ma khong can nhap ma PIN.<br>' +
+    '<span style="font-size:12px;color:var(--t3)">Ban co the bat lai bat cu luc nao.</span></div>' +
+    '<button class="btn btn-ghost" style="color:var(--c-pen);border-color:var(--c-pen-b)" onclick="doClearPin()">Xac nhan tat PIN</button>' +
+    '<button class="btn btn-ghost" onclick="closePopup()">Huy</button>';
+  document.getElementById('popup-overlay').style.display = 'flex';
+}
+
+function doClearPin() {
+  localStorage.removeItem('nt_pin_hash');
+  closePopup();
+  toast('Da tat bao mat PIN');
+  renderSettingsPane();
+}
+
+// ── BACKUP / RESTORE ──
+function exportBackup() {
+  var data = {
+    _version: 2,
+    _app: 'NailTurn',
+    _exportedAt: new Date().toISOString(),
+    nt_state:     localStorage.getItem('nt_state'),
+    nt_svcs:      localStorage.getItem('nt_svcs'),
+    nt_dailyLogs: localStorage.getItem('nt_dailyLogs'),
+    nt_tg_token:  localStorage.getItem('nt_tg_token'),
+    nt_tg_group:  localStorage.getItem('nt_tg_group'),
+    nt_tg_dm:     localStorage.getItem('nt_tg_dm'),
+  };
+  var json = JSON.stringify(data, null, 2);
+  var blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  var date = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = 'nailturn-backup-' + date + '.json';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+  localStorage.setItem('nt_last_backup', Date.now().toString());
+  toast('Da xuat backup ✅');
+  renderSettingsPane();
+}
+
+function confirmImportBackup(input) {
+  var file = input.files[0];
+  if (!file) return;
+  input.value = '';
+
+  document.getElementById('popup-head').innerHTML =
+    '<div class="popup-av" style="background:var(--rose-bg);color:var(--rose)">⬆</div>' +
+    '<div><div class="popup-name">Khoi phuc du lieu</div><div class="popup-meta">' + file.name + '</div></div>' +
+    '<button class="popup-close" onclick="closePopup()">✕</button>';
+  document.getElementById('popup-body').innerHTML =
+    '<div style="text-align:center;padding:8px 0;font-size:13px;color:var(--t2);line-height:1.9">' +
+    'Toan bo du lieu hien tai se bi <strong>ghi de</strong> boi file backup.<br>' +
+    '<span style="color:var(--t3);font-size:12px">Hanh dong nay khong the hoan tac.</span></div>' +
+    '<button class="btn btn-rose" onclick="_doImport()">Xac nhan khoi phuc</button>' +
+    '<button class="btn btn-ghost" onclick="closePopup()">Huy</button>';
+  document.getElementById('popup-overlay').style.display = 'flex';
+
+  window._doImport = function() {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var data = JSON.parse(e.target.result);
+        if (data._app !== 'NailTurn' || !data.nt_state) {
+          toast('File backup khong hop le!'); closePopup(); return;
+        }
+        ['nt_state','nt_svcs','nt_dailyLogs','nt_tg_token','nt_tg_group','nt_tg_dm'].forEach(function(k) {
+          if (data[k] != null) localStorage.setItem(k, data[k]);
+        });
+        closePopup();
+        toast('Da khoi phuc! Dang tai lai...');
+        setTimeout(function() { location.reload(); }, 1200);
+      } catch(err) {
+        toast('Loi doc file backup!'); closePopup();
+      }
+    };
+    reader.readAsText(file);
+    delete window._doImport;
+  };
+}
