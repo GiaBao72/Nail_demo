@@ -116,7 +116,6 @@ function openAddStaff() {
     <button class="popup-close" onclick="closePopup()" title="Đóng"><i class="ph-bold ph-x" style="font-size:16px;line-height:1"></i></button>`;
   document.getElementById('popup-body').innerHTML = `
     <div><div class="f-label">Tên nhân viên</div><input class="f-input" id="add-name" placeholder="VD: Nguyễn Thị Lan" style="font-size:13px;font-weight:500"></div>
-    <div><div class="f-label">Chữ viết tắt (2 ký tự)</div><input class="f-input" id="add-ini" placeholder="VD: LA" maxlength="2" style="text-transform:uppercase;font-size:13px;font-weight:700"></div>
     <button class="btn btn-rose" onclick="saveAddStaff()">Thêm nhân viên</button>
     <button class="btn btn-ghost" onclick="closePopup()">Hủy</button>`;
   document.getElementById('popup-overlay').style.display = 'flex';

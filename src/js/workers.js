@@ -16,7 +16,7 @@ function saveInfo(id) {
 
 // ── ASSIGN TURN ──
 function assignNext() {
-  const rd = readyW(); if (!rd.length) { toast('Không có thợ rảnh!'); return; }
+  const rd = smartQueue(); if (!rd.length) { toast('Không có thợ rảnh!'); return; }
   assignW(rd[0].id);
 }
 
@@ -49,6 +49,7 @@ function doAssignW(id) {
   const _tgMsg = w.name + (w.service ? '\n' + svcL(w.service) : '');
   sendTelegramMsg(_tgMsg);
   if (w.telegramId) sendTelegramMsgTo(w.telegramId, _tgMsg);
+  saveState(); render();
 }
 
 // ── FINISH TURN ──
@@ -109,12 +110,14 @@ function _doFinishW(w, tw, rev, tip) {
   w.turns=Math.round((w.turns-1+tw)*10)/10; totalTurns=Math.round((totalTurns-1+tw)*10)/10;
   const dur=w.startTime?Date.now()-w.startTime:0, ti=w.startTime?new Date(w.startTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):'-';
   if (!w.history) w.history=[];
-  w.history.push({ti, dur:fmtT(dur), svc:w.service, note:w.note, tw});
+  w.history.push({ti, dur:fmtT(dur), durationMs:dur, svc:w.service, note:w.note, tw});
   exHist.add(w.id);
   W=W.filter(x=>x.id!==w.id);
   w.status='ready'; w.note=''; w.startTime=null; w.service=''; w.revenue=0; w.tip=0; w.groupId=null;
+  w.lastFinishTime = Date.now();
   W.push(w); selId=null;
   toast(w.name + ' xong việc — về cuối hàng ✓'); closePopup();
+  saveState(); render();
 }
 
 // ── STATUS & TRANSFER ──
@@ -122,6 +125,7 @@ function setSt(id, s) {
   const w=W.find(x=>x.id===id); if (!w) return;
   W=W.filter(x=>x.id!==id); w.status=s; W.push(w); selId=null;
   toast(w.name+': '+(s==='off'?'Cho nghỉ 😴':'Vào làm lại ✅')); closePopup();
+  saveState(); render();
 }
 
 function openTransferTurn(fromId) {
@@ -311,7 +315,7 @@ function finishGroup(gid, tw) {
     w.turns=Math.round((w.turns-1+tw)*10)/10;
     const dur=w.startTime?Date.now()-w.startTime:0, ti=w.startTime?new Date(w.startTime).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}):'-';
     if (!w.history) w.history=[];
-    w.history.push({ti, dur:fmtT(dur), svc:w.service, note:w.note, tw});
+    w.history.push({ti, dur:fmtT(dur), durationMs:dur, svc:w.service, note:w.note, tw});
     exHist.add(w.id);
   });
   totalTurns=Math.round((totalTurns-members.length+members.length*tw)*10)/10;
@@ -320,5 +324,7 @@ function finishGroup(gid, tw) {
     w.status='ready'; w.note=''; w.startTime=null; w.service=''; w.revenue=0; w.tip=0; w.groupId=null;
     W.push(w);
   });
+  members.forEach(w => { w.lastFinishTime = Date.now(); });
   toast('Nhóm '+members.length+' thợ xong việc ✓'); closePopup();
+  saveState(); render();
 }
