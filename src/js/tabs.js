@@ -61,7 +61,7 @@ function getShiftHTML() {
         <div class="mb-sub">Click thợ rảnh để chọn/bỏ chọn</div>
       </div>
       <div style="display:flex;gap:6px">
-        <button class="btn btn-rose btn-sm" onclick="assignMulti()" style="width:auto">Giao ca nhóm</button>
+        <button class="btn btn-rose btn-sm" onclick="assignMulti()" style="width:auto">Giao ca</button>
         <button class="btn btn-ghost btn-sm" onclick="cancelMulti()" style="width:auto">✕</button>
       </div>
     </div>
@@ -77,4 +77,5 @@ function getShiftHTML() {
         <button class="filter-btn" data-f="off" onclick="setFilter('off')">Nghỉ</button>
       </div>
     </div>
-    <div class="staff-grid" id="staff-grid"></div
+    <div class="staff-grid" id="staff-grid"></div>`;
+}
