@@ -1636,4 +1636,5 @@ input, select, textarea { font-family: inherit; }
   background: var(--surface-3);
   flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  transition: background .12s, border-colo
+  transition: background .12s, border-color .12s;
+}

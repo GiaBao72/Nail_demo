@@ -73,4 +73,5 @@
   .sc-avatar { width: 36px; height: 36px; font-size: 10.5px; border-radius: 10px; }
 
   .report-grid-4 { grid-template-columns: repeat(2,1fr) !important; }
-  .rsc-val { font-size: 
+  .rsc-val { font-size: 18px; }
+}
